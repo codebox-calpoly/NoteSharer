@@ -1,0 +1,17 @@
+## Summary
+Briefly explain the change and why.
+
+## Screenshots / Demos
+(if UI or visible behavior)
+
+## How to Test
+Steps to verify locally.
+
+## Linked Issues
+Closes #<id>
+
+## Checklist
+- [ ] Tests added/updated
+- [ ] Lint/tests pass locally
+- [ ] Docs updated (README/ADR/changelog)
+
