@@ -1,3 +1,6 @@
+## Linked Issues
+Closes #<id>
+
 ## Summary
 Briefly explain the change and why.
 
@@ -7,11 +10,8 @@ Briefly explain the change and why.
 ## How to Test
 Steps to verify locally.
 
-## Linked Issues
-Closes #<id>
-
 ## Checklist
 - [ ] Tests added/updated
 - [ ] Lint/tests pass locally
 - [ ] Docs updated (README/ADR/changelog)
-
+- [ ] Screenshots/demos
