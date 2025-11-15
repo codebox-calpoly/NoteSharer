@@ -15,6 +15,7 @@ Students struggle to find consolidated, high‑quality, course‑specific study 
 - [Jonah Chan](https://www.linkedin.com/in/jonah-chan) - Tech Lead
 - [First Last](https://www.linkedin.com/) - Designer
 - [First Last](https://www.linkedin.com/) - Developer
+- [Moe Aung](https://www.linkedin.com/) - Developer
 
 ## Contributing
 
