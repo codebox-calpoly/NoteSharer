@@ -24,7 +24,7 @@ Students struggle to find consolidated, high‑quality, course‑specific study 
 |Backend | Supabase | API + auth|
 |Database | Supabase | accounts + file storage|
 |Tools/Infra | Supabase | hosted on free supabase tier|
-|Design | TBD, based on devs' previous experience | visual/UX design|
+|Design | Figma | visual/UX design|
 
 ## Release Timeline
 |Release Stage | Target Date | Description|
