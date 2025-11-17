@@ -42,7 +42,7 @@ Students struggle to find consolidated, high‑quality, course‑specific study 
 
 ## Budget
 |Item | Purpose | Estimated Cost|
--------------------------------
+|------|----------|--------------|
 |Supabase | expanding storage when we actually deploy the app | $25 a month|
 |AWS credits(?) | potentially for calling LLMs | varies|
 
