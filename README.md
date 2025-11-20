@@ -13,7 +13,7 @@ Students struggle to find consolidated, high‑quality, course‑specific study 
 - [First Last](https://www.linkedin.com/) - Project Manager
 - [Joshua Panicker](https://www.linkedin.com/in/joshua-panicker-32610a2b0) - Tech Lead
 - [Jonah Chan](https://www.linkedin.com/in/jonah-chan) - Tech Lead
-- [First Last](https://www.linkedin.com/) - Designer
+- [Isaiah Cortez](https://www.linkedin.com/in/isaiah-cortez9/) - Designer
 - [Noah Gullo](https://www.linkedin.com/in/noah-gullo) - Developer
 - [Victor Xie](https://www.linkedin.com/in/victor-xie-767626301/) - Developer
 - [Moe Aung](https://www.linkedin.com/) - Developer
