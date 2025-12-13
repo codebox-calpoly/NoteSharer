@@ -24,3 +24,37 @@ body {
   color: var(--foreground);
   font-family: 'Times New Roman', Times, serif, Helvetica, sans-serif;
 }
+
+.auth-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 3rem;
+  width: 100%;
+  border-radius: 9999px;
+  padding: 0 1.25rem;
+  font-weight: 600;
+  background-color: #0b0b0b;
+  color: #ffffff;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+
+.auth-button:hover {
+  background-color: #27272a;
+}
+
+@media (min-width: 768px) {
+  .auth-button {
+    width: 158px;
+  }
+}
+
+.dark .auth-button {
+  background-color: #ffffff;
+  color: #0b0b0b;
+}
+
+.dark .auth-button:hover {
+  background-color: #e5e5e5;
+}
