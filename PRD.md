@@ -8,8 +8,8 @@
 
 ## 1) Overview
 
-**Elevator pitch:** Note Sharer is a campus‑specific marketplace where students upload high‑quality notes, Quizlet sets, syllabi, and other course resources. Contributors earn credits from uploads and upvotes, then spend those credits to access others’ materials—solving the free‑rider problem and reducing reliance on paywalled platforms like Chegg or Brainly.
-
+**Elevator pitch:** Note Sharer is a campus‑specific marketplace where students upload high‑quality notes, class overviews, Quizlet sets, syllabi, and other student-created study resources. Contributors earn credits from uploads and upvotes, then spend those credits to access others’ materials—solving the free‑rider problem and reducing reliance on paywalled platforms like Chegg or Brainly. Explicit academic-integrity guardrails ensure tests, quizzes, assignments, and answer keys are never allowed.
+   
 **Problem statement:** Students struggle to find consolidated, high‑quality, course‑specific study resources. Existing solutions (group chats, random Drive folders, or paywalled sites) are fragmented, low‑signal, and don’t reward contributors—creating a free‑rider dynamic and uneven quality. A campus‑scoped platform with aligned incentives is needed to increase the supply of high‑quality materials without charging cash. Finally, this application will reduce the unfair advantage held by members of some Greek life organizations that share study materials exclusively among their members.
 
 **Primary goals:**
@@ -18,6 +18,7 @@
 3. Ensure quality via upvotes, contributor reputation, and verified course enrollment.
 4. Protect academic integrity and IP via moderation tools and clear content policies.
 5. Make discovery simple (per‑course feeds, search, tags) and onboarding low‑friction.
+6. Enforce strict prohibitions on uploading tests, quizzes, assignments, or instructor-provided materials
 
 **Non-goals:** Hosting copyrighted textbooks or publisher PDFs; facilitating cheating (current exams, answer keys, graded solutions); multi‑university support in MVP; cash payouts or crypto tokens (credits are non‑monetary).
 
@@ -37,7 +38,15 @@ Guardrails: D1/D7 activation (first upload within 7 days), average upvotes per u
   - User accounts (calpoly.edu-only email/password) with emailed verification code; profiles tied to a Cal Poly SLO identity (no SSO in V1).
   - Per‑course spaces (Dept + Course # + Term) with browse and basic search.
   - Upload resources (PDF only in V1; external links like Quizlet/Drive) with metadata (course, week/topic, tags).
-  - **Credit economy:** Upload +5 credits; per‑upvote +1 (cap +10 per item); download costs 3; **signup bonus = 2 free downloads** (non‑transferable vouchers separate from credits. that way, even if we later change the download costs to b a function of rating, new users will receive the same number of free downloads).
+  - Allowed Resource types:
+    - Lecture Notes
+    - Study Guides
+    - Links to user/student-generated content (Quizlet study resources, etc.)
+  - Prohibited Resource Types:
+    - tests, quizzes, midterms, finals (unless these are practice-study resources provided by the teacher and not are not evaulated assesments)
+    - Assignments or graded problem sets
+    - TBD
+  - **Credit economy:** Upload +3 credits; per‑upvote +1 (cap +10 per item); download costs 3; **signup bonus = 2 free downloads** (non‑transferable vouchers separate from credits. that way, even if we later change the download costs to b a function of rating, new users will receive the same number of free downloads).
   - **Teaser preview:** low‑res first page with “Unlock with 3 credits” overlay (no copy/download until unlocked).
   - **Voting:** upvote/downvote system to promote high-quality uploads.
   - **Reporting & moderation:** categories include IP/cheating/abuse; **moderators = project developers + teachers/TAs** (elevated report weight, takedown ability).
@@ -68,6 +77,8 @@ Guardrails: D1/D7 activation (first upload within 7 days), average upvotes per u
   - Given I uploaded a PDF to a course, when others upvote it, then I earn credits (up to +10 per item) that I can spend to unlock other resources.
   - Given I browse a course, when I toggle “Recent” or “Top,” then the list reorders and remembers my choice next time.
   - Given I see a suspicious upload, when I report it for IP/cheating, then moderators are notified and can takedown quickly.
+  - Given I try to upload a file containing "exam", "midterm", "quiz", etc, based on such specific keywoords the system sends out a warning and may block my upload
+  - Given I upload irrelevant/unusable content, the moderation system can revoke credits or apply a cooldown for uploads
 - **Edge cases:** Missing course → user submits course; moderator approves/denies with reason; dedupe/merge cross‑listed courses.
 
 ---
