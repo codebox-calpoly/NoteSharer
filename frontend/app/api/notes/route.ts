@@ -19,6 +19,7 @@ type VoteStatRow = {
   resource_id: string;
   upvotes: number | null;
   downvotes: number | null;
+  score: number | null;
 };
 
 export async function GET(req: Request) {
@@ -102,23 +103,24 @@ export async function GET(req: Request) {
   if (ids.length > 0) {
     const { data: statsData } = await supabase
       .from("resource_vote_stats")
-      .select<VoteStatRow>("resource_id, upvotes, downvotes")
+      .select<VoteStatRow>("resource_id, upvotes, downvotes, score")
       .in("resource_id", ids);
     voteStats = statsData ?? [];
   }
 
-  const voteMap = new Map<string, { upvotes: number; downvotes: number }>();
+  const voteMap = new Map<string, { upvotes: number; downvotes: number; score: number }>();
   voteStats.forEach((stat) => {
     voteMap.set(stat.resource_id, {
       upvotes: stat.upvotes ?? 0,
       downvotes: stat.downvotes ?? 0,
+      score: stat.score ?? 0,
     });
   });
 
   const normalized = data
     ? await Promise.all(
         data.map(async (row) => {
-          const stats = voteMap.get(row.id) ?? { upvotes: 0, downvotes: 0 };
+          const stats = voteMap.get(row.id) ?? { upvotes: 0, downvotes: 0, score: 0 };
           const base = {
             id: row.id,
             title: row.title,
@@ -128,6 +130,7 @@ export async function GET(req: Request) {
             profile_display_name: row.profiles?.display_name ?? null,
             upvote_count: stats.upvotes,
             downvote_count: stats.downvotes,
+            score: stats.score,
           };
 
           const path = row.preview_key ?? row.file_key;

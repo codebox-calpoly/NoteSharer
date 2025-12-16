@@ -20,6 +20,7 @@ type Note = {
   profile_display_name: string | null;
   upvote_count: number;
   downvote_count: number;
+  score: number;
 };
 
 export default function DashboardPage() {
@@ -300,10 +301,12 @@ export default function DashboardPage() {
                       {" • "}
                       {new Date(note.created_at).toLocaleDateString()}
                     </div>
-                    <div className="text-[11px]">
+                  <div className="text-[11px]">
                       <span className="text-green-200 font-semibold">↑ {note.upvote_count ?? 0}</span>
                       {" / "}
                       <span className="text-red-200 font-semibold">↓ {note.downvote_count ?? 0}</span>
+                      {" • "}
+                      <span className="text-gray-100 font-semibold">Score: {note.score ?? 0}</span>
                     </div>
                   </div>
                 </div>
