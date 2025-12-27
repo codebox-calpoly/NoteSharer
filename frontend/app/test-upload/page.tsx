@@ -1,18 +1,44 @@
 // app/test-upload/page.tsx
 "use client";
 
-import { useState } from "react";
+import type { Session } from "@supabase/supabase-js";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function TestUploadPage() {
+  const router = useRouter();
+  const [ isAuthenticated, setIsAuthenticated] = useState(false);
+
   const [file, setFile] = useState<File | null>(null);
   const [classId, setClassId] = useState("");
   const [title, setTitle] = useState("");
   const [accessToken, setAccessToken] = useState(
-    process.env.NEXT_PUBLIC_TEST_ACCESS_TOKEN ?? "",
+    process.env.NEXT_PUBLIC_TEST_ACCESS_TOKEN ?? ""
   );
   const [result, setResult] = useState<string | null>(null);
 
+    // Authentications
+    useEffect(() => {
+    (async () => {
+      const { data, error } = await supabase.auth.getSession();
+      if (error) {
+        // optional: log
+        console.log("testUploadPage supabase.auth.getSession error:");
+        console.log("\t" + error);
+      }
+      if (!data?.session) {        // not logged in
+        router.replace("/auth");
+        return;
+      }
+
+      setIsAuthenticated(true);
+    })();
+  }, [router]); 
+
+    // File Upload
   const handleSubmit = async (e: React.FormEvent) => {
+
     e.preventDefault();
     if (!file) {
       setResult("No file selected");
@@ -43,7 +69,10 @@ export default function TestUploadPage() {
         payload = text ? { message: text } : null;
       }
     } catch (error) {
-      payload = { error: "Response was not valid JSON", details: String(error) };
+      payload = {
+        error: "Response was not valid JSON",
+        details: String(error),
+      };
     }
 
     setResult(`${res.status}: ${JSON.stringify(payload)}`);
