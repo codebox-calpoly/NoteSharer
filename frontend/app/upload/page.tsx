@@ -161,8 +161,10 @@ export default function UploadPage() {
       };
     }
 
-    setResult(`${res.status}: ${JSON.stringify(payload)}`);
+    router.push("/dashboard");
 
+    //json for deubgging purposes
+    //setResult(`${res.status}: ${JSON.stringify(payload)}`);
 
   };
 
