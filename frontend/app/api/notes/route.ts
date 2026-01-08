@@ -81,7 +81,6 @@ export async function GET(req: Request) {
       `,
       { count: "exact" },
     )
-    .eq("profile_id", user.id)
     .order("created_at", { ascending: sort === "oldest" })
     .range(from, to);
 
