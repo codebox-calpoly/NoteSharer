@@ -15,7 +15,7 @@ export default function UploadPage() {
 
   const [tokenLoaded, setTokenLoaded] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  
+
   const router = useRouter();
 
   const [file, setFile] = useState<File | null>(null);
@@ -236,14 +236,11 @@ export default function UploadPage() {
 
       {!isAuthenticated && (
         <p className="text-sm text-red-600">
-          Checking authentication… If you are not redirected, refresh the
-          page.
+          Checking authentication… If you are not redirected, refresh the page.
         </p>
       )}
 
-      {classesError && (
-        <p className="text-sm text-red-600">{classesError}</p>
-      )}
+      {classesError && <p className="text-sm text-red-600">{classesError}</p>}
 
       <form onSubmit={handleSubmit} className="space-y-3">
         <div>
@@ -328,9 +325,7 @@ export default function UploadPage() {
           />
         </div>*/}
 
-        {submitError && (
-          <p className="text-sm text-red-600">{submitError}</p>
-        )}
+        {submitError && <p className="text-sm text-red-600">{submitError}</p>}
 
         <button type="submit" className="border px-3 py-1">
           Upload
