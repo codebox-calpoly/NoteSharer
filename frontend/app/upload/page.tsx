@@ -4,7 +4,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
-// import "./upload.css";
+import "./upload.css";
 
 export default function UploadPage() {
   const [classes, setClasses] = useState<ClassOption[]>([]);
