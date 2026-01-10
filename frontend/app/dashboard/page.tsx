@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import PDFThumbnail from "@/app/components/pdf/PDFThumbnail";
+import "./dashboard.css";
 
 type ClassOption = {
   id: string;
@@ -304,17 +305,13 @@ export default function DashboardPage() {
         })();
 
   return (
-    <main className="p-6 space-y-6">
+    <main className="dashboard-page">
       {/* Header */}
-      <header className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Dashboard</h1>
-        <button
-          type="button"
-          className="border rounded px-3 py-1 text-sm bg-white text-gray-800"
-          onClick={() => router.replace("/upload")}
-        >
-          {isUploadOpen ? "Cancel" : "Upload"}
-        </button>
+      <header className="dashboard-header">
+        <div>
+          <div className="dashboard-kicker">Notes hub</div>
+          <h1 className="dashboard-title">Dashboard</h1>
+        </div>
       </header>
 
       {/* Class Selection */}
@@ -352,114 +349,142 @@ export default function DashboardPage() {
                   onChange={(e) => setClassSearch(e.target.value)}
                   onClick={(e) => e.stopPropagation()}
                 />
+      <section className="dashboard-controls">
+        <div className="dashboard-control-row">
+          <div className="dashboard-control-group">
+            <div className="dashboard-control">
+              <label className="dashboard-label">Class</label>
+
+              <div
+                className="dashboard-select"
+                onClick={() => setIsClassDropdownOpen((open) => !open)}
+              >
+                <span className="dashboard-select-text">
+                  {selectedClassLabel}
+                </span>
+                <span className="dashboard-select-caret">▾</span>
               </div>
 
-              <button
-                type="button"
-                className="w-full text-left px-3 py-2 text-sm text-gray-800 hover:bg-gray-100"
-                onClick={() => handleSelectClass("all")}
-              >
-                All classes
-              </button>
+              {isClassDropdownOpen && (
+                <div className="dashboard-dropdown">
+                  <div className="dashboard-dropdown-search">
+                    <input
+                      type="text"
+                      className="dashboard-search-input"
+                      placeholder="Search classes…"
+                      value={classSearch}
+                      onChange={(e) => setClassSearch(e.target.value)}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </div>
 
-              {filteredClasses.map((c) => (
-                <button
-                  key={c.id}
-                  type="button"
-                  className="w-full text-left px-3 py-2 text-sm text-gray-800 hover:bg-gray-100"
-                  onClick={() => handleSelectClass(c.id)}
-                >
-                  {c.name}
-                  {c.code ? ` (${c.code})` : ""}
-                </button>
-              ))}
+                  <button
+                    type="button"
+                    className="dashboard-dropdown-item"
+                    onClick={() => handleSelectClass("all")}
+                  >
+                    All classes
+                  </button>
 
-              {filteredClasses.length === 0 && (
-                <div className="px-3 py-2 text-xs text-gray-700">
-                  No classes match “{classSearch}”
+                  {filteredClasses.map((c) => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      className="dashboard-dropdown-item"
+                      onClick={() => handleSelectClass(c.id)}
+                    >
+                      {c.name}
+                      {c.code ? ` (${c.code})` : ""}
+                    </button>
+                  ))}
+
+                  {filteredClasses.length === 0 && (
+                    <div className="dashboard-empty">
+                      No classes match “{classSearch}”
+                    </div>
+                  )}
                 </div>
               )}
             </div>
-          )}
-        </div>
 
-        {/* Filter Selection */}
-        <div className="relative">
-          <label className="block text-sm mb-1">Sort</label>
-          <button
-            type="button"
-            className="border rounded px-3 py-1 text-sm bg-white text-gray-800"
-            onClick={() => setIsFilterOpen((open) => !open)}
-          >
-            Filters <span className="text-gray-700">▾</span>
-          </button>
-          {isFilterOpen && (
-            <div className="absolute z-10 mt-1 w-40 border rounded bg-white shadow-md overflow-hidden">
+            {/* Filter Selection */}
+            <div className="dashboard-control">
+              <label className="dashboard-label">Sort</label>
               <button
                 type="button"
-                className="w-full text-left px-3 py-2 text-sm text-gray-800 hover:bg-gray-100"
-                onClick={() => handleSelectSort("newest")}
+                className="dashboard-select-button"
+                onClick={() => setIsFilterOpen((open) => !open)}
               >
-                Newest
+                Filters <span className="dashboard-select-caret">▾</span>
               </button>
-              <button
-                type="button"
-                className="w-full text-left px-3 py-2 text-sm text-gray-800 hover:bg-gray-100"
-                onClick={() => handleSelectSort("oldest")}
-              >
-                Oldest
-              </button>
+              {isFilterOpen && (
+                <div className="dashboard-dropdown dashboard-dropdown-compact">
+                  <button
+                    type="button"
+                    className="dashboard-dropdown-item"
+                    onClick={() => handleSelectSort("newest")}
+                  >
+                    Newest
+                  </button>
+                  <button
+                    type="button"
+                    className="dashboard-dropdown-item"
+                    onClick={() => handleSelectSort("oldest")}
+                  >
+                    Oldest
+                  </button>
+                </div>
+              )}
             </div>
-          )}
+          </div>
+          <div className="dashboard-upload-slot">
+            <button
+              type="button"
+              className="dashboard-upload"
+              onClick={() => router.replace("/upload")}
+            >
+              {isUploadOpen ? "Cancel" : "Upload"}
+            </button>
+          </div>
         </div>
       </section>
 
       {/* Notes list */}
       <section>
-        {classesError && (
-          <p className="text-sm text-red-500 mb-2">{classesError}</p>
-        )}
+        {classesError && <p className="dashboard-error">{classesError}</p>}
 
-        {notesError && (
-          <p className="text-sm text-red-500 mb-2">{notesError}</p>
-        )}
+        {notesError && <p className="dashboard-error">{notesError}</p>}
 
-        <ul className="divide-y">
+        <ul className="dashboard-grid">
           {notes.map((note) => (
-            <li key={note.id} className="py-3">
-              <div className="flex gap-4 items-start">
-                <div className="relative w-[200px]">
-                  {note.previewUrl ? (
-                    <PDFThumbnail fileUrl={note.previewUrl} width={200} />
-                  ) : (
-                    <div className="w-[200px] h-[280px] bg-gray-100 border rounded flex items-center justify-center text-xs text-gray-600">
-                      No preview
-                    </div>
-                  )}
-                  <div className="absolute inset-x-0 bottom-0 h-1/3 bg-black/60 text-white px-3 py-2 flex flex-col justify-end gap-1 rounded-b">
-                    <div className="text-sm font-semibold leading-tight line-clamp-2">
-                      {note.title}
-                    </div>
-                    <div className="text-[11px] text-gray-100 leading-tight">
-                      <span className="font-medium">
-                        {note.profile_display_name ?? "Unknown uploader"}
-                      </span>
-                      {" • "}
-                      {new Date(note.created_at).toLocaleDateString()}
-                    </div>
-                    <div className="text-[11px] text-gray-100">
-                      <span className="text-green-200 font-semibold">
-                        ↑ {note.upvote_count ?? 0}
-                      </span>
-                      {" / "}
-                      <span className="text-red-200 font-semibold">
-                        ↓ {note.downvote_count ?? 0}
-                      </span>
-                      {" • "}
-                      <span className="font-semibold">
-                        Score: {note.score ?? 0}
-                      </span>
-                    </div>
+            <li key={note.id} className="dashboard-card">
+              <div className="dashboard-card-media">
+                {note.previewUrl ? (
+                  <PDFThumbnail fileUrl={note.previewUrl} width={240} />
+                ) : (
+                  <div className="dashboard-no-preview">No preview</div>
+                )}
+                <div className="dashboard-card-overlay">
+                  <div className="dashboard-card-title">{note.title}</div>
+                  <div className="dashboard-card-meta">
+                    <span className="dashboard-card-author">
+                      {note.profile_display_name ?? "Unknown uploader"}
+                    </span>
+                    {" • "}
+                    {new Date(note.created_at).toLocaleDateString()}
+                  </div>
+                  <div className="dashboard-card-stats">
+                    <span className="dashboard-votes-up">
+                      ↑ {note.upvote_count ?? 0}
+                    </span>
+                    {" / "}
+                    <span className="dashboard-votes-down">
+                      ↓ {note.downvote_count ?? 0}
+                    </span>
+                    {" • "}
+                    <span className="dashboard-score">
+                      Score: {note.score ?? 0}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -467,26 +492,24 @@ export default function DashboardPage() {
           ))}
         </ul>
 
-        {loadingNotes && (
-          <p className="mt-3 text-sm text-gray-600">Loading notes…</p>
-        )}
+        {loadingNotes && <p className="dashboard-loading">Loading notes…</p>}
 
         {!loadingNotes && hasMore && (
           <button
             type="button"
             onClick={handleLoadMore}
-            className="mt-4 border rounded px-3 py-1 text-sm text-gray-800 bg-white"
+            className="dashboard-load-more"
           >
             Load more
           </button>
         )}
 
         {!loadingNotes && !hasMore && notes.length > 0 && (
-          <p className="mt-3 text-xs text-gray-600">No more notes to load.</p>
+          <p className="dashboard-subtle">No more notes to load.</p>
         )}
 
         {!loadingNotes && notes.length === 0 && !notesError && (
-          <p className="mt-3 text-sm text-gray-600">No notes found.</p>
+          <p className="dashboard-empty-state">No notes found.</p>
         )}
       </section>
 
