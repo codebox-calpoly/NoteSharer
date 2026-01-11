@@ -4,7 +4,13 @@
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
+import { Document, Page, pdfjs } from "react-pdf";
+import "react-pdf/dist/esm/Page/AnnotationLayer.css";
+import "react-pdf/dist/esm/Page/TextLayer.css";
 import "./upload.css";
+
+// Configure PDF.js worker
+pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.mjs`;
 
 export default function UploadPage() {
   const [classes, setClasses] = useState<ClassOption[]>([]);
@@ -19,6 +25,10 @@ export default function UploadPage() {
   const router = useRouter();
 
   const [file, setFile] = useState<File | null>(null);
+  const [filePreviewUrl, setFilePreviewUrl] = useState<string | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
+  const [numPages, setNumPages] = useState<number | null>(null);
+  const [pageNumber, setPageNumber] = useState(1);
   const [title, setTitle] = useState("");
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [result, setResult] = useState<string | null>(null);
@@ -122,6 +132,15 @@ export default function UploadPage() {
     }, 1500);
     return () => window.clearTimeout(timer);
   }, [isSuccess, router]);
+
+  // Cleanup preview URL when component unmounts or file changes
+  useEffect(() => {
+    return () => {
+      if (filePreviewUrl) {
+        URL.revokeObjectURL(filePreviewUrl);
+      }
+    };
+  }, [filePreviewUrl]);
 
   // File Upload
   const handleSubmit = async (e: React.FormEvent) => {
@@ -274,7 +293,20 @@ export default function UploadPage() {
                 className="upload-input upload-input--file"
                 type="file"
                 accept="application/pdf"
-                onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                onChange={(e) => {
+                  const selectedFile = e.target.files?.[0] ?? null;
+                  setFile(selectedFile);
+                  // Create preview URL for the selected file
+                  if (selectedFile) {
+                    const url = URL.createObjectURL(selectedFile);
+                    setFilePreviewUrl(url);
+                  } else {
+                    if (filePreviewUrl) {
+                      URL.revokeObjectURL(filePreviewUrl);
+                    }
+                    setFilePreviewUrl(null);
+                  }
+                }}
                 style={{ display: "none" }}
               />
               <label
@@ -284,6 +316,17 @@ export default function UploadPage() {
                 {file ? file.name : "Choose File"}
               </label>
             </div>
+            {file && (
+              <button
+                type="button"
+                className="upload-preview-button"
+                onClick={() => {
+                  setShowPreview(true);
+                }}
+              >
+                Preview PDF
+              </button>
+            )}
           </div>
 
           <div className="upload-field">
@@ -379,6 +422,85 @@ export default function UploadPage() {
           <li>Make sure the content is legible on mobile screens.</li>
         </ul>
       </aside>
+
+      {/* PDF Preview Modal */}
+      {showPreview && filePreviewUrl && (
+        <div
+          className="upload-preview-modal"
+          onClick={() => setShowPreview(false)}
+        >
+          <div
+            className="upload-preview-modal-content"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="upload-preview-modal-header">
+              <h3 className="upload-preview-modal-title">
+                {file?.name || "PDF Preview"}
+              </h3>
+              <button
+                type="button"
+                className="upload-preview-modal-close"
+                onClick={() => setShowPreview(false)}
+                aria-label="Close preview"
+              >
+                ×
+              </button>
+            </div>
+            <div className="upload-preview-modal-body">
+              <Document
+                file={filePreviewUrl}
+                onLoadSuccess={({ numPages }) => {
+                  setNumPages(numPages);
+                  setPageNumber(1);
+                }}
+                onLoadError={(error) => {
+                  console.error("PDF load error:", error);
+                }}
+                loading={
+                  <div className="upload-preview-loading">Loading PDF...</div>
+                }
+                error={
+                  <div className="upload-preview-error">
+                    Failed to load PDF preview
+                  </div>
+                }
+              >
+                <Page
+                  pageNumber={pageNumber}
+                  width={Math.min(800, typeof window !== "undefined" ? window.innerWidth - 100 : 800)}
+                  renderAnnotationLayer={false}
+                  renderTextLayer={true}
+                />
+              </Document>
+              {numPages && numPages > 1 && (
+                <div className="upload-preview-controls">
+                  <button
+                    type="button"
+                    onClick={() => setPageNumber((prev) => Math.max(1, prev - 1))}
+                    disabled={pageNumber <= 1}
+                    className="upload-preview-nav-button"
+                  >
+                    Previous
+                  </button>
+                  <span className="upload-preview-page-info">
+                    Page {pageNumber} of {numPages}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setPageNumber((prev) => Math.min(numPages, prev + 1))
+                    }
+                    disabled={pageNumber >= numPages}
+                    className="upload-preview-nav-button"
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

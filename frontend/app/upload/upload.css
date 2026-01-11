@@ -201,6 +201,156 @@
   box-shadow: 0 0 0 3px rgba(59, 111, 77, 0.1);
 }
 
+.upload-preview-button {
+  margin-top: 0.75rem;
+  padding: 0.6rem 1.2rem;
+  border-radius: 12px;
+  border: 1px solid rgba(59, 111, 77, 0.3);
+  background: rgba(59, 111, 77, 0.08);
+  color: var(--green-500);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+  width: 100%;
+}
+
+.upload-preview-button:hover {
+  background: rgba(59, 111, 77, 0.15);
+  border-color: var(--green-500);
+}
+
+/* PDF Preview Modal */
+.upload-preview-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(31, 42, 36, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 2rem;
+  overflow-y: auto;
+}
+
+.upload-preview-modal-content {
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 24px 50px rgba(31, 42, 36, 0.3);
+  max-width: 90vw;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.upload-preview-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid rgba(59, 111, 77, 0.15);
+  background: #fefdf9;
+}
+
+.upload-preview-modal-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.upload-preview-modal-close {
+  background: transparent;
+  border: none;
+  font-size: 2rem;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: background 0.2s ease, color 0.2s ease;
+  margin-left: 1rem;
+}
+
+.upload-preview-modal-close:hover {
+  background: rgba(59, 111, 77, 0.1);
+  color: var(--green-500);
+}
+
+.upload-preview-modal-body {
+  padding: 2rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #f8f6ec;
+}
+
+.upload-preview-loading,
+.upload-preview-error {
+  padding: 3rem;
+  text-align: center;
+  color: var(--muted);
+}
+
+.upload-preview-error {
+  color: #b91c1c;
+}
+
+.upload-preview-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid rgba(59, 111, 77, 0.15);
+}
+
+.upload-preview-nav-button {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  border: 1px solid rgba(59, 111, 77, 0.3);
+  background: #fefdf9;
+  color: var(--green-500);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.upload-preview-nav-button:hover:not(:disabled) {
+  background: rgba(59, 111, 77, 0.1);
+  border-color: var(--green-500);
+}
+
+.upload-preview-nav-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.upload-preview-page-info {
+  font-size: 0.9rem;
+  color: var(--muted);
+  font-weight: 500;
+  min-width: 100px;
+  text-align: center;
+}
+
 .upload-input--search {
   border-radius: 12px;
 }
@@ -430,6 +580,24 @@
   .upload-sidecard,
   .upload-hero {
     padding: 2rem 1.5rem;
+  }
+
+  .upload-preview-modal {
+    padding: 1rem;
+  }
+
+  .upload-preview-modal-content {
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: 16px;
+  }
+
+  .upload-preview-modal-header {
+    padding: 1rem 1.5rem;
+  }
+
+  .upload-preview-modal-body {
+    padding: 1rem;
   }
 }
 
