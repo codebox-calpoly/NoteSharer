@@ -314,41 +314,6 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      {/* Class Selection */}
-      <section className="flex flex-wrap gap-4 items-center">
-        <div className="relative min-w-[220px]">
-          <label className="block text-sm mb-1">Class</label>
-
-          <div
-            className="border rounded px-2 py-1 flex items-center justify-between cursor-pointer bg-white"
-            onClick={() => setIsClassDropdownOpen((open) => !open)}
-          >
-            <span className="text-sm truncate text-gray-800">
-              {selectedClassLabel}
-            </span>
-            <span className="ml-2 text-xs text-gray-700">▾</span>
-          </div>
-
-          {isClassDropdownOpen && (
-            <div className="absolute z-10 mt-1 w-full border rounded bg-white shadow-md max-h-64 overflow-y-auto">
-              <div className="course-request-row">
-                <button
-                  type="button"
-                  className="course-request-button"
-                  onClick={openCourseRequest}
-                >
-                  Request a new course
-                </button>
-              </div>
-              <div className="p-2 border-b">
-                <input
-                  type="text"
-                  className="w-full border px-2 py-1 text-sm text-gray-800 placeholder:text-gray-500"
-                  placeholder="Search classes…"
-                  value={classSearch}
-                  onChange={(e) => setClassSearch(e.target.value)}
-                  onClick={(e) => e.stopPropagation()}
-                />
       <section className="dashboard-controls">
         <div className="dashboard-control-row">
           <div className="dashboard-control-group">
@@ -367,6 +332,15 @@ export default function DashboardPage() {
 
               {isClassDropdownOpen && (
                 <div className="dashboard-dropdown">
+                  <div className="course-request-row">
+                    <button
+                      type="button"
+                      className="course-request-button"
+                      onClick={openCourseRequest}
+                    >
+                      Request a new course
+                    </button>
+                  </div>
                   <div className="dashboard-dropdown-search">
                     <input
                       type="text"
