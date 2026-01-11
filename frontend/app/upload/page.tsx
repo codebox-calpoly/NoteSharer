@@ -268,12 +268,22 @@ export default function UploadPage() {
         <form onSubmit={handleSubmit} className="upload-form">
           <div className="upload-field">
             <label className="upload-label">File (PDF)</label>
-            <input
-              className="upload-input upload-input--file"
-              type="file"
-              accept="application/pdf"
-              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-            />
+            <div className="upload-file-wrapper">
+              <input
+                id="file-input"
+                className="upload-input upload-input--file"
+                type="file"
+                accept="application/pdf"
+                onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                style={{ display: "none" }}
+              />
+              <label
+                htmlFor="file-input"
+                className="upload-file-label"
+              >
+                {file ? file.name : "Choose File"}
+              </label>
+            </div>
           </div>
 
           <div className="upload-field">
