@@ -4,7 +4,13 @@
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
+import { Document, Page, pdfjs } from "react-pdf";
+import "react-pdf/dist/esm/Page/AnnotationLayer.css";
+import "react-pdf/dist/esm/Page/TextLayer.css";
 import "./upload.css";
+
+// Configure PDF.js worker
+pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.mjs`;
 
 type ClassOption = {
   id: string;
@@ -45,6 +51,10 @@ export default function UploadPage() {
   const router = useRouter();
 
   const [file, setFile] = useState<File | null>(null);
+  const [filePreviewUrl, setFilePreviewUrl] = useState<string | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
+  const [numPages, setNumPages] = useState<number | null>(null);
+  const [pageNumber, setPageNumber] = useState(1);
   const [title, setTitle] = useState("");
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [result, setResult] = useState<string | null>(null);
@@ -247,6 +257,15 @@ export default function UploadPage() {
     return () => window.clearTimeout(timer);
   }, [isSuccess, router]);
 
+  // Cleanup preview URL when component unmounts or file changes
+  useEffect(() => {
+    return () => {
+      if (filePreviewUrl) {
+        URL.revokeObjectURL(filePreviewUrl);
+      }
+    };
+  }, [filePreviewUrl]);
+
   // File Upload
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -355,45 +374,103 @@ export default function UploadPage() {
   }
 
   return (
-    <main className="m-4 border rounded bg-blue shadow-sm p-6 space-y-4">
-      <h1 className="text-xl font-semibold">Upload Notes</h1>
+    <main className="upload-page">
+      <header className="upload-hero">
+        <div className="upload-hero-content">
+          <p className="upload-eyebrow">Cal Poly SLO Notes</p>
+          <h1 className="upload-title">Upload your notes</h1>
+          <p className="upload-subtitle">
+            Share course materials with fellow Mustangs in a clean, consistent
+            format. PDFs keep the library tidy and searchable.
+          </p>
+        </div>
+        <div className="upload-hero-badge" aria-hidden="true">
+          PDF
+        </div>
+      </header>
 
-      {!isAuthenticated && (
-        <p className="text-sm text-red-600">
-          Checking authentication… If you are not redirected, refresh the page.
-        </p>
-      )}
-
-      {classesError && <p className="text-sm text-red-600">{classesError}</p>}
-
-      <form onSubmit={handleSubmit} className="space-y-3">
-        <div>
-          <label className="block text-sm mb-1">File (PDF)</label>
-          <input
-            type="file"
-            accept="application/pdf"
-            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-          />
+      <section className="upload-panel">
+        <div className="upload-panel-header">
+          <h2 className="upload-panel-title">Add a new file</h2>
+          <p className="upload-panel-subtitle">
+            Select your class, upload the PDF, and add a quick title.
+          </p>
         </div>
 
-        <div>
-          {/* Class Selection */}
-          <section className="flex flex-wrap gap-4 items-center">
-            <div className="relative min-w-[220px]">
-              <label className="block text-sm mb-1">Class</label>
+        {!isAuthenticated && (
+          <p className="upload-alert upload-alert--info">
+            Checking authentication… If you are not redirected, refresh the
+            page.
+          </p>
+        )}
 
-              <div
-                className="border rounded px-2 py-1 flex items-center justify-between cursor-pointer bg-white"
+        {classesError && (
+          <p className="upload-alert upload-alert--error">{classesError}</p>
+        )}
+
+        <form onSubmit={handleSubmit} className="upload-form">
+          <div className="upload-field">
+            <label className="upload-label">File (PDF)</label>
+            <div className="upload-file-wrapper">
+              <input
+                id="file-input"
+                className="upload-input upload-input--file"
+                type="file"
+                accept="application/pdf"
+                onChange={(e) => {
+                  const selectedFile = e.target.files?.[0] ?? null;
+                  setFile(selectedFile);
+                  // Create preview URL for the selected file
+                  if (selectedFile) {
+                    const url = URL.createObjectURL(selectedFile);
+                    setFilePreviewUrl(url);
+                  } else {
+                    if (filePreviewUrl) {
+                      URL.revokeObjectURL(filePreviewUrl);
+                    }
+                    setFilePreviewUrl(null);
+                  }
+                }}
+                style={{ display: "none" }}
+              />
+              <label
+                htmlFor="file-input"
+                className="upload-file-label"
+              >
+                {file ? file.name : "Choose File"}
+              </label>
+            </div>
+            {file && (
+              <button
+                type="button"
+                className="upload-preview-button"
+                onClick={() => {
+                  setShowPreview(true);
+                }}
+              >
+                Preview PDF
+              </button>
+            )}
+          </div>
+
+          <div className="upload-field">
+            <label className="upload-label">Class</label>
+            <div className="upload-select">
+              <button
+                className="upload-select-trigger"
+                type="button"
                 onClick={() => setIsClassDropdownOpen((open) => !open)}
               >
-                <span className="text-sm truncate text-gray-800">
+                <span className="upload-select-value">
                   {selectedClassLabel}
                 </span>
-                <span className="ml-2 text-xs text-gray-700">▾</span>
-              </div>
+                <span className="upload-select-caret" aria-hidden="true">
+                  ▾
+                </span>
+              </button>
 
               {isClassDropdownOpen && (
-                <div className="absolute z-10 mt-1 w-full border rounded bg-white shadow-md max-h-64 overflow-y-auto">
+                <div className="upload-select-menu">
                   <div className="course-request-row">
                     <button
                       type="button"
@@ -403,10 +480,10 @@ export default function UploadPage() {
                       Request a new course
                     </button>
                   </div>
-                  <div className="p-2 border-b">
+                  <div className="upload-select-search">
                     <input
                       type="text"
-                      className="w-full border px-2 py-1 text-sm text-gray-800 placeholder:text-gray-500"
+                      className="upload-input upload-input--search"
                       placeholder="Search classes…"
                       value={classSearch}
                       onChange={(e) => setClassSearch(e.target.value)}
@@ -418,7 +495,7 @@ export default function UploadPage() {
                     <button
                       key={c.id}
                       type="button"
-                      className="w-full text-left px-3 py-2 text-sm text-gray-800 hover:bg-gray-100"
+                      className="upload-select-option"
                       onClick={() => handleSelectClass(c.id)}
                     >
                       {c.name}
@@ -427,24 +504,24 @@ export default function UploadPage() {
                   ))}
 
                   {filteredClasses.length === 0 && (
-                    <div className="px-3 py-2 text-xs text-gray-700">
+                    <div className="upload-select-empty">
                       No classes match “{classSearch}”
                     </div>
                   )}
                 </div>
               )}
             </div>
-          </section>
-        </div>
+          </div>
 
-        <div>
-          <label className="block text-sm mb-1">Note title</label>
-          <input
-            className="border px-2 py-1 w-full"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-        </div>
+          <div className="upload-field">
+            <label className="upload-label">Note title</label>
+            <input
+              className="upload-input"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Example: Midterm review sheet"
+            />
+          </div>
 
         {/* remove in production, kept for testing purposes */}
 
@@ -458,17 +535,104 @@ export default function UploadPage() {
           />
         </div>*/}
 
-        {submitError && <p className="text-sm text-red-600">{submitError}</p>}
+          {submitError && (
+            <p className="upload-alert upload-alert--error">{submitError}</p>
+          )}
 
-        <button type="submit" className="border px-3 py-1">
-          Upload
-        </button>
-      </form>
+          <button type="submit" className="upload-submit">
+            Upload notes
+          </button>
+        </form>
 
-      {result && (
-        <pre className="mt-4 text-xs whitespace-pre-wrap border p-2">
-          {result}
-        </pre>
+        {result && <pre className="upload-result">{result}</pre>}
+      </section>
+
+      <aside className="upload-sidecard">
+        <h3 className="upload-sidecard-title">Before you upload</h3>
+        <ul className="upload-sidecard-list">
+          <li>Name files clearly and keep titles short.</li>
+          <li>Remove any personal contact info from the PDF.</li>
+          <li>Make sure the content is legible on mobile screens.</li>
+        </ul>
+      </aside>
+
+      {/* PDF Preview Modal */}
+      {showPreview && filePreviewUrl && (
+        <div
+          className="upload-preview-modal"
+          onClick={() => setShowPreview(false)}
+        >
+          <div
+            className="upload-preview-modal-content"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="upload-preview-modal-header">
+              <h3 className="upload-preview-modal-title">
+                {file?.name || "PDF Preview"}
+              </h3>
+              <button
+                type="button"
+                className="upload-preview-modal-close"
+                onClick={() => setShowPreview(false)}
+                aria-label="Close preview"
+              >
+                ×
+              </button>
+            </div>
+            <div className="upload-preview-modal-body">
+              <Document
+                file={filePreviewUrl}
+                onLoadSuccess={({ numPages }) => {
+                  setNumPages(numPages);
+                  setPageNumber(1);
+                }}
+                onLoadError={(error) => {
+                  console.error("PDF load error:", error);
+                }}
+                loading={
+                  <div className="upload-preview-loading">Loading PDF...</div>
+                }
+                error={
+                  <div className="upload-preview-error">
+                    Failed to load PDF preview
+                  </div>
+                }
+              >
+                <Page
+                  pageNumber={pageNumber}
+                  width={Math.min(800, typeof window !== "undefined" ? window.innerWidth - 100 : 800)}
+                  renderAnnotationLayer={false}
+                  renderTextLayer={true}
+                />
+              </Document>
+              {numPages && numPages > 1 && (
+                <div className="upload-preview-controls">
+                  <button
+                    type="button"
+                    onClick={() => setPageNumber((prev) => Math.max(1, prev - 1))}
+                    disabled={pageNumber <= 1}
+                    className="upload-preview-nav-button"
+                  >
+                    Previous
+                  </button>
+                  <span className="upload-preview-page-info">
+                    Page {pageNumber} of {numPages}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setPageNumber((prev) => Math.min(numPages, prev + 1))
+                    }
+                    disabled={pageNumber >= numPages}
+                    className="upload-preview-nav-button"
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       )}
 
       {isCourseRequestOpen && (
