@@ -66,10 +66,50 @@ export default function AuthCallbackPage() {
 
   useEffect(() => {
     const handleRedirect = async () => {
+      const pauseBeforeRedirect = async () => {
+        await new Promise((resolve) => {
+          setTimeout(resolve, 2500);
+        });
+      };
+
+      const url = new URL(window.location.href);
+      const errorDescription =
+        url.searchParams.get("error_description") || url.searchParams.get("error");
+
+      if (errorDescription) {
+        console.error("Supabase auth redirect error", errorDescription);
+        setStatus(`We could not sign you in: ${errorDescription}`);
+        await pauseBeforeRedirect();
+        router.replace("/auth");
+        return;
+      }
+
+      const code = url.searchParams.get("code");
+      if (code) {
+        setStatus("Completing sign-in...");
+        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(
+          code
+        );
+        if (exchangeError) {
+          console.error("Failed to exchange auth code", exchangeError);
+          setStatus("We could not sign you in. Please try again.");
+          await pauseBeforeRedirect();
+          router.replace("/auth");
+          return;
+        }
+      }
+
       setStatus("Validating session...");
       const { data, error } = await supabase.auth.getSession();
 
       if (error || !data?.session) {
+        const hasCode = Boolean(code);
+        setStatus(
+          hasCode
+            ? "We could not find a session for this link. Please request a new one."
+            : "We could not find a session. Open the link in the same browser profile where you requested it.",
+        );
+        await pauseBeforeRedirect();
         router.replace("/auth");
         return;
       }
@@ -96,6 +136,7 @@ export default function AuthCallbackPage() {
           } catch (creationError) {
             console.error("Failed to create profile", creationError);
             setStatus("We could not set up your profile. Please try again.");
+            await pauseBeforeRedirect();
             await supabase.auth.signOut();
             router.replace("/auth");
             return;
@@ -103,6 +144,7 @@ export default function AuthCallbackPage() {
         }
         console.error("Failed to fetch onboarding status", profileError);
         setStatus("We could not load your profile. Please sign in again.");
+        await pauseBeforeRedirect();
         await supabase.auth.signOut();
         router.replace("/auth");
         return;

@@ -89,6 +89,7 @@
   cursor: not-allowed;
 }
 
+
 .auth-success,
 .auth-error {
   margin: 0;
@@ -149,4 +150,5 @@
   .auth-button-primary:hover {
     background: #e5e5e5;
   }
+
 }
