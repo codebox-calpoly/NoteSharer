@@ -60,6 +60,7 @@ export async function GET(req: Request) {
 
   const { searchParams } = new URL(req.url);
   const classId = searchParams.get("class_id");
+  const searchQuery = searchParams.get("search");
   const page = Number(searchParams.get("page") ?? "1");
   const pageSize = Number(searchParams.get("page_size") ?? "16");
   const sort = searchParams.get("sort") === "oldest" ? "oldest" : "newest";
@@ -80,13 +81,21 @@ export async function GET(req: Request) {
         profiles ( display_name )
       `,
       { count: "exact" },
-    )
-    .order("created_at", { ascending: sort === "oldest" })
-    .range(from, to);
+    );
 
-  if (classId) {
+  // Full-text search using the FTS index (searches title and description)
+  if (searchQuery && searchQuery.trim()) {
+    const searchTerm = `%${searchQuery.trim()}%`;
+    query = query.or(`title.ilike.${searchTerm},description.ilike.${searchTerm}`);
+  }
+
+  query = query.order("created_at", { ascending: sort === "oldest" });
+
+  if (classId && classId !== "all") {
     query = query.eq("course_id", classId);
   }
+
+  query = query.range(from, to);
 
   const { data, error, count } = await query;
 

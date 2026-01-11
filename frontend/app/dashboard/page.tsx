@@ -52,6 +52,7 @@ export default function DashboardPage() {
   const [isClassDropdownOpen, setIsClassDropdownOpen] = useState(false);
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [noteSearch, setNoteSearch] = useState("");
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [tokenLoaded, setTokenLoaded] = useState(false);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
@@ -144,6 +145,10 @@ export default function DashboardPage() {
         params.set("class_id", selectedClassId);
       }
 
+      if (noteSearch.trim()) {
+        params.set("search", noteSearch.trim());
+      }
+
       try {
         const res = await fetch(`/api/notes?${params.toString()}`, {
           headers: accessToken
@@ -182,7 +187,7 @@ export default function DashboardPage() {
     };
 
     fetchNotes();
-  }, [page, selectedClassId, sortOrder, accessToken, tokenLoaded]);
+  }, [page, selectedClassId, sortOrder, noteSearch, accessToken, tokenLoaded]);
 
   const handleSelectClass = (id: string | "all") => {
     setSelectedClassId(id);
@@ -190,6 +195,13 @@ export default function DashboardPage() {
     setNotes([]);
     setIsClassDropdownOpen(false);
     setClassSearch("");
+    setHasMore(false);
+  };
+
+  const handleSearchChange = (value: string) => {
+    setNoteSearch(value);
+    setPage(1);
+    setNotes([]);
     setHasMore(false);
   };
 
@@ -317,6 +329,18 @@ export default function DashboardPage() {
       <section className="dashboard-controls">
         <div className="dashboard-control-row">
           <div className="dashboard-control-group">
+            {/* Note Search */}
+            <div className="dashboard-control">
+              <label className="dashboard-label">Search notes</label>
+              <input
+                type="text"
+                className="dashboard-search-input"
+                placeholder="Type to search notes by title..."
+                value={noteSearch}
+                onChange={(e) => handleSearchChange(e.target.value)}
+              />
+            </div>
+
             <div className="dashboard-control">
               <label className="dashboard-label">Class</label>
 
