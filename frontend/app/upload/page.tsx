@@ -231,49 +231,73 @@ export default function UploadPage() {
   }
 
   return (
-    <main className="m-4 border rounded bg-blue shadow-sm p-6 space-y-4">
-      <h1 className="text-xl font-semibold">Upload Notes</h1>
+    <main className="upload-page">
+      <header className="upload-hero">
+        <div className="upload-hero-content">
+          <p className="upload-eyebrow">Cal Poly SLO Notes</p>
+          <h1 className="upload-title">Upload your notes</h1>
+          <p className="upload-subtitle">
+            Share course materials with fellow Mustangs in a clean, consistent
+            format. PDFs keep the library tidy and searchable.
+          </p>
+        </div>
+        <div className="upload-hero-badge" aria-hidden="true">
+          PDF
+        </div>
+      </header>
 
-      {!isAuthenticated && (
-        <p className="text-sm text-red-600">
-          Checking authentication… If you are not redirected, refresh the page.
-        </p>
-      )}
-
-      {classesError && <p className="text-sm text-red-600">{classesError}</p>}
-
-      <form onSubmit={handleSubmit} className="space-y-3">
-        <div>
-          <label className="block text-sm mb-1">File (PDF)</label>
-          <input
-            type="file"
-            accept="application/pdf"
-            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-          />
+      <section className="upload-panel">
+        <div className="upload-panel-header">
+          <h2 className="upload-panel-title">Add a new file</h2>
+          <p className="upload-panel-subtitle">
+            Select your class, upload the PDF, and add a quick title.
+          </p>
         </div>
 
-        <div>
-          {/* Class Selection */}
-          <section className="flex flex-wrap gap-4 items-center">
-            <div className="relative min-w-[220px]">
-              <label className="block text-sm mb-1">Class</label>
+        {!isAuthenticated && (
+          <p className="upload-alert upload-alert--info">
+            Checking authentication… If you are not redirected, refresh the
+            page.
+          </p>
+        )}
 
-              <div
-                className="border rounded px-2 py-1 flex items-center justify-between cursor-pointer bg-white"
+        {classesError && (
+          <p className="upload-alert upload-alert--error">{classesError}</p>
+        )}
+
+        <form onSubmit={handleSubmit} className="upload-form">
+          <div className="upload-field">
+            <label className="upload-label">File (PDF)</label>
+            <input
+              className="upload-input upload-input--file"
+              type="file"
+              accept="application/pdf"
+              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            />
+          </div>
+
+          <div className="upload-field">
+            <label className="upload-label">Class</label>
+            <div className="upload-select">
+              <button
+                className="upload-select-trigger"
+                type="button"
                 onClick={() => setIsClassDropdownOpen((open) => !open)}
               >
-                <span className="text-sm truncate text-gray-800">
+                <span className="upload-select-value">
                   {selectedClassLabel}
                 </span>
-                <span className="ml-2 text-xs text-gray-700">▾</span>
-              </div>
+                <span className="upload-select-caret" aria-hidden="true">
+                  ▾
+                </span>
+              </button>
 
               {isClassDropdownOpen && (
-                <div className="absolute z-10 mt-1 w-full border rounded bg-white shadow-md max-h-64 overflow-y-auto">
-                  <div className="p-2 border-b">
+                <div className="upload-select-menu">
+                  <div className="upload-select-search">
                     <input
                       type="text"
-                      className="w-full border px-2 py-1 text-sm text-gray-800 placeholder:text-gray-500"
+                      className="upload-input upload-input--search"
                       placeholder="Search classes…"
                       value={classSearch}
                       onChange={(e) => setClassSearch(e.target.value)}
@@ -285,7 +309,7 @@ export default function UploadPage() {
                     <button
                       key={c.id}
                       type="button"
-                      className="w-full text-left px-3 py-2 text-sm text-gray-800 hover:bg-gray-100"
+                      className="upload-select-option"
                       onClick={() => handleSelectClass(c.id)}
                     >
                       {c.name}
@@ -294,24 +318,24 @@ export default function UploadPage() {
                   ))}
 
                   {filteredClasses.length === 0 && (
-                    <div className="px-3 py-2 text-xs text-gray-700">
+                    <div className="upload-select-empty">
                       No classes match “{classSearch}”
                     </div>
                   )}
                 </div>
               )}
             </div>
-          </section>
-        </div>
+          </div>
 
-        <div>
-          <label className="block text-sm mb-1">Note title</label>
-          <input
-            className="border px-2 py-1 w-full"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-        </div>
+          <div className="upload-field">
+            <label className="upload-label">Note title</label>
+            <input
+              className="upload-input"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Example: Midterm review sheet"
+            />
+          </div>
 
         {/* remove in production, kept for testing purposes */}
 
@@ -325,18 +349,26 @@ export default function UploadPage() {
           />
         </div>*/}
 
-        {submitError && <p className="text-sm text-red-600">{submitError}</p>}
+          {submitError && (
+            <p className="upload-alert upload-alert--error">{submitError}</p>
+          )}
 
-        <button type="submit" className="border px-3 py-1">
-          Upload
-        </button>
-      </form>
+          <button type="submit" className="upload-submit">
+            Upload notes
+          </button>
+        </form>
 
-      {result && (
-        <pre className="mt-4 text-xs whitespace-pre-wrap border p-2">
-          {result}
-        </pre>
-      )}
+        {result && <pre className="upload-result">{result}</pre>}
+      </section>
+
+      <aside className="upload-sidecard">
+        <h3 className="upload-sidecard-title">Before you upload</h3>
+        <ul className="upload-sidecard-list">
+          <li>Name files clearly and keep titles short.</li>
+          <li>Remove any personal contact info from the PDF.</li>
+          <li>Make sure the content is legible on mobile screens.</li>
+        </ul>
+      </aside>
     </main>
   );
 }
