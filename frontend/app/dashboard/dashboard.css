@@ -14,6 +14,23 @@
   gap: 24px;
 }
 
+.dashboard-credit-summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.dashboard-credit-pill {
+  border: 1px solid #d0cbc2;
+  background: #ffffff;
+  color: #2a261f;
+  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  box-shadow: 0 8px 18px -14px rgba(0, 0, 0, 0.3);
+}
+
 .dashboard-kicker {
   font-size: 12px;
   text-transform: uppercase;
