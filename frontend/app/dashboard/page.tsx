@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import PDFThumbnail from "@/app/components/pdf/PDFThumbnail";
@@ -72,6 +72,8 @@ export default function DashboardPage() {
   const [loadingNotes, setLoadingNotes] = useState(false);
   const [notesError, setNotesError] = useState<string | null>(null);
   const [classesError, setClassesError] = useState<string | null>(null);
+  const [credits, setCredits] = useState<number | null>(null);
+  const [freeDownloads, setFreeDownloads] = useState<number | null>(null);
 
   const router = useRouter();
 
@@ -120,6 +122,44 @@ export default function DashboardPage() {
 
     fetchClasses();
   }, [accessToken, tokenLoaded]);
+
+  const refreshCredits = useCallback(async () => {
+    if (!accessToken) {
+      setCredits(null);
+      setFreeDownloads(null);
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/credits", {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!res.ok) {
+        setCredits(null);
+        setFreeDownloads(null);
+        return;
+      }
+
+      const data = await res.json();
+      setCredits(
+        Number.isFinite(data?.credits) ? Number(data.credits) : 0,
+      );
+      setFreeDownloads(
+        Number.isFinite(data?.freeDownloads) ? Number(data.freeDownloads) : 0,
+      );
+    } catch (error) {
+      setCredits(null);
+      setFreeDownloads(null);
+    }
+  }, [accessToken]);
+
+  useEffect(() => {
+    if (!tokenLoaded) return;
+    refreshCredits();
+  }, [refreshCredits, tokenLoaded]);
 
   const filteredClasses = useMemo(() => {
     const term = classSearch.trim().toLowerCase();
@@ -323,6 +363,14 @@ export default function DashboardPage() {
         <div>
           <div className="dashboard-kicker">Notes hub</div>
           <h1 className="dashboard-title">Dashboard</h1>
+        </div>
+        <div className="dashboard-credit-summary">
+          <span className="dashboard-credit-pill">
+            Credits: {credits ?? "—"}
+          </span>
+          <span className="dashboard-credit-pill">
+            Free Downloads: {freeDownloads ?? "—"}
+          </span>
         </div>
       </header>
 
