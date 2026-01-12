@@ -377,6 +377,13 @@ export default function UploadPage() {
     <main className="upload-page">
       <header className="upload-hero">
         <div className="upload-hero-content">
+          <button
+            type="button"
+            className="upload-back-button"
+            onClick={() => router.push("/dashboard")}
+          >
+            ← Dashboard
+          </button>
           <p className="upload-eyebrow">Cal Poly SLO Notes</p>
           <h1 className="upload-title">Upload your notes</h1>
           <p className="upload-subtitle">
