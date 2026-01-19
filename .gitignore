@@ -11,6 +11,8 @@
 .next
 out
 node_modules
+coverage
+.vercel
 
 # OS/Editor cruft
 .DS_Store
