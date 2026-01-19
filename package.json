@@ -2,11 +2,11 @@
   "name": "note-sharer",
   "private": true,
   "scripts": {
-    "setup": "node scripts/setup.mjs",
-    "start": "node scripts/start.mjs",
+    "setup": "node setup.mjs",
+    "start": "node setup.mjs --skip-supabase",
     "lint": "npm --prefix frontend run lint",
     "test": "npm --prefix frontend run test",
     "format": "npm --prefix frontend run format",
-    "gitcheck": "node scripts/gitcheck.mjs"
+    "gitcheck": "node setup.mjs --skip-supabase --skip-env --no-start && npm --prefix frontend run lint && npm --prefix frontend run test"
   }
 }
