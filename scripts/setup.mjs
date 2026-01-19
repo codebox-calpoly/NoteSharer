@@ -1,0 +1,101 @@
+import { spawnSync } from "node:child_process";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const args = new Set(process.argv.slice(2));
+const skipSupabase = args.has("--skip-supabase");
+const skipEnv = args.has("--skip-env");
+const noStart = args.has("--no-start");
+
+const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const frontendDir = path.join(rootDir, "frontend");
+const envPath = path.join(frontendDir, ".env.local");
+const requiredEnvKeys = [
+  "NEXT_PUBLIC_SUPABASE_URL",
+  "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+  "SUPABASE_SERVICE_ROLE_KEY",
+];
+
+const fail = (message) => {
+  console.error(message);
+  process.exit(1);
+};
+
+const run = (command, commandArgs, options = {}) => {
+  const result = spawnSync(command, commandArgs, {
+    stdio: "inherit",
+    shell: true,
+    ...options,
+  });
+
+  if (result.status !== 0) {
+    process.exit(result.status ?? 1);
+  }
+};
+
+const checkNodeVersion = () => {
+  const [major] = process.versions.node.split(".").map((part) => Number(part));
+  if (!Number.isFinite(major) || major < 18) {
+    fail(
+      "Node.js 18+ is required. Install it from https://nodejs.org/ or use nvm.",
+    );
+  }
+  console.log(`Node.js ${process.versions.node} detected.`);
+};
+
+const checkSupabaseCli = () => {
+  const result = spawnSync("supabase", ["--version"], {
+    shell: true,
+    encoding: "utf8",
+  });
+
+  if (result.status !== 0) {
+    console.error("Supabase CLI not found.");
+    console.error("Install it with:");
+    console.error("  macOS: brew install supabase/tap/supabase");
+    console.error("  npm:   npm install -g supabase");
+    process.exit(1);
+  }
+};
+
+const checkEnvFile = () => {
+  if (!fs.existsSync(envPath)) {
+    fail("Missing frontend/.env.local. See README for required keys.");
+  }
+
+  const raw = fs.readFileSync(envPath, "utf8");
+  const presentKeys = new Set();
+
+  raw.split(/\r?\n/).forEach((line) => {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) return;
+    const match = trimmed.match(/^([A-Za-z0-9_]+)\s*=/);
+    if (match) {
+      presentKeys.add(match[1]);
+    }
+  });
+
+  const missing = requiredEnvKeys.filter((key) => !presentKeys.has(key));
+  if (missing.length > 0) {
+    console.error("Missing required env keys in frontend/.env.local:");
+    missing.forEach((key) => console.error(`  - ${key}`));
+    process.exit(1);
+  }
+};
+
+checkNodeVersion();
+
+if (!skipSupabase) {
+  checkSupabaseCli();
+}
+
+if (!skipEnv) {
+  checkEnvFile();
+}
+
+run("npm", ["install"], { cwd: frontendDir });
+
+if (!noStart) {
+  run("npm", ["run", "dev"], { cwd: frontendDir });
+}
