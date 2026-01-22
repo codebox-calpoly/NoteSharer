@@ -8,7 +8,9 @@ const skipSupabase = args.has("--skip-supabase");
 const skipEnv = args.has("--skip-env");
 const noStart = args.has("--no-start");
 
-const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const scriptRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const cwdRoot = process.cwd();
+const rootDir = fs.existsSync(path.join(cwdRoot, "frontend")) ? cwdRoot : scriptRoot;
 const frontendDir = path.join(rootDir, "frontend");
 const envPath = path.join(frontendDir, ".env.local");
 const requiredEnvKeys = [
@@ -64,6 +66,7 @@ const checkSupabaseCli = () => {
 
 const checkEnvFile = () => {
   if (!fs.existsSync(envPath)) {
+    console.error(`Missing env file at: ${envPath}`);
     fail("Missing frontend/.env.local. See README for required keys.");
   }
 
