@@ -1,4 +1,4 @@
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -34,6 +34,28 @@ const run = (command, commandArgs, options = {}) => {
 
   if (result.status !== 0) {
     process.exit(result.status ?? 1);
+  }
+};
+
+const openBrowser = (url) => {
+  const platform = process.platform;
+  let command = null;
+  let args = [];
+
+  if (platform === "win32") {
+    command = "cmd";
+    args = ["/c", "start", "", url];
+  } else if (platform === "darwin") {
+    command = "open";
+    args = [url];
+  } else {
+    command = "xdg-open";
+    args = [url];
+  }
+
+  const result = spawnSync(command, args, { stdio: "ignore", shell: true });
+  if (result.status !== 0) {
+    console.warn(`Unable to auto-open browser. Visit ${url} manually.`);
   }
 };
 
@@ -109,5 +131,17 @@ if (!skipEnv) {
 run("npm", ["install"], { cwd: frontendDir });
 
 if (!noStart) {
-  run("npm", ["run", "dev"], { cwd: frontendDir });
+  const devServer = spawn("npm", ["run", "dev"], {
+    cwd: frontendDir,
+    stdio: "inherit",
+    shell: true,
+  });
+
+  setTimeout(() => {
+    openBrowser("http://localhost:3000");
+  }, 1500);
+
+  devServer.on("exit", (code) => {
+    process.exit(code ?? 0);
+  });
 }
