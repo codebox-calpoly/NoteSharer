@@ -90,7 +90,6 @@ export async function generateUniqueNickname(
     }
 
     // If not unique, try again (this is rare but possible)
-    // eslint-disable-next-line no-console
     console.log(`Nickname collision: ${nickname}, retrying... (attempt ${attempt + 1}/${maxAttempts})`);
   }
 

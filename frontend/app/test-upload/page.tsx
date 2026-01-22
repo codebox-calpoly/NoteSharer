@@ -1,6 +1,7 @@
 // app/test-upload/page.tsx
 "use client";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type { Session } from "@supabase/supabase-js";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -8,6 +9,7 @@ import { supabase } from "@/lib/supabaseClient";
 
 export default function TestUploadPage() {
   const router = useRouter();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [ isAuthenticated, setIsAuthenticated] = useState(false);
 
   const [file, setFile] = useState<File | null>(null);
