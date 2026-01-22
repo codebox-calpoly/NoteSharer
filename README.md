@@ -36,6 +36,21 @@ npm run setup
 - Required environment variables exist in `frontend/.env.local`.
 - Frontend dependencies are installed.
 
+### Supabase CLI install (Windows)
+Run this in PowerShell:
+
+```powershell
+Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+iwr -useb get.scoop.sh | iex
+scoop install supabase
+```
+
+### Supabase CLI install (macOS)
+
+```bash
+brew install supabase/tap/supabase
+```
+
 ### Required environment variables
 Create `frontend/.env.local` and include:
 - `NEXT_PUBLIC_SUPABASE_URL`

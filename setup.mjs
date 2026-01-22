@@ -54,7 +54,10 @@ const checkSupabaseCli = () => {
     console.error("Supabase CLI not found.");
     console.error("Install it with:");
     console.error("  macOS: brew install supabase/tap/supabase");
-    console.error("  npm:   npm install -g supabase");
+    console.error("  Windows (PowerShell):");
+    console.error("    Set-ExecutionPolicy -Scope CurrentUser RemoteSigned");
+    console.error("    iwr -useb get.scoop.sh | iex");
+    console.error("    scoop install supabase");
     process.exit(1);
   }
 };
