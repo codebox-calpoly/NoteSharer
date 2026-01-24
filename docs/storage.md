@@ -9,7 +9,7 @@ Note Sharer uses Supabase Storage with signed URLs for private file access.
 ## Signed URLs
 - Generated server-side only via `frontend/lib/storage.ts`.
 - Default TTL is 3600 seconds (1 hour) for previews.
-- Download URLs use a 120 second TTL.
+- Downloads are streamed from the API after auth checks (no signed URL returned).
 - Preview URLs in `frontend/app/api/notes/route.ts` return `null` if a signed URL
   cannot be generated (expired or missing files).
 

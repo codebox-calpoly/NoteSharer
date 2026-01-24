@@ -377,13 +377,18 @@ export default function DashboardPage() {
         return;
       }
 
-      const data = await res.json();
-      if (!data?.signedUrl) {
-        setDownloadError("Download link was not available.");
-        return;
-      }
-
-      window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      const disposition = res.headers.get("content-disposition");
+      const match = disposition?.match(/filename="([^"]+)"/);
+      const fallbackName = `${noteId}.pdf`;
+      link.href = url;
+      link.download = match?.[1] || fallbackName;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
       refreshCredits();
     } catch (error) {
       setDownloadError("Failed to download note. Try again.");

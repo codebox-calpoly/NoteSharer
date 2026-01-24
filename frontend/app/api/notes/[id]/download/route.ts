@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
-import { generateSignedUrl } from "@/lib/storage";
 import { createClient } from "@/utils/supabaseServerClient";
 
 type ResourceDownloadRow = {
@@ -156,13 +155,26 @@ export async function GET(
     }
   }
 
-  let signedUrl: string;
-  try {
-    signedUrl = await generateSignedUrl("resources", resource.file_key, 120);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "Failed to generate signed URL.";
-    return NextResponse.json({ error: message }, { status: 500 });
+  const { data: fileData, error: fileError } = await adminClient.storage
+    .from("resources")
+    .download(resource.file_key);
+
+  if (fileError || !fileData) {
+    return NextResponse.json(
+      { error: "Failed to download file.", details: fileError?.message },
+      { status: 500 },
+    );
   }
 
-  return NextResponse.json({ signedUrl }, { status: 200 });
+  const fileName = resource.file_key.split("/").pop() || "note.pdf";
+  const fileBuffer = Buffer.from(await fileData.arrayBuffer());
+
+  return new NextResponse(fileBuffer, {
+    status: 200,
+    headers: {
+      "Content-Type": fileData.type || "application/pdf",
+      "Content-Disposition": `attachment; filename="${fileName}"`,
+      "Cache-Control": "no-store",
+    },
+  });
 }
