@@ -74,6 +74,8 @@ export default function DashboardPage() {
   const [classesError, setClassesError] = useState<string | null>(null);
   const [credits, setCredits] = useState<number | null>(null);
   const [freeDownloads, setFreeDownloads] = useState<number | null>(null);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   const router = useRouter();
 
@@ -347,6 +349,49 @@ export default function DashboardPage() {
     }
   };
 
+  const handleDownload = async (noteId: string) => {
+    if (!accessToken) {
+      setDownloadError("Not authenticated. Please sign in again.");
+      return;
+    }
+
+    if (downloadingId) return;
+
+    setDownloadError(null);
+    setDownloadingId(noteId);
+
+    try {
+      const res = await fetch(`/api/notes/${noteId}/download`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!res.ok) {
+        const payload = await res.json().catch(() => null);
+        const message =
+          payload && typeof payload === "object" && "error" in payload
+            ? String(payload.error)
+            : "Failed to download note.";
+        setDownloadError(message);
+        return;
+      }
+
+      const data = await res.json();
+      if (!data?.signedUrl) {
+        setDownloadError("Download link was not available.");
+        return;
+      }
+
+      window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+      refreshCredits();
+    } catch (error) {
+      setDownloadError("Failed to download note. Try again.");
+    } finally {
+      setDownloadingId(null);
+    }
+  };
+
   const selectedClassLabel =
     selectedClassId === "all"
       ? "All classes"
@@ -501,6 +546,8 @@ export default function DashboardPage() {
 
         {notesError && <p className="dashboard-error">{notesError}</p>}
 
+        {downloadError && <p className="dashboard-error">{downloadError}</p>}
+
         <ul className="dashboard-grid">
           {notes.map((note) => (
             <li key={note.id} className="dashboard-card">
@@ -531,6 +578,16 @@ export default function DashboardPage() {
                     <span className="dashboard-score">
                       Score: {note.score ?? 0}
                     </span>
+                  </div>
+                  <div className="dashboard-download-row">
+                    <button
+                      type="button"
+                      className="dashboard-download"
+                      onClick={() => handleDownload(note.id)}
+                      disabled={downloadingId === note.id}
+                    >
+                      {downloadingId === note.id ? "Preparing..." : "Download"}
+                    </button>
                   </div>
                 </div>
               </div>

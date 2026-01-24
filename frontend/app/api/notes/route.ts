@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
+import { generateSignedUrl } from "@/lib/storage";
 import { createClient } from "@/utils/supabaseServerClient";
-import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
 type ResourceRow = {
   id: string;
@@ -30,7 +30,7 @@ export async function GET(req: Request) {
     : null;
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!supabaseUrl || !supabaseServiceRoleKey) {
     return NextResponse.json(
       { error: "Supabase environment variables are not configured." },
@@ -38,7 +38,6 @@ export async function GET(req: Request) {
     );
   }
 
-  const adminClient = createSupabaseClient(supabaseUrl, supabaseServiceRoleKey);
   const supabase = await createClient(bearerToken);
   const {
     data: { user },
@@ -70,7 +69,7 @@ export async function GET(req: Request) {
 
   let query = supabase
     .from("resources")
-    .select<ResourceRow>(
+    .select(
       `
         id,
         title,
@@ -97,7 +96,7 @@ export async function GET(req: Request) {
 
   query = query.range(from, to);
 
-  const { data, error, count } = await query;
+  const { data, error, count } = await query.returns<ResourceRow[]>();
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -111,8 +110,9 @@ export async function GET(req: Request) {
   if (ids.length > 0) {
     const { data: statsData } = await supabase
       .from("resource_vote_stats")
-      .select<VoteStatRow>("resource_id, upvotes, downvotes, score")
-      .in("resource_id", ids);
+      .select("resource_id, upvotes, downvotes, score")
+      .in("resource_id", ids)
+      .returns<VoteStatRow[]>();
     voteStats = statsData ?? [];
   }
 
@@ -146,11 +146,12 @@ export async function GET(req: Request) {
             return { ...base, previewUrl: null };
           }
 
-          const { data: signed, error: signedError } = await adminClient.storage
-            .from("resources")
-            .createSignedUrl(path, 3600);
-
-          const previewUrl = signedError ? null : signed?.signedUrl ?? null;
+          let previewUrl: string | null = null;
+          try {
+            previewUrl = await generateSignedUrl("resources", path);
+          } catch {
+            previewUrl = null;
+          }
           return { ...base, previewUrl };
         }),
       )
