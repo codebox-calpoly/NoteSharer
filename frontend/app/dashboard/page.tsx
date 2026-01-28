@@ -74,6 +74,8 @@ export default function DashboardPage() {
   const [classesError, setClassesError] = useState<string | null>(null);
   const [credits, setCredits] = useState<number | null>(null);
   const [freeDownloads, setFreeDownloads] = useState<number | null>(null);
+  const [selectedNote, setSelectedNote] = useState<Note | null>(null);
+  const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
 
   const router = useRouter();
 
@@ -347,6 +349,20 @@ export default function DashboardPage() {
     }
   };
 
+  const handleOpenNoteModal = (note: Note) => {
+    setSelectedNote(note);
+    setIsNoteModalOpen(true);
+  };
+
+  const handleCloseNoteModal = () => {
+    setIsNoteModalOpen(false);
+    setSelectedNote(null);
+  };
+
+  const handleReportNote = () => {
+    
+  };
+
   const selectedClassLabel =
     selectedClassId === "all"
       ? "All classes"
@@ -503,7 +519,18 @@ export default function DashboardPage() {
 
         <ul className="dashboard-grid">
           {notes.map((note) => (
-            <li key={note.id} className="dashboard-card">
+            <li
+              key={note.id}
+              className="dashboard-card"
+              onClick={() => handleOpenNoteModal(note)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  handleOpenNoteModal(note);
+                }
+              }}
+            >
               <div className="dashboard-card-media">
                 {note.previewUrl ? (
                   <PDFThumbnail fileUrl={note.previewUrl} width={240} />
@@ -677,6 +704,78 @@ export default function DashboardPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {isNoteModalOpen && selectedNote && (
+        <div
+          className="note-modal-overlay"
+          role="presentation"
+          onClick={handleCloseNoteModal}
+        >
+          <div
+            className="note-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="note-modal-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="note-modal-header">
+              <h2 id="note-modal-title" className="note-modal-title">
+                {selectedNote.title}
+              </h2>
+              <button
+                type="button"
+                className="note-modal-close"
+                onClick={handleCloseNoteModal}
+                aria-label="Close"
+              >
+                x
+              </button>
+            </div>
+            <div className="note-modal-content">
+              <div className="note-modal-preview">
+                {selectedNote.previewUrl ? (
+                  <PDFThumbnail fileUrl={selectedNote.previewUrl} width={400} />
+                ) : (
+                  <div className="note-modal-no-preview">No preview available</div>
+                )}
+              </div>
+              <div className="note-modal-details">
+                <p>
+                  <strong>Uploader:</strong> {selectedNote.profile_display_name ?? "Unknown"}
+                </p>
+                <p>
+                  <strong>Date:</strong> {new Date(selectedNote.created_at).toLocaleDateString()}
+                </p>
+                <p>
+                  <strong>Upvotes:</strong> {selectedNote.upvote_count ?? 0}
+                </p>
+                <p>
+                  <strong>Downvotes:</strong> {selectedNote.downvote_count ?? 0}
+                </p>
+                <p>
+                  <strong>Score:</strong> {selectedNote.score ?? 0}
+                </p>
+              </div>
+            </div>
+            <div className="note-modal-actions">
+              <button
+                type="button"
+                className="note-modal-report-btn"
+                onClick={handleReportNote}
+              >
+                Report
+              </button>
+              <button
+                type="button"
+                className="note-modal-close-btn"
+                onClick={handleCloseNoteModal}
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

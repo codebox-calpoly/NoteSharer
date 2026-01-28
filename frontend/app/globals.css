@@ -224,3 +224,141 @@ body {
  cursor: not-allowed;
 }
 
+.note-modal-overlay {
+ position: fixed;
+ inset: 0;
+ background: rgba(15, 23, 42, 0.55);
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ padding: 1.5rem;
+ z-index: 50;
+}
+
+.note-modal {
+ width: min(640px, 100%);
+ background: #ffffff;
+ border-radius: 16px;
+ padding: 1.5rem;
+ box-shadow: 0 22px 50px rgba(15, 23, 42, 0.2);
+ border: 1px solid rgba(148, 163, 184, 0.3);
+ max-height: 90vh;
+ overflow-y: auto;
+}
+
+.note-modal-header {
+ display: flex;
+ align-items: center;
+ justify-content: space-between;
+ margin-bottom: 1.5rem;
+ gap: 1rem;
+}
+
+.note-modal-title {
+ font-size: 1.25rem;
+ font-weight: 600;
+ color: #0f172a;
+ margin: 0;
+ flex: 1;
+ word-break: break-word;
+}
+
+.note-modal-close {
+ background: transparent;
+ border: none;
+ font-size: 1.5rem;
+ color: #64748b;
+ cursor: pointer;
+ padding: 0;
+ width: 32px;
+ height: 32px;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ flex-shrink: 0;
+}
+
+.note-modal-close:hover {
+ color: #0f172a;
+}
+
+.note-modal-content {
+ display: flex;
+ flex-direction: column;
+ gap: 1.5rem;
+ margin-bottom: 1.5rem;
+}
+
+.note-modal-preview {
+ width: 100%;
+ border-radius: 12px;
+ overflow: hidden;
+ border: 1px solid #e2e8f0;
+ background: #f1f5f9;
+}
+
+.note-modal-no-preview {
+ width: 100%;
+ min-height: 200px;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ color: #94a3b8;
+ font-size: 0.95rem;
+}
+
+.note-modal-details {
+ display: flex;
+ flex-direction: column;
+ gap: 0.75rem;
+}
+
+.note-modal-details p {
+ margin: 0;
+ font-size: 0.95rem;
+ color: #1e293b;
+ line-height: 1.5;
+}
+
+.note-modal-details strong {
+ color: #0f172a;
+ font-weight: 600;
+}
+
+.note-modal-actions {
+ display: flex;
+ justify-content: flex-end;
+ gap: 0.75rem;
+ padding-top: 1rem;
+ border-top: 1px solid #e2e8f0;
+}
+
+.note-modal-report-btn,
+.note-modal-close-btn {
+ border-radius: 9999px;
+ padding: 0.6rem 1.2rem;
+ font-size: 0.9rem;
+ font-weight: 600;
+ border: none;
+ cursor: pointer;
+ transition: all 0.2s ease;
+}
+
+.note-modal-report-btn {
+ background: #ef4444;
+ color: #ffffff;
+}
+
+.note-modal-report-btn:hover {
+ background: #dc2626;
+}
+
+.note-modal-close-btn {
+ background: #e2e8f0;
+ color: #0f172a;
+}
+
+.note-modal-close-btn:hover {
+ background: #cbd5e1;
+}
+
