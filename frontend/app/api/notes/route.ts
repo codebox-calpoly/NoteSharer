@@ -80,7 +80,8 @@ export async function GET(req: Request) {
         profiles ( display_name )
       `,
       { count: "exact" },
-    );
+    )
+    .eq("status", "active"); // Only show active (approved) notes on dashboard
 
   // Full-text search using the FTS index (searches title and description)
   if (searchQuery && searchQuery.trim()) {
