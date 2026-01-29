@@ -48,3 +48,40 @@ begin
   return new;
 end;
 $$;
+
+-- Replace vote policies to require purchase/download before voting.
+drop policy if exists "Users upsert own vote" on public.votes;
+drop policy if exists "Users update own vote" on public.votes;
+
+create policy "Users upsert own vote" on public.votes
+for insert
+with check (
+  auth.uid() = profile_id
+  and exists (
+    select 1
+    from public.resource_downloads d
+    where d.resource_id = votes.resource_id
+      and d.profile_id = auth.uid()
+  )
+);
+
+create policy "Users update own vote" on public.votes
+for update
+using (
+  auth.uid() = profile_id
+  and exists (
+    select 1
+    from public.resource_downloads d
+    where d.resource_id = votes.resource_id
+      and d.profile_id = auth.uid()
+  )
+)
+with check (
+  auth.uid() = profile_id
+  and exists (
+    select 1
+    from public.resource_downloads d
+    where d.resource_id = votes.resource_id
+      and d.profile_id = auth.uid()
+  )
+);
