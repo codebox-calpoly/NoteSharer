@@ -206,6 +206,12 @@
   background: #faf7f2;
 }
 
+/* Blur note preview on dashboard cards */
+.dashboard-card-media > div:first-child {
+  filter: blur(5px);
+  transform: scale(1.05);
+}
+
 .dashboard-no-preview {
   width: 100%;
   height: 100%;

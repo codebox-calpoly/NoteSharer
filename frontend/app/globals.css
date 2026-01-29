@@ -297,6 +297,11 @@ body {
  background: #f1f5f9;
 }
 
+.note-modal-preview > div {
+ filter: blur(5px);
+ transform: scale(1.05);
+}
+
 .note-modal-no-preview {
  width: 100%;
  min-height: 200px;
