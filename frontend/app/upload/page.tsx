@@ -198,6 +198,7 @@ export default function UploadPage() {
       setCourseRequestStatus("success");
       setCourseRequestMessage("Request submitted. We will review it soon.");
       setCourseRequest(emptyCourseRequest);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       setCourseRequestStatus("error");
       setCourseRequestMessage("Failed to submit the request. Try again.");
@@ -240,6 +241,7 @@ export default function UploadPage() {
         }
         const data = await res.json();
         setClasses(data.classes || []);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (err) {
         setClassesError("Failed to load classes");
         setClasses([]);
@@ -333,6 +335,7 @@ export default function UploadPage() {
 
       setResult(`${res.status}: ${JSON.stringify(payload)}`);
       setIsSuccess(true);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       setSubmitError("Upload failed. Please check your connection and retry.");
     } finally {

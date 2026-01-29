@@ -53,7 +53,6 @@ export default function OnboardingPage() {
       const nickname = await generateUniqueNickname(supabase);
       setDisplayName(nickname);
     } catch (generationError) {
-      // eslint-disable-next-line no-console
       console.error("Failed to generate nickname", generationError);
       setError("Unable to generate a nickname. Please try again.");
     } finally {
@@ -77,7 +76,6 @@ export default function OnboardingPage() {
         nameToSave = await generateUniqueNickname(supabase);
         setDisplayName(nameToSave);
       } catch (generationError) {
-        // eslint-disable-next-line no-console
         console.error("Failed to generate nickname", generationError);
         setError("Unable to generate a nickname. Please try again.");
         setSaving(false);

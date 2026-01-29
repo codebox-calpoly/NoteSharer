@@ -19,7 +19,6 @@ export default function AuthPage() {
     const checkSession = async () => {
       const { data, error } = await supabase.auth.getSession();
       if (error) {
-        // eslint-disable-next-line no-console
         console.error("Failed to fetch session", error);
       }
       if (data?.session) {

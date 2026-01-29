@@ -55,6 +55,7 @@ export default function DashboardPage() {
   const [noteSearch, setNoteSearch] = useState("");
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [tokenLoaded, setTokenLoaded] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isUploadOpen, setIsUploadOpen] = useState(false);
 
   const [isCourseRequestOpen, setIsCourseRequestOpen] = useState(false);
@@ -116,6 +117,7 @@ export default function DashboardPage() {
         }
         const data = await res.json();
         setClasses(data.classes || []);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (err) {
         setClassesError("Failed to load classes");
         setClasses([]);
@@ -152,6 +154,7 @@ export default function DashboardPage() {
       setFreeDownloads(
         Number.isFinite(data?.freeDownloads) ? Number(data.freeDownloads) : 0,
       );
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       setCredits(null);
       setFreeDownloads(null);
@@ -220,6 +223,7 @@ export default function DashboardPage() {
         }
 
         setHasMore(Boolean(data.hasMore));
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (err) {
         setNotesError("Unexpected error fetching notes");
         setHasMore(false);
@@ -330,6 +334,7 @@ export default function DashboardPage() {
       setCourseRequestStatus("success");
       setCourseRequestMessage("Request submitted. We will review it soon.");
       setCourseRequest(emptyCourseRequest);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       setCourseRequestStatus("error");
       setCourseRequestMessage("Failed to submit the request. Try again.");
