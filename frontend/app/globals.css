@@ -225,23 +225,27 @@ body {
 }
 
 .note-modal-overlay {
- position: fixed;
- inset: 0;
- background: rgba(15, 23, 42, 0.55);
- display: flex;
- align-items: center;
- justify-content: center;
- padding: 1.5rem;
- z-index: 50;
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  z-index: 100;
 }
 
 .note-modal {
  width: min(640px, 100%);
- background: #ffffff;
+ background: rgba(37, 37, 37, 0.95);
+ backdrop-filter: blur(10px);
+ -webkit-backdrop-filter: blur(10px);
  border-radius: 16px;
  padding: 1.5rem;
- box-shadow: 0 22px 50px rgba(15, 23, 42, 0.2);
- border: 1px solid rgba(148, 163, 184, 0.3);
+ box-shadow: 0 22px 50px rgba(0, 0, 0, 0.5);
+ border: 1px solid #365314;
  max-height: 90vh;
  overflow-y: auto;
 }
@@ -256,18 +260,19 @@ body {
 
 .note-modal-title {
  font-size: 1.25rem;
- font-weight: 600;
- color: #0f172a;
+ font-weight: 700;
+ color: #ffffff;
  margin: 0;
  flex: 1;
  word-break: break-word;
+ text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5), 0 0 6px rgba(0, 0, 0, 0.3);
 }
 
 .note-modal-close {
  background: transparent;
  border: none;
  font-size: 1.5rem;
- color: #64748b;
+ color: #e5e7eb;
  cursor: pointer;
  padding: 0;
  width: 32px;
@@ -279,7 +284,7 @@ body {
 }
 
 .note-modal-close:hover {
- color: #0f172a;
+ color: #ffffff;
 }
 
 .note-modal-content {
@@ -290,16 +295,18 @@ body {
 }
 
 .note-modal-preview {
- width: 100%;
- border-radius: 12px;
- overflow: hidden;
- border: 1px solid #e2e8f0;
- background: #f1f5f9;
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  background: #f1f5f9;
 }
 
-.note-modal-preview > div {
- filter: blur(5px);
- transform: scale(1.05);
+.note-modal-preview > div,
+.note-modal-preview > div > div,
+.note-modal-preview canvas {
+  filter: blur(5px) !important;
+  transform: scale(1.05) !important;
 }
 
 .note-modal-no-preview {
@@ -321,12 +328,12 @@ body {
 .note-modal-details p {
  margin: 0;
  font-size: 0.95rem;
- color: #1e293b;
+ color: #e5e7eb;
  line-height: 1.5;
 }
 
 .note-modal-details strong {
- color: #0f172a;
+ color: #4ade80;
  font-weight: 600;
 }
 
