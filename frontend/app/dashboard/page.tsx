@@ -88,6 +88,19 @@ export default function DashboardPage() {
 
   const router = useRouter();
 
+  const refreshToken = useCallback(async () => {
+    const { data, error } = await supabase.auth.getSession();
+    if (error) {
+      console.error("Error refreshing session:", error);
+      return null;
+    }
+    const newToken = data.session?.access_token ?? null;
+    if (newToken) {
+      setAccessToken(newToken);
+    }
+    return newToken;
+  }, []);
+
   useEffect(() => {
     const loadSession = async () => {
       const { data, error } = await supabase.auth.getSession();
@@ -98,6 +111,17 @@ export default function DashboardPage() {
       setTokenLoaded(true);
     };
     loadSession();
+
+    // Listen for auth state changes (including token refresh)
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setAccessToken(session?.access_token ?? null);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
@@ -109,11 +133,24 @@ export default function DashboardPage() {
 
     const fetchClasses = async () => {
       try {
-        const res = await fetch("/api/classes", {
+        let res = await fetch("/api/classes", {
           headers: {
             Authorization: `Bearer ${accessToken}`,
           },
         });
+        
+        // If 401, try refreshing token and retry once
+        if (res.status === 401) {
+          const newToken = await refreshToken();
+          if (newToken) {
+            res = await fetch("/api/classes", {
+              headers: {
+                Authorization: `Bearer ${newToken}`,
+              },
+            });
+          }
+        }
+        
         if (!res.ok) {
           const errorPayload =
             (await res.json().catch(async () => ({
@@ -133,7 +170,7 @@ export default function DashboardPage() {
     };
 
     fetchClasses();
-  }, [accessToken, tokenLoaded]);
+  }, [accessToken, tokenLoaded, refreshToken]);
 
   const refreshCredits = useCallback(async () => {
     if (!accessToken) {
@@ -143,11 +180,23 @@ export default function DashboardPage() {
     }
 
     try {
-      const res = await fetch("/api/credits", {
+      let res = await fetch("/api/credits", {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
       });
+
+      // If 401, try refreshing token and retry once
+      if (res.status === 401) {
+        const newToken = await refreshToken();
+        if (newToken) {
+          res = await fetch("/api/credits", {
+            headers: {
+              Authorization: `Bearer ${newToken}`,
+            },
+          });
+        }
+      }
 
       if (!res.ok) {
         setCredits(null);
@@ -167,7 +216,7 @@ export default function DashboardPage() {
       setCredits(null);
       setFreeDownloads(null);
     }
-  }, [accessToken]);
+  }, [accessToken, refreshToken]);
 
   useEffect(() => {
     if (!tokenLoaded) return;
@@ -203,13 +252,26 @@ export default function DashboardPage() {
       }
 
       try {
-        const res = await fetch(`/api/notes?${params.toString()}`, {
+        let res = await fetch(`/api/notes?${params.toString()}`, {
           headers: accessToken
             ? {
                 Authorization: `Bearer ${accessToken}`,
               }
             : undefined,
         });
+        
+        // If 401, try refreshing token and retry once
+        if (res.status === 401) {
+          const newToken = await refreshToken();
+          if (newToken) {
+            res = await fetch(`/api/notes?${params.toString()}`, {
+              headers: {
+                Authorization: `Bearer ${newToken}`,
+              },
+            });
+          }
+        }
+        
         if (!res.ok) {
           const errorPayload =
             (await res.json().catch(async () => ({
@@ -241,7 +303,7 @@ export default function DashboardPage() {
     };
 
     fetchNotes();
-  }, [page, selectedClassId, sortOrder, noteSearch, accessToken, tokenLoaded]);
+  }, [page, selectedClassId, sortOrder, noteSearch, accessToken, tokenLoaded, refreshToken]);
 
   const handleSelectClass = (id: string | "all") => {
     setSelectedClassId(id);
@@ -374,11 +436,27 @@ export default function DashboardPage() {
     setDownloadingId(noteId);
 
     try {
-      const res = await fetch(`/api/notes/${noteId}/download`, {
+      let res = await fetch(`/api/notes/${noteId}/download`, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
       });
+
+      // If 401, try refreshing token and retry once
+      if (res.status === 401) {
+        const newToken = await refreshToken();
+        if (newToken) {
+          res = await fetch(`/api/notes/${noteId}/download`, {
+            headers: {
+              Authorization: `Bearer ${newToken}`,
+            },
+          });
+        } else {
+          setDownloadError("Session expired. Please sign in again.");
+          setDownloadingId(null);
+          return;
+        }
+      }
 
       if (!res.ok) {
         const payload = await res.json().catch(() => null);
@@ -678,7 +756,10 @@ export default function DashboardPage() {
                     <button
                       type="button"
                       className="dashboard-download"
-                      onClick={() => handleDownload(note.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDownload(note.id);
+                      }}
                       disabled={downloadingId === note.id}
                     >
                       {downloadingId === note.id ? "Preparing..." : "Download"}
