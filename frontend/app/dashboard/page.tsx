@@ -75,6 +75,8 @@ export default function DashboardPage() {
   const [classesError, setClassesError] = useState<string | null>(null);
   const [credits, setCredits] = useState<number | null>(null);
   const [freeDownloads, setFreeDownloads] = useState<number | null>(null);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
 
@@ -354,6 +356,54 @@ export default function DashboardPage() {
     }
   };
 
+  const handleDownload = async (noteId: string) => {
+    if (!accessToken) {
+      setDownloadError("Not authenticated. Please sign in again.");
+      return;
+    }
+
+    if (downloadingId) return;
+
+    setDownloadError(null);
+    setDownloadingId(noteId);
+
+    try {
+      const res = await fetch(`/api/notes/${noteId}/download`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!res.ok) {
+        const payload = await res.json().catch(() => null);
+        const message =
+          payload && typeof payload === "object" && "error" in payload
+            ? String(payload.error)
+            : "Failed to download note.";
+        setDownloadError(message);
+        return;
+      }
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      const disposition = res.headers.get("content-disposition");
+      const match = disposition?.match(/filename="([^"]+)"/);
+      const fallbackName = `${noteId}.pdf`;
+      link.href = url;
+      link.download = match?.[1] || fallbackName;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      refreshCredits();
+    } catch {
+      setDownloadError("Failed to download note. Try again.");
+    } finally {
+      setDownloadingId(null);
+    }
+  };
+
   const handleOpenNoteModal = (note: Note) => {
     setSelectedNote(note);
     setIsNoteModalOpen(true);
@@ -365,7 +415,7 @@ export default function DashboardPage() {
   };
 
   const handleReportNote = () => {
-    
+    // TODO: wire report flow
   };
 
   const selectedClassLabel =
@@ -522,6 +572,8 @@ export default function DashboardPage() {
 
         {notesError && <p className="dashboard-error">{notesError}</p>}
 
+        {downloadError && <p className="dashboard-error">{downloadError}</p>}
+
         <ul className="dashboard-grid">
           {notes.map((note) => (
             <li
@@ -563,6 +615,16 @@ export default function DashboardPage() {
                     <span className="dashboard-score">
                       Score: {note.score ?? 0}
                     </span>
+                  </div>
+                  <div className="dashboard-download-row">
+                    <button
+                      type="button"
+                      className="dashboard-download"
+                      onClick={() => handleDownload(note.id)}
+                      disabled={downloadingId === note.id}
+                    >
+                      {downloadingId === note.id ? "Preparing..." : "Download"}
+                    </button>
                   </div>
                 </div>
               </div>

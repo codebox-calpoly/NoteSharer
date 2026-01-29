@@ -252,6 +252,33 @@
   color: #f0ebe3;
 }
 
+.dashboard-download-row {
+  margin-top: 8px;
+}
+
+.dashboard-download {
+  border: 1px solid #f5f1eb;
+  background: transparent;
+  color: #f5f1eb;
+  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dashboard-download:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px -16px rgba(0, 0, 0, 0.6);
+}
+
+.dashboard-download:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  transform: none;
+  box-shadow: none;
+}
+
 .dashboard-votes-up {
   color: #9be2b2;
   font-weight: 600;
