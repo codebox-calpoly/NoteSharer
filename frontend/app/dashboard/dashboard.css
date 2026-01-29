@@ -322,6 +322,137 @@
   color: #6b655b;
 }
 
+.report-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  z-index: 60;
+}
+
+.report-modal {
+  width: min(560px, 100%);
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 24px 50px rgba(15, 23, 42, 0.22);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+.report-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.report-modal-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0;
+}
+
+.report-modal-close {
+  background: transparent;
+  border: none;
+  font-size: 1.4rem;
+  color: #64748b;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.report-modal-subtitle {
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+  color: #475569;
+}
+
+.report-modal-subtitle span {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.report-modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.report-modal-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.report-modal-textarea {
+  width: 100%;
+  border: 1px solid #d0cbc2;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 0.9rem;
+  color: #2a261f;
+  min-height: 120px;
+  resize: vertical;
+}
+
+.report-modal-message {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.report-modal-message.success {
+  color: #15803d;
+}
+
+.report-modal-message.error {
+  color: #b34b3f;
+}
+
+.report-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.report-modal-cancel,
+.report-modal-submit {
+  border-radius: 9999px;
+  padding: 0.6rem 1.2rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.report-modal-cancel {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.report-modal-submit {
+  background: #ef4444;
+  color: #ffffff;
+}
+
+.report-modal-submit:disabled,
+.report-modal-cancel:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
 @media (max-width: 720px) {
   .dashboard-page {
     padding: 24px 16px 36px;

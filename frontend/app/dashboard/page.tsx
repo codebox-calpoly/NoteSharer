@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import PDFThumbnail from "@/app/components/pdf/PDFThumbnail";
@@ -45,6 +45,8 @@ type Note = {
   score: number;
 };
 
+type ReportStatus = "idle" | "submitting" | "success" | "error";
+
 export default function DashboardPage() {
   const [classes, setClasses] = useState<ClassOption[]>([]);
   const [classSearch, setClassSearch] = useState("");
@@ -79,6 +81,10 @@ export default function DashboardPage() {
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
+  const [isReportOpen, setIsReportOpen] = useState(false);
+  const [reportReason, setReportReason] = useState("");
+  const [reportStatus, setReportStatus] = useState<ReportStatus>("idle");
+  const [reportMessage, setReportMessage] = useState<string | null>(null);
 
   const router = useRouter();
 
@@ -412,10 +418,62 @@ export default function DashboardPage() {
   const handleCloseNoteModal = () => {
     setIsNoteModalOpen(false);
     setSelectedNote(null);
+    setIsReportOpen(false);
   };
 
   const handleReportNote = () => {
-    // TODO: wire report flow
+    if (!selectedNote) return;
+    setReportReason("");
+    setReportStatus("idle");
+    setReportMessage(null);
+    setIsReportOpen(true);
+  };
+
+  const handleCloseReport = () => {
+    setIsReportOpen(false);
+    setReportReason("");
+    setReportStatus("idle");
+    setReportMessage(null);
+  };
+
+  const handleSubmitReport = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!selectedNote) return;
+
+    const trimmedReason = reportReason.trim();
+    if (!trimmedReason) return;
+
+    setReportStatus("submitting");
+    setReportMessage(null);
+
+    try {
+      const res = await fetch("https://formspree.io/f/mwvbvqln", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          noteId: selectedNote.id,
+          noteTitle: selectedNote.title,
+          classId: selectedNote.class_id ?? "",
+          reason: trimmedReason,
+        }),
+      });
+
+      if (!res.ok) {
+        setReportStatus("error");
+        setReportMessage("Failed to send report. Please try again.");
+        return;
+      }
+
+      setReportStatus("success");
+      setReportMessage("Thanks for reporting. We’ll review this note.");
+      setReportReason("");
+    } catch {
+      setReportStatus("error");
+      setReportMessage("Failed to send report. Please try again.");
+    }
   };
 
   const selectedClassLabel =
@@ -843,6 +901,85 @@ export default function DashboardPage() {
                 Close
               </button>
             </div>
+          </div>
+        </div>
+      )}
+      {isReportOpen && selectedNote && (
+        <div
+          className="report-modal-overlay"
+          role="presentation"
+          onClick={handleCloseReport}
+        >
+          <div
+            className="report-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="report-modal-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="report-modal-header">
+              <h3 id="report-modal-title" className="report-modal-title">
+                Report note
+              </h3>
+              <button
+                type="button"
+                className="report-modal-close"
+                onClick={handleCloseReport}
+                aria-label="Close report form"
+              >
+                x
+              </button>
+            </div>
+            <p className="report-modal-subtitle">
+              Reporting: <span>{selectedNote.title}</span> (ID:{" "}
+              {selectedNote.id})
+            </p>
+            <form className="report-modal-form" onSubmit={handleSubmitReport}>
+              <label className="report-modal-label" htmlFor="report-reason">
+                Why are you reporting this note?
+              </label>
+              <textarea
+                id="report-reason"
+                name="reason"
+                className="report-modal-textarea"
+                placeholder="Tell us what’s wrong with this note."
+                rows={5}
+                value={reportReason}
+                onChange={(event) => setReportReason(event.target.value)}
+                disabled={reportStatus === "submitting"}
+                required
+              />
+              {reportMessage && (
+                <p
+                  className={
+                    reportStatus === "success"
+                      ? "report-modal-message success"
+                      : "report-modal-message error"
+                  }
+                >
+                  {reportMessage}
+                </p>
+              )}
+              <div className="report-modal-actions">
+                <button
+                  type="button"
+                  className="report-modal-cancel"
+                  onClick={handleCloseReport}
+                  disabled={reportStatus === "submitting"}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="report-modal-submit"
+                  disabled={
+                    reportStatus === "submitting" || !reportReason.trim()
+                  }
+                >
+                  {reportStatus === "submitting" ? "Sending..." : "Submit report"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
