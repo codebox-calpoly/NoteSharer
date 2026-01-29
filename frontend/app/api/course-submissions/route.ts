@@ -40,6 +40,7 @@ export async function POST(request: Request) {
   let payload: SubmissionPayload;
   try {
     payload = (await request.json()) as SubmissionPayload;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error) {
     return NextResponse.json(
       { error: "Invalid request payload." },
