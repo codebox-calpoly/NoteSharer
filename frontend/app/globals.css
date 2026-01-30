@@ -337,6 +337,92 @@ body {
  font-weight: 600;
 }
 
+.note-modal-score-hint {
+ margin: 0;
+ font-size: 0.85rem;
+ color: #94a3b8;
+}
+
+.note-modal-score-desc {
+ font-weight: normal;
+ color: #64748b;
+}
+
+.note-modal-vote-row {
+ display: flex;
+ align-items: center;
+ gap: 1rem;
+ margin-top: 0.75rem;
+}
+
+.note-modal-vote-arrow {
+ display: inline-flex;
+ align-items: center;
+ gap: 6px;
+ padding: 2px 0;
+ font-size: 0.95rem;
+ border: none;
+ background: transparent;
+ cursor: pointer;
+ transition: all 150ms ease;
+ font-weight: 600;
+}
+
+.note-modal-vote-arrow:hover:not(:disabled) {
+ filter: brightness(1.15);
+}
+
+.note-modal-vote-arrow:disabled {
+ opacity: 0.7;
+ cursor: not-allowed;
+}
+
+.note-modal-vote-up {
+ color: #9be2b2;
+}
+
+.note-modal-vote-up:hover:not(:disabled) {
+ background: transparent;
+}
+
+.note-modal-vote-up.note-modal-vote-active {
+ background: transparent;
+ color: #4ade80;
+}
+
+.note-modal-vote-down {
+ color: #f2a0a0;
+}
+
+.note-modal-vote-down:hover:not(:disabled) {
+ background: transparent;
+}
+
+.note-modal-vote-down.note-modal-vote-active {
+ background: transparent;
+ color: #ef4444;
+}
+
+.note-modal-vote-count {
+ min-width: 1.25em;
+ text-align: left;
+}
+
+.note-modal-vote-row-static .note-modal-vote-arrow {
+ pointer-events: none;
+ cursor: default;
+}
+
+.note-modal-vote-static:hover {
+ filter: none;
+}
+
+.note-modal-details .dashboard-vote-error {
+ margin-top: 0.5rem;
+ font-size: 0.85rem;
+ color: #f2a0a0;
+}
+
 .note-modal-actions {
  display: flex;
  justify-content: flex-end;
