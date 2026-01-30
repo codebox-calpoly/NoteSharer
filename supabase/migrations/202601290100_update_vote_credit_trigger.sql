@@ -1,6 +1,10 @@
 -- Update upvote credit awarding to 3 credits per upvote with a 10-credit cap per resource.
 -- Also update profiles.credit_score when credits are awarded.
 
+-- Ensure credit_score exists (app uses it; may have been added out-of-band).
+alter table public.profiles
+add column if not exists credit_score integer default 0;
+
 create or replace function public.fn_handle_vote_credits()
 returns trigger
 language plpgsql
