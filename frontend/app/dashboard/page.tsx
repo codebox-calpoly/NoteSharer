@@ -43,6 +43,9 @@ type Note = {
   upvote_count: number;
   downvote_count: number;
   score: number;
+  my_vote: number | null;
+  download_cost: number;
+  downloaded: boolean;
 };
 
 type ReportStatus = "idle" | "submitting" | "success" | "error";
@@ -53,7 +56,9 @@ export default function DashboardPage() {
   const [selectedClassId, setSelectedClassId] = useState<string | "all">("all");
   const [isClassDropdownOpen, setIsClassDropdownOpen] = useState(false);
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
+  const [downloadedFilter, setDownloadedFilter] = useState<"downloaded" | "not_downloaded">("not_downloaded");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isSortOpen, setIsSortOpen] = useState(false);
   const [noteSearch, setNoteSearch] = useState("");
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [tokenLoaded, setTokenLoaded] = useState(false);
@@ -85,6 +90,11 @@ export default function DashboardPage() {
   const [reportReason, setReportReason] = useState("");
   const [reportStatus, setReportStatus] = useState<ReportStatus>("idle");
   const [reportMessage, setReportMessage] = useState<string | null>(null);
+  const [votingId, setVotingId] = useState<string | null>(null);
+  const [voteError, setVoteError] = useState<string | null>(null);
+  const [notesVersion, setNotesVersion] = useState(0);
+  const [noteForVotePrompt, setNoteForVotePrompt] = useState<Note | null>(null);
+  const [isVotePromptOpen, setIsVotePromptOpen] = useState(false);
 
   const router = useRouter();
 
@@ -232,6 +242,17 @@ export default function DashboardPage() {
     });
   }, [classes, classSearch]);
 
+  const filteredNotes = useMemo(() => {
+    const list = notes.filter((n) =>
+      downloadedFilter === "downloaded" ? n.downloaded : !n.downloaded,
+    );
+    return [...list].sort((a, b) => {
+      const ta = new Date(a.created_at).getTime();
+      const tb = new Date(b.created_at).getTime();
+      return sortOrder === "newest" ? tb - ta : ta - tb;
+    });
+  }, [notes, downloadedFilter, sortOrder]);
+
   useEffect(() => {
     if (!tokenLoaded) return;
     const fetchNotes = async () => {
@@ -303,7 +324,7 @@ export default function DashboardPage() {
     };
 
     fetchNotes();
-  }, [page, selectedClassId, sortOrder, noteSearch, accessToken, tokenLoaded, refreshToken]);
+  }, [page, selectedClassId, sortOrder, noteSearch, accessToken, tokenLoaded, refreshToken, notesVersion]);
 
   const handleSelectClass = (id: string | "all") => {
     setSelectedClassId(id);
@@ -415,7 +436,7 @@ export default function DashboardPage() {
     setSortOrder(order);
     setPage(1);
     setHasMore(false);
-    setIsFilterOpen(false);
+    setIsSortOpen(false);
   };
 
   const handleLoadMore = () => {
@@ -481,6 +502,15 @@ export default function DashboardPage() {
       link.remove();
       window.URL.revokeObjectURL(url);
       refreshCredits();
+      setNotes((prev) => {
+        const updated = prev.map((n) => (n.id === noteId ? { ...n, downloaded: true } : n));
+        const note = prev.find((n) => n.id === noteId);
+        if (note) {
+          setNoteForVotePrompt({ ...note, downloaded: true });
+          setIsVotePromptOpen(true);
+        }
+        return updated;
+      });
     } catch {
       setDownloadError("Failed to download note. Try again.");
     } finally {
@@ -488,9 +518,98 @@ export default function DashboardPage() {
     }
   };
 
+  const handleVote = async (noteId: string, value: 1 | -1) => {
+    if (!accessToken) {
+      setVoteError("Not authenticated. Please sign in again.");
+      return;
+    }
+    if (votingId) return;
+
+    setVoteError(null);
+    setVotingId(noteId);
+
+    try {
+      let res = await fetch(`/api/notes/${noteId}/vote`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ value }),
+      });
+
+      if (res.status === 401) {
+        const newToken = await refreshToken();
+        if (newToken) {
+          res = await fetch(`/api/notes/${noteId}/vote`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${newToken}`,
+            },
+            body: JSON.stringify({ value }),
+          });
+        }
+      }
+
+      if (!res.ok) {
+        const payload = await res.json().catch(() => null);
+        const message =
+          payload && typeof payload === "object" && "error" in payload
+            ? String(payload.error)
+            : "Failed to vote.";
+        setVoteError(message);
+        setVotingId(null);
+        return;
+      }
+
+      setNotes((prev) => {
+        const note = prev.find((n) => n.id === noteId);
+        const prevVote = note?.my_vote ?? 0;
+        const upDelta = (value === 1 ? 1 : 0) - (prevVote === 1 ? 1 : 0);
+        const downDelta = (value === -1 ? 1 : 0) - (prevVote === -1 ? 1 : 0);
+        const scoreDelta = value - prevVote;
+        return prev.map((n) =>
+          n.id === noteId
+            ? {
+                ...n,
+                my_vote: value,
+                upvote_count: (n.upvote_count ?? 0) + upDelta,
+                downvote_count: (n.downvote_count ?? 0) + downDelta,
+                score: (n.score ?? 0) + scoreDelta,
+              }
+            : n,
+        );
+      });
+      if (selectedNote?.id === noteId) {
+        const prevVote = selectedNote.my_vote ?? 0;
+        const upDelta = (value === 1 ? 1 : 0) - (prevVote === 1 ? 1 : 0);
+        const downDelta = (value === -1 ? 1 : 0) - (prevVote === -1 ? 1 : 0);
+        const scoreDelta = value - prevVote;
+        setSelectedNote((prev) =>
+          prev
+            ? {
+                ...prev,
+                my_vote: value,
+                upvote_count: (prev.upvote_count ?? 0) + upDelta,
+                downvote_count: (prev.downvote_count ?? 0) + downDelta,
+                score: (prev.score ?? 0) + scoreDelta,
+              }
+            : null,
+        );
+      }
+      setNotesVersion((v) => v + 1);
+    } catch {
+      setVoteError("Failed to vote. Try again.");
+    } finally {
+      setVotingId(null);
+    }
+  };
+
   const handleOpenNoteModal = (note: Note) => {
     setSelectedNote(note);
     setIsNoteModalOpen(true);
+    setVoteError(null);
   };
 
   const handleCloseNoteModal = () => {
@@ -660,34 +779,67 @@ export default function DashboardPage() {
               )}
             </div>
 
-            {/* Filter Selection */}
-            <div className="dashboard-control">
-              <label className="dashboard-label">Sort</label>
-              <button
-                type="button"
-                className="dashboard-select-button"
-                onClick={() => setIsFilterOpen((open) => !open)}
-              >
-                Filters <span className="dashboard-select-caret">▾</span>
-              </button>
-              {isFilterOpen && (
-                <div className="dashboard-dropdown dashboard-dropdown-compact">
-                  <button
-                    type="button"
-                    className="dashboard-dropdown-item"
-                    onClick={() => handleSelectSort("newest")}
-                  >
-                    Newest
-                  </button>
-                  <button
-                    type="button"
-                    className="dashboard-dropdown-item"
-                    onClick={() => handleSelectSort("oldest")}
-                  >
-                    Oldest
-                  </button>
-                </div>
-              )}
+            {/* Filter + Sort by: same spacing as Class ↔ Filter */}
+            <div className="dashboard-filter-sort-group">
+              <div className="dashboard-control">
+                <label className="dashboard-label">Filter</label>
+                <button
+                  type="button"
+                  className="dashboard-select-button"
+                  onClick={() => setIsFilterOpen((open) => !open)}
+                >
+                  {downloadedFilter === "downloaded" ? "Downloaded notes" : "New notes"}
+                  <span className="dashboard-select-caret">▾</span>
+                </button>
+                {isFilterOpen && (
+                  <div className="dashboard-dropdown dashboard-dropdown-compact">
+                    <button
+                      type="button"
+                      className="dashboard-dropdown-item"
+                      onClick={() => { setDownloadedFilter("downloaded"); setIsFilterOpen(false); setPage(1); setHasMore(false); }}
+                    >
+                      Downloaded notes
+                    </button>
+                    <button
+                      type="button"
+                      className="dashboard-dropdown-item"
+                      onClick={() => { setDownloadedFilter("not_downloaded"); setIsFilterOpen(false); setPage(1); setHasMore(false); }}
+                    >
+                      New notes
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <div className="dashboard-control">
+                <label className="dashboard-label">Sort by</label>
+                <button
+                  type="button"
+                  className="dashboard-select-button"
+                  onClick={() => setIsSortOpen((open) => !open)}
+                >
+                  {sortOrder === "newest" ? "Newest" : "Oldest"}
+                  <span className="dashboard-select-caret">▾</span>
+                </button>
+                {isSortOpen && (
+                  <div className="dashboard-dropdown dashboard-dropdown-compact">
+                    <button
+                      type="button"
+                      className="dashboard-dropdown-item"
+                      onClick={() => handleSelectSort("newest")}
+                    >
+                      Newest
+                    </button>
+                    <button
+                      type="button"
+                      className="dashboard-dropdown-item"
+                      onClick={() => handleSelectSort("oldest")}
+                    >
+                      Oldest
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
           <div className="dashboard-upload-slot">
@@ -709,9 +861,10 @@ export default function DashboardPage() {
         {notesError && <p className="dashboard-error">{notesError}</p>}
 
         {downloadError && <p className="dashboard-error">{downloadError}</p>}
+        {voteError && <p className="dashboard-error" role="alert">{voteError}</p>}
 
         <ul className="dashboard-grid">
-          {notes.map((note) => (
+          {filteredNotes.map((note) => (
             <li
               key={note.id}
               className="dashboard-card"
@@ -739,17 +892,22 @@ export default function DashboardPage() {
                     {" • "}
                     {new Date(note.created_at).toLocaleDateString()}
                   </div>
-                  <div className="dashboard-card-stats">
-                    <span className="dashboard-votes-up">
-                      ↑ {note.upvote_count ?? 0}
+                  <div className="dashboard-card-stats dashboard-card-stats-static" onClick={(e) => e.stopPropagation()}>
+                    <span
+                      className={`dashboard-vote-arrow dashboard-vote-up dashboard-vote-static ${note.my_vote === 1 ? "dashboard-vote-active" : ""}`}
+                      title="Upvotes (vote in note details)"
+                      aria-hidden
+                    >
+                      <span className="dashboard-vote-arrow-icon">↑</span>
+                      <span className="dashboard-vote-count">{note.upvote_count ?? 0}</span>
                     </span>
-                    {" / "}
-                    <span className="dashboard-votes-down">
-                      ↓ {note.downvote_count ?? 0}
-                    </span>
-                    {" • "}
-                    <span className="dashboard-score">
-                      Score: {note.score ?? 0}
+                    <span
+                      className={`dashboard-vote-arrow dashboard-vote-down dashboard-vote-static ${note.my_vote === -1 ? "dashboard-vote-active" : ""}`}
+                      title="Downvotes (vote in note details)"
+                      aria-hidden
+                    >
+                      <span className="dashboard-vote-arrow-icon">↓</span>
+                      <span className="dashboard-vote-count">{note.downvote_count ?? 0}</span>
                     </span>
                   </div>
                   <div className="dashboard-download-row">
@@ -761,8 +919,16 @@ export default function DashboardPage() {
                         handleDownload(note.id);
                       }}
                       disabled={downloadingId === note.id}
+                      title={note.downloaded ? "Re-download (free)" : `Download (−${note.download_cost} credits)`}
                     >
-                      {downloadingId === note.id ? "Preparing..." : "Download"}
+                      <span className="dashboard-download-label">
+                        {downloadingId === note.id ? "Preparing..." : "Download"}
+                      </span>
+                      {downloadingId !== note.id && (
+                        <span className="dashboard-download-cost">
+                          {note.downloaded ? "Free" : `−${note.download_cost} credits`}
+                        </span>
+                      )}
                     </button>
                   </div>
                 </div>
@@ -956,14 +1122,30 @@ export default function DashboardPage() {
                   <strong>Date:</strong> {new Date(selectedNote.created_at).toLocaleDateString()}
                 </p>
                 <p>
-                  <strong>Upvotes:</strong> {selectedNote.upvote_count ?? 0}
+                  <strong>Download:</strong>{" "}
+                  {selectedNote.downloaded ? "You have this (re-download free)" : `−${selectedNote.download_cost} credits`}
                 </p>
-                <p>
-                  <strong>Downvotes:</strong> {selectedNote.downvote_count ?? 0}
+                <p className="note-modal-score-hint" title="Net score (upvotes − downvotes), used for sorting">
+                  Score: {selectedNote.score ?? 0} <span className="note-modal-score-desc">(up − down)</span>
                 </p>
-                <p>
-                  <strong>Score:</strong> {selectedNote.score ?? 0}
-                </p>
+                <div className="note-modal-vote-row note-modal-vote-row-static">
+                  <span
+                    className={`note-modal-vote-arrow note-modal-vote-up note-modal-vote-static ${selectedNote.my_vote === 1 ? "note-modal-vote-active" : ""}`}
+                    title="Upvotes"
+                    aria-hidden
+                  >
+                    <span className="note-modal-vote-arrow-icon">↑</span>
+                    <span className="note-modal-vote-count">{selectedNote.upvote_count ?? 0}</span>
+                  </span>
+                  <span
+                    className={`note-modal-vote-arrow note-modal-vote-down note-modal-vote-static ${selectedNote.my_vote === -1 ? "note-modal-vote-active" : ""}`}
+                    title="Downvotes"
+                    aria-hidden
+                  >
+                    <span className="note-modal-vote-arrow-icon">↓</span>
+                    <span className="note-modal-vote-count">{selectedNote.downvote_count ?? 0}</span>
+                  </span>
+                </div>
               </div>
             </div>
             <div className="note-modal-actions">
@@ -982,6 +1164,94 @@ export default function DashboardPage() {
                 Close
               </button>
             </div>
+          </div>
+        </div>
+      )}
+      {isVotePromptOpen && noteForVotePrompt && (
+        <div
+          className="vote-prompt-overlay"
+          role="presentation"
+          onClick={() => {
+            setIsVotePromptOpen(false);
+            setNoteForVotePrompt(null);
+            setVoteError(null);
+          }}
+        >
+          <div
+            className="vote-prompt-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="vote-prompt-title"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="vote-prompt-header">
+              <h3 id="vote-prompt-title" className="vote-prompt-title">
+                Rate this note
+              </h3>
+              <button
+                type="button"
+                className="vote-prompt-close"
+                onClick={() => {
+                  setIsVotePromptOpen(false);
+                  setNoteForVotePrompt(null);
+                  setVoteError(null);
+                }}
+                aria-label="Close"
+              >
+                x
+              </button>
+            </div>
+            <p className="vote-prompt-subtitle">
+              You downloaded &quot;{noteForVotePrompt.title}&quot;. How was it?
+            </p>
+            <div className="vote-prompt-actions">
+              <button
+                type="button"
+                className={`note-modal-vote-arrow note-modal-vote-up ${noteForVotePrompt.my_vote === 1 ? "note-modal-vote-active" : ""}`}
+                onClick={() => {
+                  handleVote(noteForVotePrompt.id, 1);
+                  setIsVotePromptOpen(false);
+                  setNoteForVotePrompt(null);
+                  setVoteError(null);
+                }}
+                disabled={votingId === noteForVotePrompt.id}
+                aria-label="Upvote"
+              >
+                <span className="note-modal-vote-arrow-icon">↑</span>
+                <span className="note-modal-vote-count">Upvote</span>
+              </button>
+              <button
+                type="button"
+                className={`note-modal-vote-arrow note-modal-vote-down ${noteForVotePrompt.my_vote === -1 ? "note-modal-vote-active" : ""}`}
+                onClick={() => {
+                  handleVote(noteForVotePrompt.id, -1);
+                  setIsVotePromptOpen(false);
+                  setNoteForVotePrompt(null);
+                  setVoteError(null);
+                }}
+                disabled={votingId === noteForVotePrompt.id}
+                aria-label="Downvote"
+              >
+                <span className="note-modal-vote-arrow-icon">↓</span>
+                <span className="note-modal-vote-count">Downvote</span>
+              </button>
+            </div>
+            {voteError && (
+              <p className="dashboard-vote-error" role="alert">
+                {voteError}
+              </p>
+            )}
+            <button
+              type="button"
+              className="vote-prompt-skip"
+              onClick={() => {
+                setIsVotePromptOpen(false);
+                setNoteForVotePrompt(null);
+                setVoteError(null);
+              }}
+            >
+              Skip for now
+            </button>
           </div>
         </div>
       )}

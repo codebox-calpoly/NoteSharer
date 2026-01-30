@@ -106,6 +106,18 @@
   flex-wrap: wrap;
 }
 
+.dashboard-filter-sort-group {
+  display: flex;
+  align-items: flex-end;
+  gap: 18px;
+  flex-shrink: 0;
+}
+
+.dashboard-filter-sort-group .dashboard-control {
+  min-width: 0;
+  width: auto;
+}
+
 .dashboard-upload-slot {
   display: flex;
   margin-left: 0;
@@ -237,8 +249,9 @@
 
 .dashboard-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(220px, 320px));
   gap: 20px;
+  justify-content: start;
 }
 
 .dashboard-card {
@@ -327,15 +340,32 @@
 }
 
 .dashboard-download {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
   border: 1px solid #365314;
   background: rgba(37, 37, 37, 0.7);
   color: #e5e7eb;
   font-size: 12px;
-  padding: 6px 12px;
+  padding: 6px 14px;
   border-radius: 9999px;
   cursor: pointer;
   font-weight: 600;
   transition: all 150ms ease;
+}
+
+.dashboard-download-label {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.dashboard-download-cost {
+  font-size: 10px;
+  font-weight: 500;
+  opacity: 0.9;
+  line-height: 1.2;
 }
 
 .dashboard-download:hover {
@@ -361,8 +391,97 @@
   font-weight: 600;
 }
 
-.dashboard-score {
+.dashboard-card-stats {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.dashboard-vote-arrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 0;
+  font-size: 0.9rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: all 150ms ease;
   font-weight: 600;
+}
+
+.dashboard-vote-arrow:hover:not(:disabled) {
+  filter: brightness(1.15);
+}
+
+.dashboard-vote-arrow:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.dashboard-vote-up {
+  color: #9be2b2;
+}
+
+.dashboard-vote-up:hover:not(:disabled) {
+  background: transparent;
+}
+
+.dashboard-vote-up.dashboard-vote-active {
+  background: transparent;
+  color: #4ade80;
+}
+
+.dashboard-vote-down {
+  color: #f2a0a0;
+}
+
+.dashboard-vote-down:hover:not(:disabled) {
+  background: transparent;
+}
+
+.dashboard-vote-down.dashboard-vote-active {
+  background: transparent;
+  color: #ef4444;
+}
+
+.dashboard-vote-count {
+  min-width: 1.25em;
+  text-align: left;
+}
+
+.dashboard-card-stats-static .dashboard-vote-arrow {
+  pointer-events: none;
+  cursor: default;
+}
+
+.dashboard-vote-static:hover {
+  filter: none;
+}
+
+.dashboard-dropdown-section-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.5rem 0.75rem 0.25rem;
+  margin-top: 0.25rem;
+  border-top: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.dashboard-dropdown-section-label:first-child {
+  margin-top: 0;
+  border-top: none;
+  padding-top: 0;
+}
+
+.dashboard-vote-error {
+  margin-top: 8px;
+  font-size: 0.9rem;
+  color: #f2a0a0;
 }
 
 .dashboard-loading {
@@ -539,6 +658,84 @@
 .report-modal-cancel:disabled {
   opacity: 0.65;
   cursor: not-allowed;
+}
+
+.vote-prompt-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  z-index: 55;
+}
+
+.vote-prompt-modal {
+  width: min(420px, 100%);
+  background: #1a1a1a;
+  border-radius: 16px;
+  padding: 1.25rem 1.5rem;
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(74, 222, 128, 0.2);
+}
+
+.vote-prompt-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.vote-prompt-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #e5e7eb;
+  margin: 0;
+}
+
+.vote-prompt-close {
+  background: transparent;
+  border: none;
+  font-size: 1.4rem;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vote-prompt-subtitle {
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+  color: #94a3b8;
+  line-height: 1.4;
+}
+
+.vote-prompt-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.vote-prompt-skip {
+  display: block;
+  width: 100%;
+  padding: 0.5rem;
+  font-size: 0.85rem;
+  color: #94a3b8;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.vote-prompt-skip:hover {
+  color: #e5e7eb;
 }
 
 @media (max-width: 720px) {
