@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { generateSignedUrl } from "@/lib/storage";
 import { createClient } from "@/utils/supabaseServerClient";
 
@@ -10,6 +11,7 @@ type ResourceRow = {
   created_at: string;
   file_key: string | null;
   preview_key: string | null;
+  download_cost: number;
   profiles: {
     display_name: string | null;
   } | null;
@@ -77,10 +79,12 @@ export async function GET(req: Request) {
         created_at,
         file_key,
         preview_key,
+        download_cost,
         profiles ( display_name )
       `,
       { count: "exact" },
-    );
+    )
+    .eq("status", "active"); // Only show active (approved) notes on dashboard
 
   // Full-text search using the FTS index (searches title and description)
   if (searchQuery && searchQuery.trim()) {
@@ -125,10 +129,38 @@ export async function GET(req: Request) {
     });
   });
 
+  let myVotes: { resource_id: string; value: number }[] = [];
+  if (ids.length > 0) {
+    const { data: myVotesData } = await supabase
+      .from("votes")
+      .select("resource_id, value")
+      .eq("profile_id", user.id)
+      .in("resource_id", ids);
+    myVotes = myVotesData ?? [];
+  }
+  const myVoteMap = new Map<string, number>();
+  myVotes.forEach((v) => myVoteMap.set(v.resource_id, v.value));
+
+  // Use service-role so download status is authoritative for this user only (no RLS ambiguity).
+  const currentUserId = user.id;
+  let downloadedIds = new Set<string>();
+  if (ids.length > 0) {
+    const adminClient = createSupabaseClient(supabaseUrl, supabaseServiceRoleKey);
+    const { data: downloadsData } = await adminClient
+      .from("resource_downloads")
+      .select("resource_id")
+      .eq("profile_id", currentUserId)
+      .in("resource_id", ids);
+    (downloadsData ?? []).forEach((d: { resource_id: string }) => {
+      downloadedIds.add(d.resource_id);
+    });
+  }
+
   const normalized = data
     ? await Promise.all(
         data.map(async (row) => {
           const stats = voteMap.get(row.id) ?? { upvotes: 0, downvotes: 0, score: 0 };
+          const myVote = myVoteMap.get(row.id) ?? null;
           const base = {
             id: row.id,
             title: row.title,
@@ -139,6 +171,9 @@ export async function GET(req: Request) {
             upvote_count: stats.upvotes,
             downvote_count: stats.downvotes,
             score: stats.score,
+            my_vote: myVote,
+            download_cost: row.download_cost ?? 0,
+            downloaded: downloadedIds.has(row.id),
           };
 
           const path = row.preview_key ?? row.file_key;
@@ -165,6 +200,11 @@ export async function GET(req: Request) {
       total,
       hasMore,
     },
-    { status: 200 },
+    {
+      status: 200,
+      headers: {
+        "Cache-Control": "no-store",
+      },
+    },
   );
 }

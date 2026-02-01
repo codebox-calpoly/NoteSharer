@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import PDFThumbnail from "@/app/components/pdf/PDFThumbnail";
 import "./dashboard.css";
-import ProfileIcons from "./profile/profile-icon";
+import ProfileIcons from "./profile-icon";
 
 type ClassOption = {
   id: string;
@@ -503,7 +503,7 @@ export default function DashboardPage() {
               Free Downloads: {freeDownloads ?? "—"}
             </span>
           </div>
-          <ProfileIcons />
+          <ProfileIcons/>
         </div>
       </header>
 
