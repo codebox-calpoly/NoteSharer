@@ -143,7 +143,7 @@ export async function GET(req: Request) {
 
   // Use service-role so download status is authoritative for this user only (no RLS ambiguity).
   const currentUserId = user.id;
-  let downloadedIds = new Set<string>();
+  const downloadedIds = new Set<string>();
   if (ids.length > 0) {
     const adminClient = createSupabaseClient(supabaseUrl, supabaseServiceRoleKey);
     const { data: downloadsData } = await adminClient
