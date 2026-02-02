@@ -20,8 +20,10 @@ export default function Page() {
       if (error) {
         setCreditsError("Not authenticated");
       }
-      setAccessToken(data.session?.access_token ?? null);
-      setTokenLoaded(true);
+      Promise.resolve().then(() => {
+        setAccessToken(data.session?.access_token ?? null);
+        setTokenLoaded(true);
+      });
     };
     loadSession();
   }, []);
