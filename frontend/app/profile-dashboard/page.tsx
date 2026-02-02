@@ -59,7 +59,10 @@ export default function Page() {
 
   useEffect(() => {
     if (!tokenLoaded) return;
-    refreshCredits();
+    const timeoutId = window.setTimeout(() => {
+      void refreshCredits();
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
   }, [refreshCredits, tokenLoaded]);
 
   const handleLogout = useCallback(async () => {
