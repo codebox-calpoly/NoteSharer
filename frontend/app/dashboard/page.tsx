@@ -182,56 +182,76 @@ export default function DashboardPage() {
     fetchClasses();
   }, [accessToken, tokenLoaded, refreshToken]);
 
+  const fetchCredits = useCallback(
+    async (token: string | null) => {
+      if (!token) return null;
+
+      try {
+        let res = await fetch("/api/credits", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        // If 401, try refreshing token and retry once
+        if (res.status === 401) {
+          const newToken = await refreshToken();
+          if (newToken) {
+            res = await fetch("/api/credits", {
+              headers: {
+                Authorization: `Bearer ${newToken}`,
+              },
+            });
+          }
+        }
+
+        if (!res.ok) return null;
+
+        const data = await res.json();
+        return {
+          credits: Number.isFinite(data?.credits) ? Number(data.credits) : 0,
+          freeDownloads: Number.isFinite(data?.freeDownloads)
+            ? Number(data.freeDownloads)
+            : 0,
+        };
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      } catch (error) {
+        return null;
+      }
+    },
+    [refreshToken],
+  );
+
   const refreshCredits = useCallback(async () => {
-    if (!accessToken) {
+    const payload = await fetchCredits(accessToken);
+    if (!payload) {
       setCredits(null);
       setFreeDownloads(null);
       return;
     }
+    setCredits(payload.credits);
+    setFreeDownloads(payload.freeDownloads);
+  }, [accessToken, fetchCredits]);
 
-    try {
-      let res = await fetch("/api/credits", {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-
-      // If 401, try refreshing token and retry once
-      if (res.status === 401) {
-        const newToken = await refreshToken();
-        if (newToken) {
-          res = await fetch("/api/credits", {
-            headers: {
-              Authorization: `Bearer ${newToken}`,
-            },
-          });
-        }
-      }
-
-      if (!res.ok) {
+  useEffect(() => {
+    if (!tokenLoaded) return;
+    let active = true;
+    const loadCredits = async () => {
+      const payload = await fetchCredits(accessToken);
+      if (!active) return;
+      if (!payload) {
         setCredits(null);
         setFreeDownloads(null);
         return;
       }
-
-      const data = await res.json();
-      setCredits(
-        Number.isFinite(data?.credits) ? Number(data.credits) : 0,
-      );
-      setFreeDownloads(
-        Number.isFinite(data?.freeDownloads) ? Number(data.freeDownloads) : 0,
-      );
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (error) {
-      setCredits(null);
-      setFreeDownloads(null);
-    }
-  }, [accessToken, refreshToken]);
-
-  useEffect(() => {
-    if (!tokenLoaded) return;
-    refreshCredits();
-  }, [refreshCredits, tokenLoaded]);
+      setCredits(payload.credits);
+      setFreeDownloads(payload.freeDownloads);
+    };
+    loadCredits();
+    return () => {
+      active = false;
+    };
+  }, [accessToken, fetchCredits, tokenLoaded]);
 
   const filteredClasses = useMemo(() => {
     const term = classSearch.trim().toLowerCase();
