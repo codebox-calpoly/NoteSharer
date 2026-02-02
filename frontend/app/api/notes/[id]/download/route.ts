@@ -102,6 +102,23 @@ export async function GET(
     alreadyOwned = Boolean(download?.id);
   }
 
+  // Ensure owner has a resource_downloads row when they "download" so they can vote (Emma's policy).
+  if (isOwner) {
+    const { data: ownerDownload } = await supabase
+      .from("resource_downloads")
+      .select("id")
+      .eq("resource_id", resourceId)
+      .eq("profile_id", user.id)
+      .maybeSingle();
+    if (!ownerDownload?.id) {
+      await adminClient.from("resource_downloads").insert({
+        resource_id: resourceId,
+        profile_id: user.id,
+        credits_spent: 0,
+      });
+    }
+  }
+
   if (!alreadyOwned) {
     const { data: profile, error: profileError } = await supabase
       .from("profiles")

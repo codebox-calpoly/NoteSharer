@@ -450,11 +450,13 @@ export default function UploadPage() {
                 {file ? file.name : "Choose File"}
               </label>
             </div>
-            {file && (
+            {file && filePreviewUrl && (
               <button
                 type="button"
                 className="upload-preview-button"
-                onClick={() => {
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
                   setShowPreview(true);
                 }}
               >

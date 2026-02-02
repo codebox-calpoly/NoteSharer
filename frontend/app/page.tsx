@@ -54,20 +54,6 @@ export default function Home() {
               quarters together.
             </p>
 
-            {/* Search/Action Bar */}
-            <div className="max-w-2xl mx-auto mb-12">
-              <div className="bg-white/95 dark:bg-emerald-950/95 rounded-full shadow-2xl p-2 flex items-center gap-2 border border-emerald-100 dark:border-emerald-800">
-                <input
-                  type="text"
-                  placeholder="Search for courses, professors, or notes..."
-                  className="flex-1 px-6 py-4 bg-transparent text-emerald-950 dark:text-amber-50 placeholder-emerald-400 focus:outline-none text-lg"
-                />
-                <button className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-emerald-950 font-semibold px-8 py-3 rounded-full transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105">
-                  Search
-                </button>
-              </div>
-            </div>
-
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <a
