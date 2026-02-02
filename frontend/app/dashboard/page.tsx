@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import PDFThumbnail from "@/app/components/pdf/PDFThumbnail";
 import "./dashboard.css";
+import ProfileIcons from "./profile-icon";
 
 type ClassOption = {
   id: string;
@@ -710,13 +711,16 @@ export default function DashboardPage() {
           <div className="dashboard-kicker">Notes hub</div>
           <h1 className="dashboard-title">Dashboard</h1>
         </div>
-        <div className="dashboard-credit-summary">
-          <span className="dashboard-credit-pill">
-            Credits: {credits ?? "—"}
-          </span>
-          <span className="dashboard-credit-pill">
-            Free Downloads: {freeDownloads ?? "—"}
-          </span>
+        <div className="dashboard-header-right">
+          <div className="dashboard-credit-summary">
+            <span className="dashboard-credit-pill">
+              Credits: {credits ?? "—"}
+            </span>
+            <span className="dashboard-credit-pill">
+              Free Downloads: {freeDownloads ?? "—"}
+            </span>
+          </div>
+          <ProfileIcons/>
         </div>
       </header>
 
