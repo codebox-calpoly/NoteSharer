@@ -5,6 +5,12 @@ import { createClient } from "@supabase/supabase-js";
 const MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024;
 const PDF_MIME_TYPES = new Set(["application/pdf"]);
 const STORAGE_BUCKET = "resources";
+const RESOURCE_TYPES = new Set([
+  "lecture_notes",
+  "study_guide",
+  "class_overview",
+  "link",
+]);
 
 const isUuid = (value: string) =>
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
@@ -82,6 +88,7 @@ export async function POST(req: NextRequest) {
   const file = formData.get("file");
   const classId = (formData.get("class_id") as string | null)?.trim();
   const title = (formData.get("title") as string | null)?.trim();
+  const resourceType = (formData.get("resource_type") as string | null)?.trim();
 
   if (!(file instanceof File)) {
     return NextResponse.json({ error: "A PDF file is required." }, { status: 400 });
@@ -94,6 +101,13 @@ export async function POST(req: NextRequest) {
   if (!title || title.length > 200) {
     return NextResponse.json(
       { error: "title is required and must be at most 200 characters." },
+      { status: 400 },
+    );
+  }
+
+  if (!resourceType || !RESOURCE_TYPES.has(resourceType)) {
+    return NextResponse.json(
+      { error: "resource_type must be a valid value." },
       { status: 400 },
     );
   }
@@ -156,6 +170,7 @@ export async function POST(req: NextRequest) {
       profile_id: userId,
       course_id: classId,
       title,
+      resource_type: resourceType,
       file_key: filePath,
       preview_key: filePath,
     })

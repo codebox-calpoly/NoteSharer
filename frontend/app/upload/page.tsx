@@ -38,6 +38,13 @@ const emptyCourseRequest: CourseRequestForm = {
   justification: "",
 };
 
+const resourceTypeOptions = [
+  { label: "Lecture Notes", value: "lecture_notes" },
+  { label: "Study Guide", value: "study_guide" },
+  { label: "Class Overview", value: "class_overview" },
+  { label: "Link", value: "link" },
+] as const;
+
 export default function UploadPage() {
   const [classes, setClasses] = useState<ClassOption[]>([]);
   const [classSearch, setClassSearch] = useState("");
@@ -56,6 +63,7 @@ export default function UploadPage() {
   const [numPages, setNumPages] = useState<number | null>(null);
   const [pageNumber, setPageNumber] = useState(1);
   const [title, setTitle] = useState("");
+  const [resourceType, setResourceType] = useState("");
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [result, setResult] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -288,6 +296,12 @@ export default function UploadPage() {
       return;
     }
 
+    if (!resourceType) {
+      setSubmitError("Please select a resource type.");
+      setIsUploading(false);
+      return;
+    }
+
     if (!accessToken) {
       setSubmitError("Missing access token. Please re-authenticate.");
       setIsUploading(false);
@@ -298,6 +312,7 @@ export default function UploadPage() {
     formData.append("file", file);
     formData.append("class_id", classId);
     formData.append("title", title);
+    formData.append("resource_type", resourceType);
 
     try {
       const res = await fetch("/api/upload", {
@@ -533,6 +548,28 @@ export default function UploadPage() {
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Example: Midterm review sheet"
             />
+          </div>
+
+          <div className="upload-field">
+            <label className="upload-label" htmlFor="resource-type">
+              Resource type
+            </label>
+            <select
+              id="resource-type"
+              className="upload-input"
+              value={resourceType}
+              onChange={(e) => setResourceType(e.target.value)}
+              required
+            >
+              <option value="" disabled>
+                Select a type
+              </option>
+              {resourceTypeOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
           </div>
 
         {/* remove in production, kept for testing purposes */}
