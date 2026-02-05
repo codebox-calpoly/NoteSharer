@@ -1173,6 +1173,25 @@ export default function DashboardPage() {
               </div>
             </div>
             <div className="note-modal-actions">
+              <div className="note-modal-vote-block">
+                <button
+                  type="button"
+                  className="note-modal-upvote-btn"
+                  onClick={() => handleVote(selectedNote.id, 1)}
+                  disabled={votingId === selectedNote.id}
+                >
+                  {selectedNote.my_vote === 1 ? "Upvoted" : "Upvote"}
+                </button>
+
+                <button
+                  type="button"
+                  className="note-modal-downvote-btn"
+                  onClick={() => handleVote(selectedNote.id, -1)}
+                  disabled={votingId === selectedNote.id}
+                >
+                  {selectedNote.my_vote === -1 ? "Downvoted" : "Downvote"}
+                </button>
+              </div>
               <button
                 type="button"
                 className="note-modal-report-btn"
