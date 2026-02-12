@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabaseClient";
+import { getSessionWithRecovery, supabase } from "@/lib/supabaseClient";
 import "./profile-dashboard.css";
 
 export default function Page() {
@@ -16,12 +16,12 @@ export default function Page() {
 
   useEffect(() => {
     const loadSession = async () => {
-      const { data, error } = await supabase.auth.getSession();
+      const { session, error } = await getSessionWithRecovery(supabase);
       if (error) {
         setCreditsError("Not authenticated");
       }
       Promise.resolve().then(() => {
-        setAccessToken(data.session?.access_token ?? null);
+        setAccessToken(session?.access_token ?? null);
         setTokenLoaded(true);
       });
     };

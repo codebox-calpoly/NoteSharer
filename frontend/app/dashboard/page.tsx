@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabaseClient";
+import { getSessionWithRecovery, supabase } from "@/lib/supabaseClient";
 import PDFThumbnail from "@/app/components/pdf/PDFThumbnail";
 import "./dashboard.css";
 import ProfileIcons from "./profile-icon";
@@ -100,12 +100,12 @@ export default function DashboardPage() {
   const router = useRouter();
 
   const refreshToken = useCallback(async () => {
-    const { data, error } = await supabase.auth.getSession();
+    const { session, error } = await getSessionWithRecovery(supabase);
     if (error) {
       console.error("Error refreshing session:", error);
       return null;
     }
-    const newToken = data.session?.access_token ?? null;
+    const newToken = session?.access_token ?? null;
     if (newToken) {
       setAccessToken(newToken);
     }
@@ -114,11 +114,11 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const loadSession = async () => {
-      const { data, error } = await supabase.auth.getSession();
+      const { session, error } = await getSessionWithRecovery(supabase);
       if (error) {
         setClassesError("Not authenticated");
       }
-      setAccessToken(data.session?.access_token ?? null);
+      setAccessToken(session?.access_token ?? null);
       setTokenLoaded(true);
     };
     loadSession();
@@ -619,6 +619,7 @@ export default function DashboardPage() {
             : null,
         );
       }
+      await refreshCredits();
       setNotesVersion((v) => v + 1);
     } catch {
       setVoteError("Failed to vote. Try again.");
@@ -1173,6 +1174,28 @@ export default function DashboardPage() {
               </div>
             </div>
             <div className="note-modal-actions">
+              <button
+                type="button"
+                className={`note-modal-vote-arrow note-modal-vote-up ${selectedNote.my_vote === 1 ? "note-modal-vote-active" : ""}`}
+                onClick={() => handleVote(selectedNote.id, 1)}
+                disabled={!selectedNote.downloaded || votingId === selectedNote.id}
+                title={selectedNote.downloaded ? "Upvote this note" : "Download this note to vote"}
+                aria-label="Upvote"
+              >
+                <span className="note-modal-vote-arrow-icon">↑</span>
+                <span className="note-modal-vote-count">Upvote</span>
+              </button>
+              <button
+                type="button"
+                className={`note-modal-vote-arrow note-modal-vote-down ${selectedNote.my_vote === -1 ? "note-modal-vote-active" : ""}`}
+                onClick={() => handleVote(selectedNote.id, -1)}
+                disabled={!selectedNote.downloaded || votingId === selectedNote.id}
+                title={selectedNote.downloaded ? "Downvote this note" : "Download this note to vote"}
+                aria-label="Downvote"
+              >
+                <span className="note-modal-vote-arrow-icon">↓</span>
+                <span className="note-modal-vote-count">Downvote</span>
+              </button>
               <button
                 type="button"
                 className="note-modal-report-btn"

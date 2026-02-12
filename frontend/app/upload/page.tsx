@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabaseClient";
+import { getSessionWithRecovery, supabase } from "@/lib/supabaseClient";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import "react-pdf/dist/esm/Page/TextLayer.css";
@@ -82,11 +82,11 @@ export default function UploadPage() {
   // Authentications
   useEffect(() => {
     (async () => {
-      const { data, error } = await supabase.auth.getSession();
+      const { session, error } = await getSessionWithRecovery(supabase);
       if (error) {
         console.log("UploadPage supabase.auth.getSession error:", error);
       }
-      if (!data?.session) {
+      if (!session) {
         // not logged in
         router.replace("/auth");
         return;
@@ -99,11 +99,11 @@ export default function UploadPage() {
   //recycled
   useEffect(() => {
     const loadSession = async () => {
-      const { data, error } = await supabase.auth.getSession();
+      const { session, error } = await getSessionWithRecovery(supabase);
       if (error) {
         setClassesError("Not authenticated");
       }
-      setAccessToken(data.session?.access_token ?? null);
+      setAccessToken(session?.access_token ?? null);
       setTokenLoaded(true);
     };
     loadSession();

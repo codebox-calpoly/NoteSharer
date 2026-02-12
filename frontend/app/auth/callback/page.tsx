@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabaseClient";
+import { getSessionWithRecovery, supabase } from "@/lib/supabaseClient";
 import { generateUniqueNickname } from "@/lib/nicknames";
 import "./callback.css";
 
@@ -100,9 +100,9 @@ export default function AuthCallbackPage() {
       }
 
       setStatus("Validating session...");
-      const { data, error } = await supabase.auth.getSession();
+      const { session, error } = await getSessionWithRecovery(supabase);
 
-      if (error || !data?.session) {
+      if (error || !session) {
         const hasCode = Boolean(code);
         setStatus(
           hasCode
@@ -114,8 +114,8 @@ export default function AuthCallbackPage() {
         return;
       }
 
-      const userId = data.session.user.id;
-      const userEmail = data.session.user.email ?? null;
+      const userId = session.user.id;
+      const userEmail = session.user.email ?? null;
       setStatus("Checking onboarding status...");
 
       const { data: profile, error: profileError } = await supabase

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { supabase } from "@/lib/supabaseClient";
+import { getSessionWithRecovery, supabase } from "@/lib/supabaseClient";
 import "./reset-my-data.css";
 
 type Status = "idle" | "loading" | "success" | "error";
@@ -15,7 +15,7 @@ export default function ResetMyDataPage() {
     let cancelled = false;
 
     async function run() {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { session } = await getSessionWithRecovery(supabase);
       if (!session?.access_token) {
         if (!cancelled) {
           setStatus("error");

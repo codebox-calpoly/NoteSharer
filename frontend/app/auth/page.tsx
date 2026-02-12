@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { supabase } from "@/lib/supabaseClient";
+import { getSessionWithRecovery, supabase } from "@/lib/supabaseClient";
 import "./auth.css";
 
 export default function AuthPage() {
@@ -19,11 +19,11 @@ export default function AuthPage() {
 
   useEffect(() => {
     const checkSession = async () => {
-      const { data, error } = await supabase.auth.getSession();
+      const { session, error } = await getSessionWithRecovery(supabase);
       if (error) {
         console.error("Failed to fetch session", error);
       }
-      if (data?.session) {
+      if (session) {
         router.replace(redirectTo.startsWith("/") ? redirectTo : "/auth/callback");
         return;
       }

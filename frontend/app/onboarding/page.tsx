@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabaseClient";
+import { getSessionWithRecovery, supabase } from "@/lib/supabaseClient";
 import { generateUniqueNickname } from "@/lib/nicknames";
 import "./onboarding.css";
 
@@ -17,12 +17,12 @@ export default function OnboardingPage() {
 
   useEffect(() => {
     const load = async () => {
-      const { data: sessionData } = await supabase.auth.getSession();
-      if (!sessionData?.session) {
+      const { session } = await getSessionWithRecovery(supabase);
+      if (!session) {
         router.replace("/auth");
         return;
       }
-      const userId = sessionData.session.user.id;
+      const userId = session.user.id;
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("onboarding_complete, display_name")
@@ -63,8 +63,8 @@ export default function OnboardingPage() {
   const complete = async () => {
     setSaving(true);
     setError(null);
-    const { data: sessionData } = await supabase.auth.getSession();
-    const userId = sessionData?.session?.user.id;
+    const { session } = await getSessionWithRecovery(supabase);
+    const userId = session?.user.id;
     if (!userId) {
       router.replace("/auth");
       return;
