@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import "./auth.css";
 
 export default function AuthPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirect") || "/auth/callback";
   const [checking, setChecking] = useState(true);
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
@@ -22,7 +24,7 @@ export default function AuthPage() {
         console.error("Failed to fetch session", error);
       }
       if (data?.session) {
-        router.replace("/auth/callback");
+        router.replace(redirectTo.startsWith("/") ? redirectTo : "/auth/callback");
         return;
       }
       setChecking(false);
@@ -81,7 +83,7 @@ export default function AuthPage() {
             if (verifyError) {
               setError(verifyError.message ?? "Invalid or expired code.");
             } else {
-              router.replace("/auth/callback");
+              router.replace(redirectTo.startsWith("/") ? redirectTo : "/auth/callback");
             }
           }
           setSubmitting(false);

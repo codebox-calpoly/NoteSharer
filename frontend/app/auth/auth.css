@@ -1,87 +1,92 @@
+/* Poly Pages sign-in layout */
 .auth-page {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f4f4f5;
-  color: #0b0b0b;
-  padding: 1.5rem;
+  background: var(--poly-bg-page);
+  color: var(--poly-neutral-dark);
+  padding: var(--poly-space-lg);
 }
 
 .auth-card {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  background: #ffffff;
-  color: #0b0b0b;
-  border: 1px solid #e4e4e7;
-  border-radius: 12px;
-  padding: 2rem;
-  max-width: 480px;
-  width: min(480px, 100%);
+  gap: var(--poly-space-lg);
+  background: #fff;
+  color: var(--poly-neutral-dark);
+  border: 1px solid var(--poly-border);
+  border-radius: var(--poly-radius-card);
+  padding: var(--poly-space-3xl);
+  max-width: 440px;
+  width: 100%;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.06);
 }
 
 .auth-title {
   margin: 0;
-  font-size: 1.25rem;
+  font-size: 48px;
   font-weight: 700;
+  line-height: 1.2;
+  color: var(--poly-neutral-dark);
 }
 
 .auth-body {
   margin: 0;
-  font-size: 0.95rem;
+  font-size: 18px;
   line-height: 1.5;
-  color: #4b5563;
+  color: var(--poly-neutral-muted);
 }
 
 .auth-form {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: var(--poly-space-lg);
 }
 
 .auth-label {
-  font-size: 0.9rem;
+  font-size: 14px;
   font-weight: 600;
-  color: #111827;
+  color: var(--poly-neutral-dark);
 }
 
 .auth-input {
   width: 100%;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  padding: 0.75rem 0.9rem;
-  font-size: 0.95rem;
+  height: 48px;
+  border: 1px solid var(--poly-border);
+  border-radius: var(--poly-radius-input);
+  padding: 0 16px;
+  font-size: 16px;
   background: #fff;
-  color: #111827;
-  transition: border-color 120ms ease, box-shadow 120ms ease;
+  color: var(--poly-neutral-dark);
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .auth-input:focus {
   outline: none;
-  border-color: #111827;
-  box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.08);
+  border-color: var(--poly-primary);
+  box-shadow: 0 0 0 3px rgba(191, 68, 8, 0.12);
 }
 
 .auth-input::placeholder {
-  color: #9ca3af;
+  color: var(--poly-neutral-muted);
 }
 
 .auth-button-primary {
-  height: 3rem;
-  border: none;
-  border-radius: 9999px;
-  background: #0b0b0b;
-  color: #ffffff;
+  height: 48px;
+  border: 1px solid var(--poly-primary);
+  border-radius: var(--poly-radius-button);
+  background: var(--poly-primary);
+  color: #fff;
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: 16px;
   cursor: pointer;
-  transition: background-color 150ms ease, transform 150ms ease;
+  transition: background 0.2s, border-color 0.2s;
 }
 
-.auth-button-primary:hover {
-  background: #27272a;
+.auth-button-primary:hover:not(:disabled) {
+  background: var(--poly-primary-hover);
+  border-color: var(--poly-primary-hover);
 }
 
 .auth-button-primary:disabled {
@@ -89,11 +94,26 @@
   cursor: not-allowed;
 }
 
+.auth-button-secondary {
+  background: transparent;
+  border: 1px solid var(--poly-border);
+  color: var(--poly-neutral-muted);
+  font-size: 14px;
+  padding: 8px 16px;
+  border-radius: var(--poly-radius-button);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.auth-button-secondary:hover {
+  background: var(--poly-sage-soft);
+  color: var(--poly-neutral-dark);
+}
 
 .auth-success,
 .auth-error {
   margin: 0;
-  font-size: 0.9rem;
+  font-size: 14px;
 }
 
 .auth-success {
@@ -106,49 +126,14 @@
 
 .auth-loading {
   margin: 0;
-  font-size: 0.95rem;
+  font-size: 16px;
   font-weight: 600;
+  color: var(--poly-neutral-muted);
 }
 
+/* Dark mode: keep Poly Pages light theme for consistency, or uncomment below
 @media (prefers-color-scheme: dark) {
-  .auth-page {
-    background: #0a0a0a;
-    color: #ededed;
-  }
-
-  .auth-card {
-    background: #0b0b0f;
-    color: #ededed;
-    border-color: #27272a;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
-  }
-
-  .auth-body {
-    color: #a1a1aa;
-  }
-
-  .auth-label {
-    color: #e4e4e7;
-  }
-
-  .auth-input {
-    background: #0f0f14;
-    border-color: #27272a;
-    color: #e4e4e7;
-  }
-
-  .auth-input:focus {
-    border-color: #c4c4cc;
-    box-shadow: 0 0 0 3px rgba(196, 196, 204, 0.12);
-  }
-
-  .auth-button-primary {
-    background: #ffffff;
-    color: #0b0b0b;
-  }
-
-  .auth-button-primary:hover {
-    background: #e5e5e5;
-  }
-
+  .auth-page { background: var(--poly-bg-page); }
+  .auth-card { border-color: var(--poly-border); }
 }
+*/

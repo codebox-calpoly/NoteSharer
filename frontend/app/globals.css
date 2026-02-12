@@ -4,6 +4,191 @@
 :root {
  --background: #ffffff;
  --foreground: #171717;
+ /* Poly Pages – landing & sign-in only */
+ --poly-primary: #BF4408;
+ --poly-primary-hover: #E65103;
+ --poly-accent: #F9C784;
+ --poly-bg-page: #FAF9F7;
+ --poly-border: rgba(122, 155, 118, 0.15);
+ --poly-border-subtle: rgba(122, 155, 118, 0.075);
+ --poly-sage: #6DBE8B;
+ --poly-sage-soft: rgba(122, 155, 118, 0.1);
+ --poly-neutral-dark: #2E2E2E;
+ --poly-neutral-muted: #495565;
+ --poly-radius-card: 8px;
+ --poly-radius-input: 6px;
+ --poly-radius-button: 24px;
+ --poly-space-unit: 8px;
+ --poly-space-lg: 24px;
+ --poly-space-xl: 32px;
+ --poly-space-3xl: 48px;
+ --poly-space-4xl: 64px;
+}
+
+/* Landing page – Poly layout */
+.poly-page {
+  min-height: 100vh;
+}
+
+.poly-navbar {
+  background: #fff;
+  border-bottom: 1px solid var(--poly-border);
+  padding: var(--poly-space-unit) var(--poly-space-lg);
+}
+
+.poly-navbar-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.poly-logo-row {
+  text-decoration: none;
+  color: inherit;
+}
+
+.poly-logo-text {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--poly-neutral-dark);
+}
+
+.poly-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1.25rem;
+  border-radius: var(--poly-radius-button);
+  background: var(--poly-primary);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-decoration: none;
+  transition: background 0.2s ease;
+}
+
+.poly-btn-primary:hover {
+  background: var(--poly-primary-hover);
+}
+
+.poly-hero {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: var(--poly-space-4xl) var(--poly-space-lg) var(--poly-space-3xl);
+  text-align: center;
+}
+
+.poly-hero-title {
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--poly-neutral-dark);
+  margin: 0 0 1rem;
+}
+
+.poly-hero-subtitle {
+  font-size: 1.125rem;
+  line-height: 1.6;
+  color: var(--poly-neutral-muted);
+  margin: 0;
+}
+
+.poly-section {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--poly-space-lg) var(--poly-space-3xl);
+}
+
+.poly-section-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--poly-neutral-dark);
+  margin: 0 0 0.5rem;
+}
+
+.poly-section-desc {
+  font-size: 1rem;
+  color: var(--poly-neutral-muted);
+  margin: 0 0 1.5rem;
+}
+
+.poly-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1.5rem;
+}
+
+.poly-course-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1.25rem;
+  background: #fff;
+  border: 1px solid var(--poly-border);
+  border-radius: var(--poly-radius-card);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.poly-course-card:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border-color: var(--poly-sage);
+}
+
+.poly-course-badge {
+  display: inline-block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--poly-neutral-dark);
+  background: var(--poly-accent);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  width: fit-content;
+}
+
+.poly-course-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--poly-neutral-dark);
+  margin: 0;
+  line-height: 1.3;
+}
+
+.poly-course-meta {
+  font-size: 0.9rem;
+  color: var(--poly-sage);
+}
+
+.poly-footer {
+  border-top: 1px solid var(--poly-border-subtle);
+  padding: var(--poly-space-lg) var(--poly-space-lg);
+  background: #fff;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.poly-footer-logo {
+  font-size: 0.9rem;
+  color: var(--poly-neutral-muted);
+}
+
+.poly-footer-nav {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.poly-footer-nav a {
+  color: var(--poly-neutral-muted);
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.poly-footer-nav a:hover {
+  color: var(--poly-neutral-dark);
 }
 
 
