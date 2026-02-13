@@ -400,6 +400,20 @@
   flex-shrink: 0;
 }
 
+.browse-loading {
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--poly-neutral-muted);
+  font-size: 16px;
+}
+
+.browse-loading-more {
+  padding: 16px 24px;
+  text-align: center;
+  color: var(--poly-neutral-muted);
+  font-size: 14px;
+}
+
 .browse-empty {
   padding: 48px 24px;
   text-align: center;

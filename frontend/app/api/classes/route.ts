@@ -21,7 +21,25 @@ type ClassResponse = {
   note_count: number;
 };
 
-export async function GET() {
+const PAGE_SIZE = 1000;
+
+function buildClasses(rows: CourseRow[], countMap: Map<string, number>): ClassResponse[] {
+  return rows.map((course) => {
+    const codeParts = [course.department, course.course_number].filter(Boolean).join(" ").trim();
+    const fallbackName = codeParts || "Untitled course";
+    return {
+      id: course.id,
+      name: course.title?.trim() || fallbackName,
+      code: codeParts || null,
+      department: course.department ?? null,
+      term: course.term ?? null,
+      year: course.year ?? null,
+      note_count: countMap.get(course.id) ?? 0,
+    };
+  });
+}
+
+export async function GET(request: Request) {
   const headerStore = await headers();
   const authHeader = headerStore.get("authorization");
   const bearerToken = authHeader?.toLowerCase().startsWith("bearer ")
@@ -47,10 +65,54 @@ export async function GET() {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  // Supabase/PostgREST default limit is 1000; we have ~15k+ courses, so paginate to get all.
-  const pageSize = 1000;
+  const { searchParams } = new URL(request.url);
+  const limitParam = searchParams.get("limit");
+  const offsetParam = searchParams.get("offset");
+  const paginated = limitParam != null && limitParam !== "";
+  const limit = paginated ? Math.min(Math.max(1, parseInt(limitParam, 10) || PAGE_SIZE), 1000) : PAGE_SIZE;
+  const offset = paginated ? Math.max(0, parseInt(offsetParam ?? "0", 10)) : 0;
+
+  if (paginated) {
+    const { data: page, error } = await supabase
+      .from("courses")
+      .select("id, title, department, course_number, term, year")
+      .order("title", { ascending: true })
+      .range(offset, offset + limit - 1);
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    const rows = (page ?? []) as CourseRow[];
+    const courseIds = rows.map((c) => c.id);
+    const countMap = new Map<string, number>();
+
+    if (courseIds.length > 0) {
+      const { data: resources } = await supabase
+        .from("resources")
+        .select("course_id")
+        .eq("status", "active")
+        .in("course_id", courseIds);
+      (resources ?? []).forEach((r: { course_id: string }) => {
+        countMap.set(r.course_id, (countMap.get(r.course_id) ?? 0) + 1);
+      });
+    }
+
+    const classes = buildClasses(rows, countMap);
+    const hasMore = rows.length === limit;
+
+    return NextResponse.json(
+      { classes, hasMore },
+      {
+        status: 200,
+        headers: {
+          "Cache-Control": "private, max-age=60, stale-while-revalidate=120",
+        },
+      }
+    );
+  }
+
   const rows: CourseRow[] = [];
-  let offset = 0;
+  let currentOffset = 0;
   let hasMore = true;
 
   while (hasMore) {
@@ -58,18 +120,18 @@ export async function GET() {
       .from("courses")
       .select("id, title, department, course_number, term, year")
       .order("title", { ascending: true })
-      .range(offset, offset + pageSize - 1);
+      .range(currentOffset, currentOffset + PAGE_SIZE - 1);
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
     const list = (page ?? []) as CourseRow[];
     rows.push(...list);
-    hasMore = list.length === pageSize;
-    offset += pageSize;
+    hasMore = list.length === PAGE_SIZE;
+    currentOffset += PAGE_SIZE;
   }
 
-  const courseIds = rows?.map((c) => c.id) ?? [];
+  const courseIds = rows.map((c) => c.id);
   const countMap = new Map<string, number>();
 
   if (courseIds.length > 0) {
@@ -82,20 +144,15 @@ export async function GET() {
     });
   }
 
-  const classes: ClassResponse[] =
-    rows?.map((course) => {
-      const codeParts = [course.department, course.course_number].filter(Boolean).join(" ").trim();
-      const fallbackName = codeParts || "Untitled course";
-      return {
-        id: course.id,
-        name: course.title?.trim() || fallbackName,
-        code: codeParts || null,
-        department: course.department ?? null,
-        term: course.term ?? null,
-        year: course.year ?? null,
-        note_count: countMap.get(course.id) ?? 0,
-      };
-    }) ?? [];
+  const classes = buildClasses(rows, countMap);
 
-  return NextResponse.json({ classes }, { status: 200 });
+  return NextResponse.json(
+    { classes },
+    {
+      status: 200,
+      headers: {
+        "Cache-Control": "private, max-age=60, stale-while-revalidate=120",
+      },
+    }
+  );
 }

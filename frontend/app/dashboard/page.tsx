@@ -54,6 +54,8 @@ export default function DashboardPage() {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [tokenLoaded, setTokenLoaded] = useState(false);
   const [coursesError, setCoursesError] = useState<string | null>(null);
+  const [coursesLoading, setCoursesLoading] = useState(false);
+  const [coursesLoadingMore, setCoursesLoadingMore] = useState(false);
   const [catalogTerms, setCatalogTerms] = useState<CatalogTerm[]>(FALLBACK_CATALOG_TERMS);
   const [departments, setDepartments] = useState<string[]>(() => [...CALPOLY_DEPARTMENT_CODES]);
   const [credits, setCredits] = useState<number | null>(null);
@@ -87,41 +89,70 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!tokenLoaded || !accessToken) {
-      if (tokenLoaded && !accessToken) setCoursesError("Not authenticated");
+      if (tokenLoaded && !accessToken) {
+        setCoursesError("Not authenticated");
+        setCoursesLoading(false);
+      }
       return;
     }
     let active = true;
-    const fetchCourses = async () => {
+    setCoursesLoading(true);
+    setCoursesLoadingMore(false);
+    const pageSize = 1000;
+
+    const fetchPage = async (token: string, off: number): Promise<{ classes: CourseOption[]; hasMore: boolean } | null> => {
+      const res = await fetch(`/api/classes?limit=${pageSize}&offset=${off}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.status === 401) return null;
+      if (!res.ok) return null;
+      const data = (await res.json()) as { classes?: CourseOption[]; hasMore?: boolean };
+      return {
+        classes: data.classes ?? [],
+        hasMore: data.hasMore ?? false,
+      };
+    };
+
+    const run = async () => {
       try {
-        let res = await fetch("/api/classes", {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        });
-        if (res.status === 401) {
+        let token = accessToken;
+        let res = await fetchPage(token, 0);
+        if (res === null) {
           const newToken = await refreshToken();
-          if (newToken) {
-            res = await fetch("/api/classes", {
-              headers: { Authorization: `Bearer ${newToken}` },
-            });
-          }
+          if (newToken) res = await fetchPage(newToken, 0);
         }
         if (!active) return;
-        if (!res.ok) {
-          const payload = await res.json().catch(() => ({}));
-          setCoursesError((payload as { error?: string }).error || "Failed to load courses");
+        if (res === null) {
+          setCoursesError("Failed to load courses");
           setCourses([]);
+          setCoursesLoading(false);
           return;
         }
-        const data = (await res.json()) as { classes?: CourseOption[] };
-        setCourses(data.classes ?? []);
+        setCourses(res.classes);
         setCoursesError(null);
+        setCoursesLoading(false);
+
+        let offset = res.classes.length;
+        if (res.hasMore) setCoursesLoadingMore(true);
+        while (active && res.hasMore) {
+          token = token ?? (await refreshToken()) ?? undefined;
+          if (!token) break;
+          const next = await fetchPage(token, offset);
+          if (!active || next === null) break;
+          setCourses((prev) => [...prev, ...next.classes]);
+          offset += next.classes.length;
+          res = next;
+        }
+        if (active) setCoursesLoadingMore(false);
       } catch {
         if (active) {
           setCoursesError("Failed to load courses");
           setCourses([]);
+          setCoursesLoading(false);
         }
       }
     };
-    fetchCourses();
+    run();
     return () => { active = false; };
   }, [accessToken, tokenLoaded, refreshToken]);
 
@@ -350,7 +381,10 @@ export default function DashboardPage() {
               />
             </div>
           </div>
-          {allDisplayCourses.length === 0 && !coursesError && (
+          {(!tokenLoaded || coursesLoading) && !coursesError && (
+            <p className="browse-loading" aria-live="polite">Loading courses…</p>
+          )}
+          {tokenLoaded && !coursesLoading && allDisplayCourses.length === 0 && !coursesError && (
             <p className="browse-empty">No courses match your filters.</p>
           )}
           <div className="browse-course-grid">
@@ -392,6 +426,9 @@ export default function DashboardPage() {
                 Load more ({allDisplayCourses.length - visibleCourseCount} remaining)
               </button>
             </div>
+          )}
+          {coursesLoadingMore && (
+            <p className="browse-loading-more" aria-live="polite">Loading more courses…</p>
           )}
         </main>
       </div>
