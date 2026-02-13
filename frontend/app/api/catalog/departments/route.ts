@@ -28,31 +28,24 @@ export async function GET() {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const { data: creditData, error: creditError } = await supabase
-    .from("profiles")
-    .select("credit_score")
-    .eq("id", user.id)
-    .maybeSingle();
+  const { data, error } = await supabase
+    .from("courses")
+    .select("department")
+    .not("department", "is", null);
 
-  if (creditError) {
-    return NextResponse.json({ error: creditError.message }, { status: 500 });
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const { count: voucherCount, error: voucherError } = await supabase
-    .from("download_vouchers")
-    .select("id", { count: "exact", head: true })
-    .eq("profile_id", user.id)
-    .is("redeemed_at", null);
+  const deptSet = new Set<string>();
+  (data ?? []).forEach((r: { department: string | null }) => {
+    if (r.department) deptSet.add(r.department);
+  });
+  const departments = Array.from(deptSet).sort((a, b) => {
+    if (a === "TEST") return -1;
+    if (b === "TEST") return 1;
+    return a.localeCompare(b);
+  });
 
-  if (voucherError) {
-    return NextResponse.json({ error: voucherError.message }, { status: 500 });
-  }
-
-  return NextResponse.json(
-    {
-      credits: creditData?.credit_score ?? 0,
-      freeDownloads: voucherCount ?? 0,
-    },
-    { status: 200 },
-  );
+  return NextResponse.json({ departments }, { status: 200 });
 }

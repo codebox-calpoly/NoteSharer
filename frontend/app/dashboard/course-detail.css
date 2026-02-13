@@ -1,0 +1,326 @@
+/* Course detail page – course-detail-page-ui style (Poly) */
+.course-detail-page {
+  min-height: 100vh;
+  background: var(--poly-bg-page);
+  display: flex;
+  flex-direction: column;
+}
+
+.course-detail-body {
+  flex: 1;
+  padding: 32px 32px 48px;
+  max-width: 1280px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.course-detail-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.course-detail-header-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.course-detail-header-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.course-detail-code {
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 32px;
+  color: var(--poly-neutral-dark);
+}
+
+.course-detail-term-badge {
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: var(--poly-accent);
+  color: var(--poly-neutral-dark);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+}
+
+.course-detail-title {
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 28px;
+  color: var(--poly-neutral-dark);
+  margin: 0;
+}
+
+.course-detail-subline {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  color: rgba(73, 85, 101, 1);
+  margin: 4px 0 0;
+}
+
+.course-detail-add-note {
+  flex-shrink: 0;
+  height: 44px;
+  padding: 0 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 999px;
+  background: var(--poly-sage);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+.course-detail-add-note:hover {
+  opacity: 0.9;
+}
+
+/* Tabs – Notes (active), Resources, Top Contributors */
+.course-detail-tabs {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  border-bottom: 1px solid rgba(229, 231, 235, 1);
+  margin-bottom: 24px;
+}
+
+.course-detail-tab {
+  padding: 12px 20px;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--poly-neutral-muted);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.course-detail-tab:hover {
+  color: var(--poly-neutral-dark);
+}
+
+.course-detail-tab.active {
+  color: var(--poly-sage);
+  border-bottom-color: var(--poly-sage);
+}
+
+/* Filter row */
+.course-detail-filters {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.course-detail-filter-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.course-detail-filter-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--poly-neutral-muted);
+}
+
+.course-detail-filter-btn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(229, 231, 235, 1);
+  background: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--poly-neutral-dark);
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.course-detail-filter-btn:hover {
+  background: var(--poly-sage-soft);
+  border-color: var(--poly-sage);
+}
+
+.course-detail-filter-btn.active {
+  background: var(--poly-sage-soft);
+  border-color: var(--poly-sage);
+  color: var(--poly-sage);
+}
+
+.course-detail-notes-count {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--poly-neutral-muted);
+}
+
+/* Note cards grid – no download on card */
+.course-detail-note-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 24px;
+}
+
+.course-detail-note-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+  background: #fff;
+  border: 1px solid rgba(229, 231, 235, 1);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: box-shadow 0.2s, border-color 0.2s;
+  text-align: left;
+}
+
+.course-detail-note-card:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border-color: var(--poly-sage);
+}
+
+.course-detail-note-title {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 24px;
+  color: var(--poly-neutral-dark);
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.course-detail-note-by {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--poly-neutral-muted);
+  margin: 0;
+}
+
+.course-detail-note-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(242, 244, 246, 1);
+}
+
+.course-detail-note-votes {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--poly-neutral-dark);
+}
+
+.course-detail-note-vote-up {
+  color: var(--poly-sage);
+}
+
+.course-detail-note-vote-down {
+  color: #b91c1c;
+}
+
+.course-detail-note-credits {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--poly-neutral-muted);
+}
+
+.course-detail-empty {
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--poly-neutral-muted);
+  font-size: 16px;
+}
+
+.course-detail-error {
+  padding: 16px;
+  background: rgba(239, 68, 68, 0.1);
+  color: #b91c1c;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.course-detail-loading {
+  margin-top: 16px;
+  font-size: 16px;
+  color: var(--poly-neutral-muted);
+}
+
+.course-detail-load-more {
+  margin-top: 24px;
+  width: 100%;
+  max-width: 200px;
+  margin-left: auto;
+  margin-right: auto;
+  display: block;
+  height: 44px;
+  padding: 0 24px;
+  border-radius: 999px;
+  border: 1px solid var(--poly-sage);
+  background: #fff;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--poly-sage);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.course-detail-load-more:hover {
+  background: var(--poly-sage-soft);
+  color: var(--poly-sage);
+}
+
+.course-detail-load-more:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Download button in modal – primary style */
+.note-modal-download-btn {
+  border-radius: 999px;
+  padding: 0.6rem 1.2rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: var(--poly-sage);
+  color: #fff;
+}
+
+.note-modal-download-btn:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.note-modal-download-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}

@@ -32,12 +32,21 @@ supabase db push
 
 This runs the SQL in `supabase/migrations` against the linked project. Review the SQL beforehand if you already have data—running migrations on a live database may require downtime or backfills.
 
-## 5. Keeping the Schema in Sync
+## 5. Catalog Data (Courses & Terms)
+After `supabase db push`, the `catalog_terms` table is seeded with the 2026–2028 catalog terms (Fall 2026 through Summer 2028). To populate the `courses` table with all Cal Poly catalog courses for those terms, run from the **frontend** directory:
+
+```bash
+cd frontend && npm run db:seed-catalog
+```
+
+This reads `app/dashboard/calpoly-catalog.ts` and upserts one row per (department, course_number, term, year). Ensure `.env.local` has `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` so the script can connect.
+
+## 6. Keeping the Schema in Sync
 - When making DB changes locally, create a new migration file with `supabase migration new <name>` and edit the generated SQL.
 - Use `supabase db lint` to catch obvious issues before pushing.
 - If you edit the schema in the hosted project directly, run `supabase db pull` to update the local shadow schema and resolve drift.
 
-## 6. Helpful Commands
+## 7. Helpful Commands
 
 | Command | Purpose |
 | --- | --- |
@@ -45,14 +54,14 @@ This runs the SQL in `supabase/migrations` against the linked project. Review th
 | `supabase db dump --schema public` | Export the current schema (good for backups) |
 | `supabase functions deploy <name>` | Deploy Edge Functions (future work) |
 
-## 7. Storage Buckets
+## 8. Storage Buckets
 Create these buckets in the Supabase dashboard (Storage → Buckets):
 - `resources` — original PDFs (private, access via signed URLs)
 - `previews` — blurred teaser PNGs
 
 Set each bucket to **private** and let the API create signed URLs after credit/voucher checks.
 
-## 8. Next Steps
+## 9. Next Steps
 - Wire these env vars into the Next.js frontend (`createClient` helpers for client/server).
 - Implement server actions/API routes that call the provided SQL RPC helpers for credits, vouchers, and downloads.
 - Add RLS policies once the Auth flows are ready (policies are noted inside the migration file but left `ALTER POLICY ... USING (...)` editable so you can fine-tune them per route).

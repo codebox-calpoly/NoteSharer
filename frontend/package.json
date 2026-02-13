@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint",
     "test": "jest",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "db:seed-catalog": "node scripts/seed-catalog-courses.mjs",
+    "fetch-course-titles": "node scripts/fetch-course-titles.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.83.0",
