@@ -22,6 +22,77 @@ type ClassResponse = {
 };
 
 const PAGE_SIZE = 1000;
+const RESOURCE_PAGE_SIZE = 1000;
+const RPC_BATCH_SIZE = 500;
+
+type RpcRow = { course_id: string; note_count: number };
+
+/** Get note counts via DB RPC (accurate, no row limit). Falls back to paginated fetch if RPC fails. */
+async function getNoteCountMap(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  courseIds: string[] | null
+): Promise<Map<string, number>> {
+  const countMap = new Map<string, number>();
+
+  if (courseIds != null && courseIds.length === 0) return countMap;
+
+  const ids = courseIds ?? [];
+  const useRpc = ids.length > 0;
+
+  if (useRpc) {
+    let rpcFailed = false;
+    for (let i = 0; i < ids.length && !rpcFailed; i += RPC_BATCH_SIZE) {
+      const batch = ids.slice(i, i + RPC_BATCH_SIZE);
+      const { data, error } = await supabase.rpc("get_course_note_counts", {
+        p_course_ids: batch,
+      });
+      if (!error && Array.isArray(data)) {
+        (data as RpcRow[]).forEach((row) => {
+          countMap.set(row.course_id, Number(row.note_count) ?? 0);
+        });
+        continue;
+      }
+      if (error) rpcFailed = true;
+    }
+    if (!rpcFailed && (countMap.size > 0 || ids.length === 0)) return countMap;
+  }
+
+  return fetchNoteCountMapFallback(supabase, courseIds);
+}
+
+/** Fallback: fetch all active resource rows (paginated) and count when RPC is not available. */
+async function fetchNoteCountMapFallback(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  courseIds: string[] | null
+): Promise<Map<string, number>> {
+  const countMap = new Map<string, number>();
+  let offset = 0;
+  let hasMore = true;
+
+  const maxInClause = 500;
+  const useFilter = courseIds != null && courseIds.length > 0 && courseIds.length <= maxInClause;
+
+  while (hasMore) {
+    let query = supabase
+      .from("resources")
+      .select("course_id")
+      .eq("status", "active")
+      .range(offset, offset + RESOURCE_PAGE_SIZE - 1);
+    if (useFilter) {
+      query = query.in("course_id", courseIds!);
+    }
+    const { data: page, error } = await query;
+    if (error) throw error;
+    const list = (page ?? []) as { course_id: string }[];
+    list.forEach((r) => {
+      countMap.set(r.course_id, (countMap.get(r.course_id) ?? 0) + 1);
+    });
+    hasMore = list.length === RESOURCE_PAGE_SIZE;
+    offset += RESOURCE_PAGE_SIZE;
+  }
+
+  return countMap;
+}
 
 function buildClasses(rows: CourseRow[], countMap: Map<string, number>): ClassResponse[] {
   return rows.map((course) => {
@@ -84,17 +155,14 @@ export async function GET(request: Request) {
     }
     const rows = (page ?? []) as CourseRow[];
     const courseIds = rows.map((c) => c.id);
-    const countMap = new Map<string, number>();
-
-    if (courseIds.length > 0) {
-      const { data: resources } = await supabase
-        .from("resources")
-        .select("course_id")
-        .eq("status", "active")
-        .in("course_id", courseIds);
-      (resources ?? []).forEach((r: { course_id: string }) => {
-        countMap.set(r.course_id, (countMap.get(r.course_id) ?? 0) + 1);
-      });
+    let countMap: Map<string, number>;
+    try {
+      countMap = await getNoteCountMap(supabase, courseIds.length > 0 ? courseIds : null);
+    } catch (err) {
+      return NextResponse.json(
+        { error: err instanceof Error ? err.message : "Failed to load resource counts" },
+        { status: 500 }
+      );
     }
 
     const classes = buildClasses(rows, countMap);
@@ -131,17 +199,15 @@ export async function GET(request: Request) {
     currentOffset += PAGE_SIZE;
   }
 
-  const courseIds = rows.map((c) => c.id);
-  const countMap = new Map<string, number>();
-
-  if (courseIds.length > 0) {
-    const { data: resources } = await supabase
-      .from("resources")
-      .select("course_id")
-      .eq("status", "active");
-    (resources ?? []).forEach((r: { course_id: string }) => {
-      countMap.set(r.course_id, (countMap.get(r.course_id) ?? 0) + 1);
-    });
+  const allCourseIds = rows.map((c) => c.id);
+  let countMap: Map<string, number>;
+  try {
+    countMap = await getNoteCountMap(supabase, allCourseIds.length > 0 ? allCourseIds : null);
+  } catch (err) {
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Failed to load resource counts" },
+      { status: 500 }
+    );
   }
 
   const classes = buildClasses(rows, countMap);
