@@ -139,7 +139,8 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const limitParam = searchParams.get("limit");
   const offsetParam = searchParams.get("offset");
-  const departmentParam = searchParams.get("department")?.trim() || null;
+  const departmentParamRaw = searchParams.get("department")?.trim() || null;
+  const departmentParam = departmentParamRaw ? departmentParamRaw.toUpperCase() : null;
   const paginated = limitParam != null && limitParam !== "";
   const limit = paginated ? Math.min(Math.max(1, parseInt(limitParam, 10) || PAGE_SIZE), 1000) : PAGE_SIZE;
   const offset = paginated ? Math.max(0, parseInt(offsetParam ?? "0", 10)) : 0;
@@ -150,7 +151,7 @@ export async function GET(request: Request) {
       .select("id, title, department, course_number, term, year")
       .order("title", { ascending: true })
       .range(offset, offset + limit - 1);
-    if (departmentParam) query = query.ilike("department", departmentParam);
+    if (departmentParam) query = query.eq("department", departmentParam);
     const { data: page, error } = await query;
 
     if (error) {
@@ -161,11 +162,8 @@ export async function GET(request: Request) {
     let countMap: Map<string, number>;
     try {
       countMap = await getNoteCountMap(supabase, courseIds.length > 0 ? courseIds : null);
-    } catch (err) {
-      return NextResponse.json(
-        { error: err instanceof Error ? err.message : "Failed to load resource counts" },
-        { status: 500 }
-      );
+    } catch {
+      countMap = new Map();
     }
 
     const classes = buildClasses(rows, countMap);
@@ -192,7 +190,7 @@ export async function GET(request: Request) {
       .select("id, title, department, course_number, term, year")
       .order("title", { ascending: true })
       .range(currentOffset, currentOffset + PAGE_SIZE - 1);
-    if (departmentParam) query = query.ilike("department", departmentParam);
+    if (departmentParam) query = query.eq("department", departmentParam);
     const { data: page, error } = await query;
 
     if (error) {
@@ -208,11 +206,8 @@ export async function GET(request: Request) {
   let countMap: Map<string, number>;
   try {
     countMap = await getNoteCountMap(supabase, allCourseIds.length > 0 ? allCourseIds : null);
-  } catch (err) {
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Failed to load resource counts" },
-      { status: 500 }
-    );
+  } catch {
+    countMap = new Map();
   }
 
   const classes = buildClasses(rows, countMap);

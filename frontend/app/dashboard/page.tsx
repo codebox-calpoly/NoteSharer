@@ -98,7 +98,10 @@ export default function DashboardPage() {
       offset: number,
       department: string | null,
       limit: number
-    ): Promise<{ classes: CourseOption[]; hasMore: boolean } | null> => {
+    ): Promise<
+      | { ok: true; classes: CourseOption[]; hasMore: boolean }
+      | { ok: false; error: string }
+    > => {
       const params = new URLSearchParams();
       params.set("limit", String(limit));
       params.set("offset", String(offset));
@@ -106,10 +109,15 @@ export default function DashboardPage() {
       const res = await fetch(`/api/classes?${params.toString()}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (res.status === 401) return null;
-      if (!res.ok) return null;
-      const data = (await res.json()) as { classes?: CourseOption[]; hasMore?: boolean };
+      const data = (await res.json().catch(() => ({}))) as {
+        classes?: CourseOption[];
+        hasMore?: boolean;
+        error?: string;
+      };
+      if (res.status === 401) return { ok: false, error: "Not authenticated" };
+      if (!res.ok) return { ok: false, error: data.error ?? res.statusText ?? "Failed to load courses" };
       return {
+        ok: true,
         classes: data.classes ?? [],
         hasMore: data.hasMore ?? false,
       };
@@ -134,13 +142,13 @@ export default function DashboardPage() {
       try {
         let token = accessToken;
         let res = await fetchCoursesPage(token, 0, selectedDepartment, pageSize);
-        if (res === null) {
+        if (res.ok === false && res.error === "Not authenticated") {
           const newToken = await refreshToken();
           if (newToken) res = await fetchCoursesPage(newToken, 0, selectedDepartment, pageSize);
         }
         if (!active) return;
-        if (res === null) {
-          setCoursesError("Failed to load courses");
+        if (res.ok === false) {
+          setCoursesError(res.error);
           setCourses([]);
           setCoursesLoading(false);
           return;
@@ -154,9 +162,9 @@ export default function DashboardPage() {
           setHasMoreFromApi(res.hasMore);
           if (res.hasMore) setCoursesLoadingMore(true);
         }
-      } catch {
+      } catch (e) {
         if (active) {
-          setCoursesError("Failed to load courses");
+          setCoursesError(e instanceof Error ? e.message : "Failed to load courses");
           setCourses([]);
           setCoursesLoading(false);
         }
@@ -237,35 +245,38 @@ export default function DashboardPage() {
     return departments.filter((d) => d.toLowerCase().includes(q));
   }, [departments, departmentFilterSearch]);
 
-  /** Courses from DB, filtered by department, term, and search. One card per unique course (deduplicated by code). */
+  /** Courses from DB, filtered by department and search. One card per unique course code (deduplicated; note_count summed across terms). */
   const allDisplayCourses = useMemo((): CourseOption[] => {
     let list = [...courses];
     if (selectedDepartment) {
       list = list.filter((c) => c.department === selectedDepartment);
     }
-    if (selectedTermYear) {
-      list = list.filter((c) => termYearLabel(c.term, c.year) === selectedTermYear);
-    }
-    // Course search: filter by course code prefix (like department filter). Type "C" → codes starting with C; "CSC" → only CSC courses.
     const q = browseSearch.trim().toLowerCase();
     if (q) {
       list = list.filter((c) => (c.code ?? "").toLowerCase().startsWith(q));
     }
-    return list.sort((a, b) => {
+    const sorted = list.sort((a, b) => {
       const codeA = (a.code ?? a.name).toLowerCase();
       const codeB = (b.code ?? b.name).toLowerCase();
-      const byCode = codeA.localeCompare(codeB);
-      if (byCode !== 0) return byCode;
-      const termA = termYearLabel(a.term, a.year);
-      const termB = termYearLabel(b.term, b.year);
-      return termA.localeCompare(termB);
+      return codeA.localeCompare(codeB);
     });
-  }, [courses, selectedDepartment, selectedTermYear, browseSearch]);
+    const seen = new Map<string, CourseOption>();
+    for (const c of sorted) {
+      const key = c.code ?? `${c.department ?? ""} ${c.id}`.trim();
+      const existing = seen.get(key);
+      if (existing) {
+        existing.note_count = (existing.note_count ?? 0) + (c.note_count ?? 0);
+      } else {
+        seen.set(key, { ...c, note_count: c.note_count ?? 0 });
+      }
+    }
+    return Array.from(seen.values());
+  }, [courses, selectedDepartment, browseSearch]);
 
   /** Reset visible count when filters/search change so we don't show a short list after narrowing. */
   useEffect(() => {
     setVisibleCourseCount(80);
-  }, [selectedDepartment, selectedTermYear, browseSearch]);
+  }, [selectedDepartment, browseSearch]);
 
   const coursesToRender = allDisplayCourses.slice(0, visibleCourseCount);
   const hasMoreToShow = visibleCourseCount < allDisplayCourses.length;
@@ -289,15 +300,15 @@ export default function DashboardPage() {
             const newToken = await refreshToken();
             if (newToken) res = await fetchCoursesPage(newToken, offset, null, INITIAL_PAGE_SIZE);
           }
-          if (cancelled) return;
-          if (res !== null) {
-            setCourses((prev) => [...prev, ...res.classes]);
-            setHasMoreFromApi(res.hasMore);
-            if (!res.hasMore) setCoursesLoadingMore(false);
-          } else {
-            setCoursesLoadingMore(false);
-            setHasMoreFromApi(false);
-          }
+        if (cancelled) return;
+        if (res.ok) {
+          setCourses((prev) => [...prev, ...res.classes]);
+          setHasMoreFromApi(res.hasMore);
+          if (!res.hasMore) setCoursesLoadingMore(false);
+        } else {
+          setCoursesLoadingMore(false);
+          setHasMoreFromApi(false);
+        }
         } catch {
           if (!cancelled) {
             setCoursesLoadingMore(false);
@@ -443,17 +454,7 @@ export default function DashboardPage() {
                     <p className="browse-course-code">{course.code ?? course.name}</p>
                     {(() => {
                       const subline = getCourseSubline(course.code);
-                      const termLabel = termYearLabel(course.term, course.year);
-                      return (
-                        <>
-                          {subline ? <p className="browse-course-subline">{subline}</p> : null}
-                          {termLabel !== "—" ? (
-                            <p className="browse-course-term" aria-label={`Term: ${termLabel}`}>
-                              {termLabel}
-                            </p>
-                          ) : null}
-                        </>
-                      );
+                      return subline ? <p className="browse-course-subline">{subline}</p> : null;
                     })()}
                   </div>
                   {course.department && (
