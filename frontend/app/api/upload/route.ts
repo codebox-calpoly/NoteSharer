@@ -89,6 +89,7 @@ export async function POST(req: NextRequest) {
   const classId = (formData.get("class_id") as string | null)?.trim();
   const title = (formData.get("title") as string | null)?.trim();
   const resourceType = (formData.get("resource_type") as string | null)?.trim();
+  const description = (formData.get("description") as string | null)?.trim() || null;
 
   if (!(file instanceof File)) {
     return NextResponse.json({ error: "A PDF file is required." }, { status: 400 });
@@ -108,6 +109,13 @@ export async function POST(req: NextRequest) {
   if (!resourceType || !RESOURCE_TYPES.has(resourceType)) {
     return NextResponse.json(
       { error: "resource_type must be a valid value." },
+      { status: 400 },
+    );
+  }
+
+  if (description != null && description.length > 2000) {
+    return NextResponse.json(
+      { error: "description must be at most 2000 characters." },
       { status: 400 },
     );
   }
@@ -171,6 +179,7 @@ export async function POST(req: NextRequest) {
       course_id: classId,
       title,
       resource_type: resourceType,
+      description: description || null,
       file_key: filePath,
       preview_key: filePath,
     })

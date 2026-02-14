@@ -139,16 +139,19 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const limitParam = searchParams.get("limit");
   const offsetParam = searchParams.get("offset");
+  const departmentParam = searchParams.get("department")?.trim() || null;
   const paginated = limitParam != null && limitParam !== "";
   const limit = paginated ? Math.min(Math.max(1, parseInt(limitParam, 10) || PAGE_SIZE), 1000) : PAGE_SIZE;
   const offset = paginated ? Math.max(0, parseInt(offsetParam ?? "0", 10)) : 0;
 
   if (paginated) {
-    const { data: page, error } = await supabase
+    let query = supabase
       .from("courses")
       .select("id, title, department, course_number, term, year")
       .order("title", { ascending: true })
       .range(offset, offset + limit - 1);
+    if (departmentParam) query = query.ilike("department", departmentParam);
+    const { data: page, error } = await query;
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
@@ -184,11 +187,13 @@ export async function GET(request: Request) {
   let hasMore = true;
 
   while (hasMore) {
-    const { data: page, error } = await supabase
+    let query = supabase
       .from("courses")
       .select("id, title, department, course_number, term, year")
       .order("title", { ascending: true })
       .range(currentOffset, currentOffset + PAGE_SIZE - 1);
+    if (departmentParam) query = query.ilike("department", departmentParam);
+    const { data: page, error } = await query;
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });

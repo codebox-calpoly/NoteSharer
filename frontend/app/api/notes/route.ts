@@ -9,6 +9,7 @@ type ResourceRow = {
   title: string;
   course_id: string | null;
   created_at: string;
+  description: string | null;
   file_key: string | null;
   preview_key: string | null;
   download_cost: number;
@@ -77,6 +78,7 @@ export async function GET(req: Request) {
         title,
         course_id,
         created_at,
+        description,
         file_key,
         preview_key,
         download_cost,
@@ -166,6 +168,7 @@ export async function GET(req: Request) {
             title: row.title,
             class_id: row.course_id,
             created_at: row.created_at,
+            description: row.description ?? null,
             storage_path: row.file_key,
             profile_display_name: row.profiles?.display_name ?? null,
             upvote_count: stats.upvotes,

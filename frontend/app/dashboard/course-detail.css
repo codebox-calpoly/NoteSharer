@@ -303,6 +303,21 @@
   cursor: not-allowed;
 }
 
+.note-modal-header-text {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Note description in modal (from upload step 3) */
+.note-modal-description {
+  margin: 0.5rem 0 0;
+  font-size: 0.95rem;
+  font-weight: 400;
+  color: var(--poly-neutral-muted);
+  line-height: 1.45;
+  max-width: 100%;
+}
+
 /* Download button in modal – primary style */
 .note-modal-download-btn {
   border-radius: 999px;

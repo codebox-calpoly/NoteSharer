@@ -30,6 +30,7 @@ type CourseOption = {
 type Note = {
   id: string;
   title: string;
+  description: string | null;
   created_at: string;
   class_id: string | null;
   storage_path: string | null;
@@ -753,9 +754,14 @@ export default function CourseDetailPage() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="note-modal-header">
-              <h2 id="note-modal-title" className="note-modal-title">
-                {selectedNote.title}
-              </h2>
+              <div className="note-modal-header-text">
+                <h2 id="note-modal-title" className="note-modal-title">
+                  {selectedNote.title}
+                </h2>
+                {selectedNote.description && (
+                  <p className="note-modal-description">{selectedNote.description}</p>
+                )}
+              </div>
               <button
                 type="button"
                 className="note-modal-close"

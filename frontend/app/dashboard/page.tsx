@@ -62,6 +62,8 @@ export default function DashboardPage() {
   const [freeDownloads, setFreeDownloads] = useState<number | null>(null);
   /** Number of course cards to render (paginated for performance). */
   const [visibleCourseCount, setVisibleCourseCount] = useState(80);
+  /** When no department selected, whether the API has more courses to fetch. */
+  const [hasMoreFromApi, setHasMoreFromApi] = useState(false);
 
   const refreshToken = useCallback(async () => {
     const { session, error } = await getSessionWithRecovery(supabase);
@@ -87,6 +89,34 @@ export default function DashboardPage() {
     return () => subscription.unsubscribe();
   }, []);
 
+  const INITIAL_PAGE_SIZE = 200;
+  const DEPARTMENT_PAGE_SIZE = 1000;
+
+  const fetchCoursesPage = useCallback(
+    async (
+      token: string,
+      offset: number,
+      department: string | null,
+      limit: number
+    ): Promise<{ classes: CourseOption[]; hasMore: boolean } | null> => {
+      const params = new URLSearchParams();
+      params.set("limit", String(limit));
+      params.set("offset", String(offset));
+      if (department?.trim()) params.set("department", department.trim());
+      const res = await fetch(`/api/classes?${params.toString()}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.status === 401) return null;
+      if (!res.ok) return null;
+      const data = (await res.json()) as { classes?: CourseOption[]; hasMore?: boolean };
+      return {
+        classes: data.classes ?? [],
+        hasMore: data.hasMore ?? false,
+      };
+    },
+    []
+  );
+
   useEffect(() => {
     if (!tokenLoaded || !accessToken) {
       if (tokenLoaded && !accessToken) {
@@ -98,28 +128,15 @@ export default function DashboardPage() {
     let active = true;
     setCoursesLoading(true);
     setCoursesLoadingMore(false);
-    const pageSize = 1000;
-
-    const fetchPage = async (token: string, off: number): Promise<{ classes: CourseOption[]; hasMore: boolean } | null> => {
-      const res = await fetch(`/api/classes?limit=${pageSize}&offset=${off}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.status === 401) return null;
-      if (!res.ok) return null;
-      const data = (await res.json()) as { classes?: CourseOption[]; hasMore?: boolean };
-      return {
-        classes: data.classes ?? [],
-        hasMore: data.hasMore ?? false,
-      };
-    };
+    const pageSize = selectedDepartment ? DEPARTMENT_PAGE_SIZE : INITIAL_PAGE_SIZE;
 
     const run = async () => {
       try {
         let token = accessToken;
-        let res = await fetchPage(token, 0);
+        let res = await fetchCoursesPage(token, 0, selectedDepartment, pageSize);
         if (res === null) {
           const newToken = await refreshToken();
-          if (newToken) res = await fetchPage(newToken, 0);
+          if (newToken) res = await fetchCoursesPage(newToken, 0, selectedDepartment, pageSize);
         }
         if (!active) return;
         if (res === null) {
@@ -131,19 +148,12 @@ export default function DashboardPage() {
         setCourses(res.classes);
         setCoursesError(null);
         setCoursesLoading(false);
-
-        let offset = res.classes.length;
-        if (res.hasMore) setCoursesLoadingMore(true);
-        while (active && res.hasMore) {
-          token = token ?? (await refreshToken()) ?? undefined;
-          if (!token) break;
-          const next = await fetchPage(token, offset);
-          if (!active || next === null) break;
-          setCourses((prev) => [...prev, ...next.classes]);
-          offset += next.classes.length;
-          res = next;
+        if (selectedDepartment) {
+          setHasMoreFromApi(false);
+        } else {
+          setHasMoreFromApi(res.hasMore);
+          if (res.hasMore) setCoursesLoadingMore(true);
         }
-        if (active) setCoursesLoadingMore(false);
       } catch {
         if (active) {
           setCoursesError("Failed to load courses");
@@ -154,7 +164,7 @@ export default function DashboardPage() {
     };
     run();
     return () => { active = false; };
-  }, [accessToken, tokenLoaded, refreshToken]);
+  }, [accessToken, tokenLoaded, selectedDepartment, refreshToken, fetchCoursesPage]);
 
   useEffect(() => {
     if (!tokenLoaded || !accessToken) return;
@@ -241,18 +251,14 @@ export default function DashboardPage() {
     if (q) {
       list = list.filter((c) => (c.code ?? "").toLowerCase().startsWith(q));
     }
-    const sorted = list.sort((a, b) => {
+    return list.sort((a, b) => {
       const codeA = (a.code ?? a.name).toLowerCase();
       const codeB = (b.code ?? b.name).toLowerCase();
-      return codeA.localeCompare(codeB);
-    });
-    // One card per course: keep first occurrence of each course code (same course appears per term in DB).
-    const seen = new Set<string>();
-    return sorted.filter((c) => {
-      const key = c.code ?? `${c.department ?? ""} ${c.id}`.trim();
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
+      const byCode = codeA.localeCompare(codeB);
+      if (byCode !== 0) return byCode;
+      const termA = termYearLabel(a.term, a.year);
+      const termB = termYearLabel(b.term, b.year);
+      return termA.localeCompare(termB);
     });
   }, [courses, selectedDepartment, selectedTermYear, browseSearch]);
 
@@ -262,8 +268,46 @@ export default function DashboardPage() {
   }, [selectedDepartment, selectedTermYear, browseSearch]);
 
   const coursesToRender = allDisplayCourses.slice(0, visibleCourseCount);
-  const hasMoreCourses = visibleCourseCount < allDisplayCourses.length;
-  const loadMoreCourses = () => setVisibleCourseCount((n) => Math.min(n + 80, allDisplayCourses.length));
+  const hasMoreToShow = visibleCourseCount < allDisplayCourses.length;
+  const hasMoreToFetch = !selectedDepartment && (hasMoreFromApi || coursesLoadingMore);
+  const hasMoreCourses = hasMoreToShow || hasMoreToFetch;
+
+  const loadMoreCourses = useCallback(() => {
+    if (hasMoreToShow) {
+      setVisibleCourseCount((n) => Math.min(n + 80, allDisplayCourses.length));
+      return;
+    }
+    if (hasMoreToFetch && !coursesLoadingMore && accessToken) {
+      setCoursesLoadingMore(true);
+      const offset = courses.length;
+      let cancelled = false;
+      (async () => {
+        try {
+          let token = accessToken;
+          let res = await fetchCoursesPage(token, offset, null, INITIAL_PAGE_SIZE);
+          if (res === null) {
+            const newToken = await refreshToken();
+            if (newToken) res = await fetchCoursesPage(newToken, offset, null, INITIAL_PAGE_SIZE);
+          }
+          if (cancelled) return;
+          if (res !== null) {
+            setCourses((prev) => [...prev, ...res.classes]);
+            setHasMoreFromApi(res.hasMore);
+            if (!res.hasMore) setCoursesLoadingMore(false);
+          } else {
+            setCoursesLoadingMore(false);
+            setHasMoreFromApi(false);
+          }
+        } catch {
+          if (!cancelled) {
+            setCoursesLoadingMore(false);
+            setHasMoreFromApi(false);
+          }
+        }
+      })();
+      return () => { cancelled = true };
+    }
+  }, [hasMoreToShow, hasMoreToFetch, coursesLoadingMore, accessToken, courses.length, allDisplayCourses.length, refreshToken, fetchCoursesPage]);
 
   const clearFilters = () => {
     setSelectedDepartment(null);
@@ -399,7 +443,17 @@ export default function DashboardPage() {
                     <p className="browse-course-code">{course.code ?? course.name}</p>
                     {(() => {
                       const subline = getCourseSubline(course.code);
-                      return subline ? <p className="browse-course-subline">{subline}</p> : null;
+                      const termLabel = termYearLabel(course.term, course.year);
+                      return (
+                        <>
+                          {subline ? <p className="browse-course-subline">{subline}</p> : null}
+                          {termLabel !== "—" ? (
+                            <p className="browse-course-term" aria-label={`Term: ${termLabel}`}>
+                              {termLabel}
+                            </p>
+                          ) : null}
+                        </>
+                      );
                     })()}
                   </div>
                   {course.department && (
@@ -422,8 +476,17 @@ export default function DashboardPage() {
           </div>
           {hasMoreCourses && (
             <div className="browse-load-more-wrap">
-              <button type="button" className="browse-load-more" onClick={loadMoreCourses}>
-                Load more ({allDisplayCourses.length - visibleCourseCount} remaining)
+              <button
+                type="button"
+                className="browse-load-more"
+                onClick={loadMoreCourses}
+                disabled={hasMoreToFetch && coursesLoadingMore}
+              >
+                {hasMoreToShow
+                  ? `Load more (${allDisplayCourses.length - visibleCourseCount} remaining)`
+                  : coursesLoadingMore
+                    ? "Loading…"
+                    : "Load more courses"}
               </button>
             </div>
           )}
