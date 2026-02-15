@@ -63,12 +63,30 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const classId = searchParams.get("class_id");
   const searchQuery = searchParams.get("search");
+  const mine = searchParams.get("mine") === "1";
+  const downloaded = searchParams.get("downloaded") === "1";
   const page = Number(searchParams.get("page") ?? "1");
   const pageSize = Number(searchParams.get("page_size") ?? "16");
   const sort = searchParams.get("sort") === "oldest" ? "oldest" : "newest";
 
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
+
+  // When "downloaded=1", fetch resource_ids from resource_downloads first, then query resources.
+  let downloadedResourceIds: string[] = [];
+  if (downloaded) {
+    const { data: downloadsData } = await supabase
+      .from("resource_downloads")
+      .select("resource_id")
+      .eq("profile_id", user.id);
+    downloadedResourceIds = (downloadsData ?? []).map((d: { resource_id: string }) => d.resource_id);
+    if (downloadedResourceIds.length === 0) {
+      return NextResponse.json(
+        { notes: [], page, pageSize, total: 0, hasMore: false },
+        { status: 200, headers: { "Cache-Control": "no-store" } },
+      );
+    }
+  }
 
   let query = supabase
     .from("resources")
@@ -87,6 +105,13 @@ export async function GET(req: Request) {
       { count: "exact" },
     )
     .eq("status", "active"); // Only show active (approved) notes on dashboard
+
+  if (mine) {
+    query = query.eq("profile_id", user.id);
+  }
+  if (downloaded) {
+    query = query.in("id", downloadedResourceIds);
+  }
 
   // Full-text search using the FTS index (searches title and description)
   if (searchQuery && searchQuery.trim()) {
