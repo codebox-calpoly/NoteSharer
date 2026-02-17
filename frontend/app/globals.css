@@ -1,6 +1,68 @@
 @import "tailwindcss";
 
 
+/* Page enter animations (leaderboard-style: fade up on load) */
+.page-enter {
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.page-enter-hidden {
+  opacity: 0;
+  transform: translateY(20px);
+}
+.page-enter-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Card hover lift (leaderboard list / browse cards) */
+.card-hover-lift {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.card-hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+}
+
+/* Button hover lift (sign-up / create account style) */
+.btn-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.btn-lift:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+.btn-lift:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* Keyframes from design (fade-in, fade-up) */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.animate-fade-in {
+  animation: fade-in 1s var(--animation-delay, 0s) ease forwards;
+}
+.animate-fade-up {
+  animation: fade-up 1s var(--animation-delay, 0s) ease forwards;
+}
+
 :root {
  --background: #ffffff;
  --foreground: #171717;
@@ -23,6 +85,8 @@
  --poly-space-xl: 32px;
  --poly-space-3xl: 48px;
  --poly-space-4xl: 64px;
+ /* Landing design (Anima) */
+ --variable-collection-warm-apricot: rgba(249, 199, 132, 1);
 }
 
 /* Landing page – Poly layout */

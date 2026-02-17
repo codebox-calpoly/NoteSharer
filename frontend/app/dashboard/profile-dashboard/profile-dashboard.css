@@ -23,11 +23,21 @@
 .profile-page__nav-inner {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   width: 100%;
   max-width: 1280px;
   margin: 0 auto;
   gap: 24px;
+}
+
+.profile-page__nav-start {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.profile-page__nav-spacer {
+  flex: 1;
+  min-width: 0;
 }
 
 .profile-page__logo {
@@ -265,6 +275,7 @@
   border: none;
   cursor: pointer;
   position: relative;
+  transition: color 0.2s ease;
 }
 
 .profile-page__tab:hover {
@@ -283,6 +294,19 @@
   bottom: 0;
   height: 4px;
   background: var(--poly-accent);
+  animation: profile-tab-underline 0.3s ease;
+}
+
+@keyframes profile-tab-underline {
+  from {
+    opacity: 0;
+    transform: scaleX(0.8);
+    transform-origin: center;
+  }
+  to {
+    opacity: 1;
+    transform: scaleX(1);
+  }
 }
 
 .profile-page__note-list {
@@ -324,10 +348,13 @@
   display: block;
   text-decoration: none;
   color: inherit;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .profile-page__note-card:hover {
   color: inherit;
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
 }
 
 /* Sidebar – My Stats */

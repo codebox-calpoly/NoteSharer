@@ -5,6 +5,7 @@ import Link from "next/link";
 import { getSessionWithRecovery, supabase } from "@/lib/supabaseClient";
 import { CALPOLY_DEPARTMENT_CODES } from "./calpoly-catalog";
 import { getCourseSubline } from "./course-name-utils";
+import { DesignNav } from "@/app/components/DesignNav";
 import "./dashboard.css";
 import "./browse.css";
 import ProfileIcons from "./profile-icon";
@@ -64,6 +65,8 @@ export default function DashboardPage() {
   const [visibleCourseCount, setVisibleCourseCount] = useState(80);
   /** When no department selected, whether the API has more courses to fetch. */
   const [hasMoreFromApi, setHasMoreFromApi] = useState(false);
+  /** Page enter animation (leaderboard-style). */
+  const [isVisible, setIsVisible] = useState(false);
 
   const refreshToken = useCallback(async () => {
     const { session, error } = await getSessionWithRecovery(supabase);
@@ -71,6 +74,10 @@ export default function DashboardPage() {
     const newToken = session?.access_token ?? null;
     if (newToken) setAccessToken(newToken);
     return newToken;
+  }, []);
+
+  useEffect(() => {
+    setIsVisible(true);
   }, []);
 
   useEffect(() => {
@@ -329,33 +336,22 @@ export default function DashboardPage() {
 
   return (
     <div className="browse-page">
-      <nav className="browse-navbar">
-        <div className="browse-navbar-inner">
-          <Link href="/dashboard" className="browse-nav-logo">
-            <span className="browse-nav-logo-text">NoteSharer</span>
-          </Link>
-          <div className="browse-nav-center">
-            <Link href="/dashboard" className="browse-nav-link active">
-              Browse Courses
-            </Link>
-            <Link href="/leaderboard" className="browse-nav-link">
-              Leaderboard
-            </Link>
-          </div>
-          <div className="browse-nav-right">
-            <span className="browse-credits-pill">
-              Credits: {credits ?? "—"}
-            </span>
-            <Link href="/upload" className="browse-upload-btn">
-              Upload Notes
-            </Link>
+      <DesignNav
+        active="browse"
+        rightSlot={
+          <>
+            <span className="browse-credits-pill">Credits: {credits ?? "—"}</span>
+            <Link href="/upload" className="browse-upload-btn">Upload Notes</Link>
             <ProfileIcons />
-          </div>
-        </div>
-      </nav>
+          </>
+        }
+      />
 
       <div className="browse-body">
-        <aside className="browse-sidebar">
+        <aside
+          className={`browse-sidebar page-enter ${isVisible ? "page-enter-visible" : "page-enter-hidden"}`}
+          style={{ transitionDelay: "100ms" }}
+        >
           <h2 className="browse-sidebar-title">Filters</h2>
           <div className="browse-filter-section">
             <span className="browse-filter-heading">Department</span>
@@ -412,7 +408,10 @@ export default function DashboardPage() {
 
         <main className="browse-main">
           {coursesError && <p className="browse-error">{coursesError}</p>}
-          <div className="browse-heading-wrap">
+          <div
+            className={`browse-heading-wrap page-enter ${isVisible ? "page-enter-visible" : "page-enter-hidden"}`}
+            style={{ transitionDelay: "0ms" }}
+          >
             <h1 className="browse-heading">Browse Courses</h1>
             <p className="browse-subtitle">
               Select a course to view and download notes.
@@ -443,36 +442,41 @@ export default function DashboardPage() {
             <p className="browse-empty">No courses match your filters.</p>
           )}
           <div className="browse-course-grid">
-            {coursesToRender.map((course) => (
-              <Link
+            {coursesToRender.map((course, index) => (
+              <div
                 key={course.id}
-                href={`/dashboard/course/${course.id}`}
-                className="browse-course-card"
+                className={`page-enter ${isVisible ? "page-enter-visible" : "page-enter-hidden"}`}
+                style={{ transitionDelay: `${200 + index * 40}ms` }}
               >
-                <div className="browse-course-card-top">
-                  <div className="browse-course-card-info">
-                    <p className="browse-course-code">{course.code ?? course.name}</p>
-                    {(() => {
-                      const subline = getCourseSubline(course.code);
-                      return subline ? <p className="browse-course-subline">{subline}</p> : null;
-                    })()}
+                <Link
+                  href={`/dashboard/course/${course.id}`}
+                  className="browse-course-card"
+                >
+                  <div className="browse-course-card-top">
+                    <div className="browse-course-card-info">
+                      <p className="browse-course-code">{course.code ?? course.name}</p>
+                      {(() => {
+                        const subline = getCourseSubline(course.code);
+                        return subline ? <p className="browse-course-subline">{subline}</p> : null;
+                      })()}
+                    </div>
+                    {course.department && (
+                      <span className="browse-course-badge">{course.department}</span>
+                    )}
                   </div>
-                  {course.department && (
-                    <span className="browse-course-badge">{course.department}</span>
-                  )}
-                </div>
-                <div className="browse-course-meta">
-                  <svg className="browse-course-meta-icon" viewBox="0 0 16 16" fill="none" aria-hidden>
-                    <path
-                      d="M8 1v14M1 8h14"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                  {course.note_count} notes available
-                </div>
-              </Link>
+                  <div className="browse-course-meta">
+                    <svg className="browse-course-meta-icon" viewBox="0 0 16 16" fill="none" aria-hidden>
+                      <path
+                        d="M8 1v14M1 8h14"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                    {course.note_count} notes available
+                  </div>
+                </Link>
+              </div>
             ))}
           </div>
           {hasMoreCourses && (

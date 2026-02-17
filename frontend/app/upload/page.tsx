@@ -5,6 +5,8 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getSessionWithRecovery, supabase } from "@/lib/supabaseClient";
+import { DesignNav } from "@/app/components/DesignNav";
+import ProfileIcons from "@/app/dashboard/profile-icon";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import "react-pdf/dist/esm/Page/TextLayer.css";
@@ -61,6 +63,11 @@ export default function UploadPage() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    setIsVisible(true);
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -353,25 +360,24 @@ export default function UploadPage() {
   return (
     <main className="upload-page upload-page--design">
       <div className="upload-page-inner">
-        <header className="upload-nav">
-          <Link href="/dashboard" className="upload-nav-logo">
-            <span className="upload-nav-logo-text">NoteSharer</span>
-          </Link>
-          <nav className="upload-nav-links">
-            <Link href="/dashboard" className="upload-nav-link">Browse Courses</Link>
-            <Link href="/dashboard" className="upload-nav-link">Leaderboard</Link>
-          </nav>
-          <div className="upload-nav-right">
-            {credits != null && (
-              <span className="upload-nav-credits">Credits: {credits}</span>
-            )}
-            <Link href="/dashboard" className="upload-nav-upload-btn">Upload Notes</Link>
-            <Link href="/dashboard/profile-dashboard" className="upload-nav-profile" aria-label="Profile">👤</Link>
-          </div>
-        </header>
+        <DesignNav
+          active="upload"
+          rightSlot={
+            <>
+              {credits != null && (
+                <span className="upload-nav-credits">Credits: {credits}</span>
+              )}
+              <Link href="/upload" className="upload-nav-upload-btn">Upload Notes</Link>
+              <ProfileIcons />
+            </>
+          }
+        />
 
         <div className="upload-layout">
-          <section className="upload-main-card">
+          <section
+            className={`upload-main-card page-enter ${isVisible ? "page-enter-visible" : "page-enter-hidden"}`}
+            style={{ transitionDelay: "0ms" }}
+          >
             <h1 className="upload-main-title">Upload Your Notes</h1>
             <p className="upload-main-subtitle">Share your knowledge and earn credits</p>
 
@@ -417,7 +423,7 @@ export default function UploadPage() {
                   )}
                   <button
                     type="button"
-                    className="upload-step-continue"
+                    className="upload-step-continue btn-lift"
                     onClick={() => setStep(2)}
                     disabled={!file}
                   >
@@ -562,7 +568,7 @@ export default function UploadPage() {
                   </button>
                   <button
                     type="button"
-                    className="upload-step-continue"
+                    className="upload-step-continue btn-lift"
                     onClick={() => {
                       const id = matchClassFromInput() ?? classId;
                       if (!id || !department?.trim() || !title.trim() || !resourceType) return;
@@ -607,7 +613,7 @@ export default function UploadPage() {
                   <button type="button" className="upload-step-back" onClick={() => setStep(2)}>
                     Back
                   </button>
-                  <button type="submit" className="upload-submit-btn">
+                  <button type="submit" className="upload-submit-btn btn-lift">
                     Upload notes
                   </button>
                 </div>

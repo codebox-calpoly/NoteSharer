@@ -24,11 +24,21 @@
 .browse-navbar-inner {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   width: 100%;
   max-width: 1280px;
   margin: 0 auto;
   gap: 32px;
+}
+
+.browse-nav-start {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.browse-nav-spacer {
+  flex: 1;
+  min-width: 0;
 }
 
 .browse-nav-logo {
@@ -324,11 +334,12 @@
   border-radius: 8px;
   text-decoration: none;
   color: inherit;
-  transition: box-shadow 0.2s, border-color 0.2s;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.2s ease;
 }
 
 .browse-course-card:hover {
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
   border-color: var(--poly-sage);
 }
 
@@ -338,6 +349,7 @@
 }
 
 .browse-course-card-placeholder:hover {
+  transform: none;
   border-color: rgba(229, 231, 235, 1);
   box-shadow: none;
 }

@@ -660,15 +660,25 @@
 .upload-nav {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 24px;
-  padding: 0 0 1px;
+  width: 100%;
   min-height: 77px;
+  padding: 0 32px 1px;
   border-bottom: 1px solid var(--upload-border);
   background: var(--upload-card);
   margin: 0 -32px;
-  padding-left: 32px;
-  padding-right: 32px;
+  box-sizing: border-box;
+}
+
+.upload-nav-start {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.upload-nav-spacer {
+  flex: 1;
+  min-width: 0;
 }
 
 .upload-nav-logo {
@@ -804,6 +814,14 @@
   margin-bottom: 24px;
   position: relative;
   background: #fafafa;
+  transition: border-color 0.25s ease, background-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.upload-page--design .upload-dragzone:hover,
+.upload-page--design .upload-dragzone:focus-within {
+  border-color: var(--upload-sage);
+  background: rgba(109, 190, 139, 0.06);
+  box-shadow: 0 0 0 3px rgba(109, 190, 139, 0.12);
 }
 
 .upload-dragzone-input {

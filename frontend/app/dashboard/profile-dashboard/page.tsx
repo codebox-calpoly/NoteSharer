@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getSessionWithRecovery, supabase } from "@/lib/supabaseClient";
 import type { User } from "@supabase/supabase-js";
+import { DesignNav } from "@/app/components/DesignNav";
 import "./profile-dashboard.css";
 import "../course-detail.css";
 
@@ -59,7 +60,12 @@ export default function Page() {
   const [loadingUploads, setLoadingUploads] = useState(false);
   const [loadingDownloads, setLoadingDownloads] = useState(false);
   const [notesError, setNotesError] = useState<string | null>(null);
+  const [isVisible, setIsVisible] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    setIsVisible(true);
+  }, []);
 
   useEffect(() => {
     const loadSession = async () => {
@@ -172,31 +178,26 @@ export default function Page() {
 
   return (
     <div className="profile-page">
-      <header className="profile-page__nav">
-        <div className="profile-page__nav-inner">
-          <Link href="/dashboard" className="profile-page__logo">
-            <span className="profile-page__logo-text">Note Sharer</span>
-          </Link>
-          <div className="profile-page__nav-center">
-            <Link href="/dashboard" className="profile-page__nav-link">Browse Courses</Link>
-            <Link href="/leaderboard" className="profile-page__nav-link">Leaderboard</Link>
-          </div>
-          <div className="profile-page__nav-right">
-            <span className="profile-page__credits-pill">
-              Credits: {credits ?? "—"}
-            </span>
+      <DesignNav
+        active="profile"
+        rightSlot={
+          <>
+            <span className="profile-page__credits-pill">Credits: {credits ?? "—"}</span>
             <Link href="/upload" className="profile-page__upload-btn">Upload Note</Link>
             <Link href="/dashboard/profile-dashboard" className="profile-page__profile-btn" aria-label="Profile">
               {initial}
             </Link>
-          </div>
-        </div>
-      </header>
+          </>
+        }
+      />
 
       <div className="profile-page__body">
         <div className="profile-page__main">
           <div className="profile-page__content">
-            <section className="profile-page__card profile-page__profile-card">
+            <section
+              className={`profile-page__card profile-page__profile-card page-enter ${isVisible ? "page-enter-visible" : "page-enter-hidden"}`}
+              style={{ transitionDelay: "0ms" }}
+            >
               <div className="profile-page__profile-row">
                 <div className="profile-page__profile-info">
                   <div className="profile-page__avatar" aria-hidden>{initial}</div>
@@ -214,7 +215,10 @@ export default function Page() {
               </div>
             </section>
 
-            <section className="profile-page__card profile-page__tabs-card">
+            <section
+              className={`profile-page__card profile-page__tabs-card page-enter ${isVisible ? "page-enter-visible" : "page-enter-hidden"}`}
+              style={{ transitionDelay: "150ms" }}
+            >
               <div className="profile-page__tabs">
                 <button
                   type="button"
@@ -238,7 +242,10 @@ export default function Page() {
                   Favorites
                 </button>
               </div>
-              <div className="profile-page__note-list">
+              <div
+                className={`profile-page__note-list page-enter ${isVisible ? "page-enter-visible" : "page-enter-hidden"}`}
+                style={{ transitionDelay: "250ms" }}
+              >
                 {notesError && (
                   <p className="profile-page__error-inline" role="alert">{notesError}</p>
                 )}
@@ -315,7 +322,10 @@ export default function Page() {
             </section>
           </div>
 
-          <aside className="profile-page__sidebar">
+          <aside
+            className={`profile-page__sidebar page-enter ${isVisible ? "page-enter-visible" : "page-enter-hidden"}`}
+            style={{ transitionDelay: "200ms" }}
+          >
             <div className="profile-page__stats-card">
               <h2 className="profile-page__stats-title">My Stats</h2>
               <div className="profile-page__stats-grid">

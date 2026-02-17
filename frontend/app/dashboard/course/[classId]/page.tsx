@@ -11,6 +11,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { getSessionWithRecovery, supabase } from "@/lib/supabaseClient";
 import PDFThumbnail from "@/app/components/pdf/PDFThumbnail";
+import { DesignNav } from "@/app/components/DesignNav";
 import ProfileIcons from "../../profile-icon";
 import { getCourseSubline } from "../../course-name-utils";
 import "../../dashboard.css";
@@ -530,28 +531,16 @@ export default function CourseDetailPage() {
   if (coursesError && !course) {
     return (
       <div className="course-detail-page">
-        <nav className="browse-navbar">
-          <div className="browse-navbar-inner">
-            <Link href="/dashboard" className="browse-nav-logo">
-              <span className="browse-nav-logo-text">NoteSharer</span>
-            </Link>
-            <div className="browse-nav-center">
-              <Link href="/dashboard" className="browse-nav-link active">
-                Browse Notes
-              </Link>
-              <Link href="/leaderboard" className="browse-nav-link">
-                Leaderboard
-              </Link>
-            </div>
-            <div className="browse-nav-right">
+        <DesignNav
+          active="browse"
+          rightSlot={
+            <>
               <span className="browse-credits-pill">Credits: {credits ?? "—"}</span>
-              <Link href="/upload" className="browse-upload-btn">
-                Upload Notes
-              </Link>
+              <Link href="/upload" className="browse-upload-btn">Upload Notes</Link>
               <ProfileIcons />
-            </div>
-          </div>
-        </nav>
+            </>
+          }
+        />
         <div className="course-detail-body">
           <p className="course-detail-error">{coursesError}</p>
           <Link href="/dashboard">Back to Browse</Link>
@@ -562,28 +551,16 @@ export default function CourseDetailPage() {
 
   return (
     <div className="course-detail-page">
-      <nav className="browse-navbar">
-        <div className="browse-navbar-inner">
-          <Link href="/dashboard" className="browse-nav-logo">
-            <span className="browse-nav-logo-text">NoteSharer</span>
-          </Link>
-          <div className="browse-nav-center">
-            <Link href="/dashboard" className="browse-nav-link active">
-              Browse Courses
-            </Link>
-            <Link href="/leaderboard" className="browse-nav-link">
-              Leaderboard
-            </Link>
-          </div>
-          <div className="browse-nav-right">
+      <DesignNav
+        active="browse"
+        rightSlot={
+          <>
             <span className="browse-credits-pill">Credits: {credits ?? "—"}</span>
-            <Link href="/upload" className="browse-upload-btn">
-              Upload Notes
-            </Link>
+            <Link href="/upload" className="browse-upload-btn">Upload Notes</Link>
             <ProfileIcons />
-          </div>
-        </div>
-      </nav>
+          </>
+        }
+      />
 
       <div className="course-detail-body">
         {course && (
