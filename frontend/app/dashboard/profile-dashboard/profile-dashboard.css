@@ -425,6 +425,20 @@
   color: var(--poly-sage);
 }
 
+.profile-page__appearance {
+  margin-top: 20px;
+}
+
+.profile-page__stat-row--appearance {
+  align-items: center;
+}
+
+.profile-page__appearance-hint {
+  margin: 12px 0 0;
+  font-size: 13px;
+  color: var(--poly-neutral-muted);
+}
+
 /* Error & actions */
 .profile-page__error {
   margin: 16px auto 0;

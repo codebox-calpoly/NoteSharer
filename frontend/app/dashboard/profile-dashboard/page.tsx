@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { getSessionWithRecovery, supabase } from "@/lib/supabaseClient";
 import type { User } from "@supabase/supabase-js";
 import { DesignNav } from "@/app/components/DesignNav";
+import { ThemeToggle } from "@/app/components/ThemeToggle";
+import { useTheme } from "@/app/components/ThemeProvider";
 import "./profile-dashboard.css";
 import "../course-detail.css";
 
@@ -175,6 +177,7 @@ export default function Page() {
   const initial = getDisplayInitial(user);
   const displayName = getDisplayName(user);
   const handle = getHandle(user);
+  const { theme } = useTheme();
 
   return (
     <div className="profile-page">
@@ -351,6 +354,16 @@ export default function Page() {
                 <span className="profile-page__stat-label">Net Credits</span>
                 <span className="profile-page__stat-value profile-page__stat-value--net">0</span>
               </div>
+            </div>
+            <div className="profile-page__stats-card profile-page__appearance">
+              <h2 className="profile-page__stats-title">Appearance</h2>
+              <div className="profile-page__stat-row profile-page__stat-row--appearance">
+                <span className="profile-page__stat-label">Theme</span>
+                <ThemeToggle />
+              </div>
+              <p className="profile-page__appearance-hint">
+                {theme === "dark" ? "Dark mode" : "Light mode"}
+              </p>
             </div>
           </aside>
         </div>

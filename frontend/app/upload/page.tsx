@@ -359,20 +359,19 @@ export default function UploadPage() {
 
   return (
     <main className="upload-page upload-page--design">
+      <DesignNav
+        active="upload"
+        rightSlot={
+          <>
+            {credits != null && (
+              <span className="upload-nav-credits">Credits: {credits}</span>
+            )}
+            <Link href="/upload" className="upload-nav-upload-btn">Upload Notes</Link>
+            <ProfileIcons />
+          </>
+        }
+      />
       <div className="upload-page-inner">
-        <DesignNav
-          active="upload"
-          rightSlot={
-            <>
-              {credits != null && (
-                <span className="upload-nav-credits">Credits: {credits}</span>
-              )}
-              <Link href="/upload" className="upload-nav-upload-btn">Upload Notes</Link>
-              <ProfileIcons />
-            </>
-          }
-        />
-
         <div className="upload-layout">
           <section
             className={`upload-main-card page-enter ${isVisible ? "page-enter-visible" : "page-enter-hidden"}`}
@@ -621,7 +620,7 @@ export default function UploadPage() {
             )}
           </section>
 
-          <aside className="upload-sidecard upload-sidecard--credits">
+          <aside className="upload-sidecard upload-sidecard--credits" aria-label="Credits info">
             <h3 className="upload-sidecard-title">How Credits Work</h3>
             <div className="upload-credits-list">
               <div className="upload-credits-item">

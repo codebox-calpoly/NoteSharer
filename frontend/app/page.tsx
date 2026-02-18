@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { ThemeToggle } from "@/app/components/ThemeToggle";
 
 const ANIMA_IMG = "https://c.animaapp.com/vYVdVbUl/img";
 
@@ -23,20 +24,22 @@ export default function Home() {
 
   return (
     <div
-      className="flex flex-col items-start relative w-full min-h-screen bg-[#faf9f7]"
+      className="landing-page flex flex-col items-start relative w-full min-h-screen page-bg"
       style={{ fontFamily: "var(--font-inter), Inter, Helvetica, sans-serif" }}
     >
       {/* Header */}
-      <header className="flex flex-col w-full items-start pt-0 pb-px px-0 bg-white border-b border-solid border-neutral-200 sticky top-0 z-50">
+      <header className="landing-header flex flex-col w-full items-start pt-0 pb-px px-0 bg-white border-b border-solid border-neutral-200 sticky top-0 z-50">
         <div className="flex h-[72px] items-center justify-between px-4 md:px-8 py-0 relative w-full">
           <div className="flex items-center gap-3 relative">
-            <img
-              className="relative w-[54px] h-[54px]"
-              alt="Poly Pages Logo"
-              src={`${ANIMA_IMG}/container-8.svg`}
-            />
+            <span className="logo-box relative w-[54px] h-[54px]">
+              <img
+                className="relative w-[54px] h-[54px] landing-logo"
+                alt="Poly Pages Logo"
+                src={`${ANIMA_IMG}/container-8.svg`}
+              />
+            </span>
             <div className="relative h-8">
-              <h1 className="font-bold text-[#2e2e2e] text-xl md:text-2xl tracking-[0] leading-8 whitespace-nowrap">
+              <h1 className="font-bold text-[var(--poly-neutral-dark)] text-xl md:text-2xl tracking-[0] leading-8 whitespace-nowrap">
                 Poly Pages
               </h1>
             </div>
@@ -46,28 +49,30 @@ export default function Home() {
             <button
               type="button"
               onClick={() => scrollToSection("how-it-works")}
-              className="font-medium text-[#666666] text-base tracking-[0] leading-6 whitespace-nowrap hover:text-[#6dbe8b] transition-colors duration-200"
+              className="font-medium text-[var(--poly-neutral-muted)] text-base tracking-[0] leading-6 whitespace-nowrap hover:text-[#6dbe8b] transition-colors duration-200"
             >
               How It Works
             </button>
             <button
               type="button"
               onClick={() => scrollToSection("why-poly-pages")}
-              className="font-medium text-[#666666] text-base tracking-[0] leading-6 whitespace-nowrap hover:text-[#6dbe8b] transition-colors duration-200"
+              className="font-medium text-[var(--poly-neutral-muted)] text-base tracking-[0] leading-6 whitespace-nowrap hover:text-[#6dbe8b] transition-colors duration-200"
             >
               Why Us
             </button>
             <button
               type="button"
               onClick={() => scrollToSection("features")}
-              className="font-medium text-[#666666] text-base tracking-[0] leading-6 whitespace-nowrap hover:text-[#6dbe8b] transition-colors duration-200"
+              className="font-medium text-[var(--poly-neutral-muted)] text-base tracking-[0] leading-6 whitespace-nowrap hover:text-[#6dbe8b] transition-colors duration-200"
             >
               Features
             </button>
           </nav>
 
-          <Link
-            href="/auth"
+          <div className="hidden md:flex items-center gap-4">
+            <ThemeToggle />
+            <Link
+              href="/auth"
             className="hidden md:flex relative w-[95.05px] h-10 rounded-[10px] border border-solid border-black shadow-[0px_4px_4px_#00000040] cursor-pointer transition-all duration-200 hover:shadow-[0px_6px_6px_#00000040] hover:-translate-y-0.5 active:translate-y-0 active:shadow-[0px_2px_2px_#00000040] items-center justify-center bg-[var(--variable-collection-warm-apricot)]"
             aria-label="Log In"
           >
@@ -75,6 +80,7 @@ export default function Home() {
               Log In
             </span>
           </Link>
+          </div>
 
           <button
             type="button"
@@ -101,7 +107,7 @@ export default function Home() {
         </div>
 
         <div
-          className={`md:hidden fixed top-[73px] left-0 w-full bg-white border-b border-neutral-200 transition-all duration-300 ease-in-out ${
+          className={`landing-mobile-menu md:hidden fixed top-[73px] left-0 w-full bg-white border-b border-neutral-200 transition-all duration-300 ease-in-out ${
             mobileMenuOpen
               ? "max-h-screen opacity-100"
               : "max-h-0 opacity-0 overflow-hidden"
@@ -112,21 +118,21 @@ export default function Home() {
             <button
               type="button"
               onClick={() => scrollToSection("how-it-works")}
-              className="font-medium text-[#666666] text-base tracking-[0] leading-6 hover:text-[#6dbe8b] transition-colors duration-200 w-full text-left"
+              className="font-medium text-[var(--poly-neutral-muted)] text-base tracking-[0] leading-6 hover:text-[#6dbe8b] transition-colors duration-200 w-full text-left"
             >
               How It Works
             </button>
             <button
               type="button"
               onClick={() => scrollToSection("why-poly-pages")}
-              className="font-medium text-[#666666] text-base tracking-[0] leading-6 hover:text-[#6dbe8b] transition-colors duration-200 w-full text-left"
+              className="font-medium text-[var(--poly-neutral-muted)] text-base tracking-[0] leading-6 hover:text-[#6dbe8b] transition-colors duration-200 w-full text-left"
             >
               Why Us
             </button>
             <button
               type="button"
               onClick={() => scrollToSection("features")}
-              className="font-medium text-[#666666] text-base tracking-[0] leading-6 hover:text-[#6dbe8b] transition-colors duration-200 w-full text-left"
+              className="font-medium text-[var(--poly-neutral-muted)] text-base tracking-[0] leading-6 hover:text-[#6dbe8b] transition-colors duration-200 w-full text-left"
             >
               Features
             </button>
@@ -156,7 +162,7 @@ export default function Home() {
             }`}
           >
             <h1 className="font-bold text-3xl md:text-5xl lg:text-6xl text-center tracking-[0] leading-tight md:leading-[72px] px-4">
-              <span className="text-[#2e2e2e]">Share notes. Earn credits. </span>
+              <span className="landing-tagline-gray">Share notes. Earn credits. </span>
               <span className="text-[#6dbe8b]">Learn together.</span>
             </h1>
           </header>
@@ -218,7 +224,7 @@ export default function Home() {
       <FeaturesSection />
 
       {/* Footer */}
-      <footer className="flex flex-col w-full items-start pt-8 md:pt-12 pb-8 px-4 md:px-8 bg-neutral-50 border-t border-solid border-neutral-200">
+      <footer className="landing-footer flex flex-col w-full items-start pt-8 md:pt-12 pb-8 px-4 md:px-8 bg-neutral-50 border-t border-solid border-neutral-200">
         <div className="flex flex-col md:flex-row h-auto md:h-[61px] items-start md:items-center justify-between gap-6 md:gap-0 w-full max-w-6xl mx-auto">
           <div className="flex flex-col items-start gap-2">
             <div className="relative h-8">

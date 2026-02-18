@@ -30,7 +30,7 @@ export default function LeaderboardPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#faf9f7]" style={{ fontFamily: "var(--font-inter), Inter, Helvetica, sans-serif" }}>
+    <div className="flex flex-col min-h-screen page-bg" style={{ fontFamily: "var(--font-inter), Inter, Helvetica, sans-serif" }}>
       <DesignNav active="leaderboard" />
       <main className="flex-1 px-4 md:px-8 py-8 md:py-12">
         <div className="max-w-4xl mx-auto">
@@ -39,8 +39,8 @@ export default function LeaderboardPage() {
               isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
             }`}
           >
-            <h2 className="font-bold text-[#2e2e2e] text-3xl md:text-4xl mb-2">Leaderboard</h2>
-            <p className="font-normal text-[#666666] text-base md:text-lg">Top contributors in the community</p>
+            <h2 className="font-bold text-[var(--poly-neutral-dark)] text-3xl md:text-4xl mb-2">Leaderboard</h2>
+            <p className="font-normal text-[var(--poly-neutral-muted)] text-base md:text-lg">Top contributors in the community</p>
           </div>
           <div
             className={`mb-8 flex justify-center transition-all duration-700 delay-200 ${

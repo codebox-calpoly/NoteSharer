@@ -64,6 +64,7 @@
 }
 
 :root {
+ --theme-transition: 0.4s ease;
  --background: #ffffff;
  --foreground: #171717;
  /* Poly Pages – landing & sign-in only */
@@ -87,6 +88,424 @@
  --poly-space-4xl: 64px;
  /* Landing design (Anima) */
  --variable-collection-warm-apricot: rgba(249, 199, 132, 1);
+}
+
+/* Smooth theme transition – applied to elements that change with theme */
+html {
+  transition: background-color var(--theme-transition), color var(--theme-transition);
+}
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  transition: background-color var(--theme-transition), color var(--theme-transition);
+}
+/* Broad theme transition so nav, cards, sections, text animate when toggling light/dark */
+.page-bg,
+.design-nav-header,
+.landing-header,
+.landing-page section,
+.landing-footer,
+.landing-mobile-menu,
+header,
+header .logo-box,
+[class*="browse-"],
+[class*="profile-page"],
+[class*="course-detail"],
+[class*="upload-"],
+[class*="poly-"],
+.poly-footer,
+article,
+button,
+a,
+input,
+textarea,
+select {
+  transition: background-color var(--theme-transition), color var(--theme-transition), border-color var(--theme-transition), box-shadow var(--theme-transition);
+}
+
+/* Dark theme – applied when data-theme="dark" on <html> */
+[data-theme="dark"] {
+  --background: #0f0f0f;
+  --foreground: #e5e5e5;
+  --poly-bg-page: #1a1a1a;
+  --poly-neutral-dark: #e5e5e5;
+  --poly-neutral-muted: #a3a3a3;
+  --poly-border: rgba(255, 255, 255, 0.12);
+  --poly-border-subtle: rgba(255, 255, 255, 0.06);
+  --poly-sage-soft: rgba(109, 190, 139, 0.2);
+  --variable-collection-warm-apricot: rgba(249, 199, 132, 0.9);
+}
+
+[data-theme="dark"] body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+/* Dark: nav, cards, sidebar, inputs */
+[data-theme="dark"] .browse-navbar,
+[data-theme="dark"] .design-nav-header,
+[data-theme="dark"] .browse-sidebar,
+[data-theme="dark"] .browse-course-card,
+[data-theme="dark"] .profile-page__card,
+[data-theme="dark"] .profile-page__nav,
+[data-theme="dark"] .profile-page__stats-card {
+  background: #262626 !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+[data-theme="dark"] .profile-page__rank-card {
+  background: #2d2d2d !important;
+  border-color: rgba(249, 199, 132, 0.5) !important;
+}
+[data-theme="dark"] .profile-page__rank-label {
+  color: #b0b0b0 !important;
+}
+[data-theme="dark"] .profile-page__rank-value {
+  color: var(--variable-collection-warm-apricot) !important;
+}
+[data-theme="dark"] .profile-page__rank-sub {
+  color: #a3a3a3 !important;
+}
+
+[data-theme="dark"] .profile-page__logout {
+  background: #2d2d2d !important;
+  border-color: var(--poly-sage) !important;
+  color: #e5e5e5 !important;
+}
+[data-theme="dark"] .profile-page__logout:hover:not(:disabled) {
+  background: #363636 !important;
+}
+
+[data-theme="dark"] .browse-heading,
+[data-theme="dark"] .browse-sidebar-title,
+[data-theme="dark"] .browse-filter-heading,
+[data-theme="dark"] .profile-page__handle,
+[data-theme="dark"] .profile-page__name,
+[data-theme="dark"] .profile-page__stats-title {
+  color: #e5e5e5 !important;
+}
+
+[data-theme="dark"] .browse-subtitle,
+[data-theme="dark"] .browse-course-code,
+[data-theme="dark"] .browse-course-subline,
+[data-theme="dark"] .browse-course-meta,
+[data-theme="dark"] .profile-page__bio {
+  color: #a3a3a3 !important;
+}
+
+[data-theme="dark"] .browse-department-search,
+[data-theme="dark"] .browse-main-search {
+  background: #262626 !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  color: #e5e5e5 !important;
+}
+
+[data-theme="dark"] .browse-filter-option:not(.active) {
+  color: #a3a3a3;
+}
+
+[data-theme="dark"] .browse-filter-option.active {
+  background: var(--poly-sage-soft);
+  color: var(--poly-sage);
+}
+
+[data-theme="dark"] .course-detail-note-title,
+[data-theme="dark"] .course-detail-note-by,
+[data-theme="dark"] .profile-page__note-card {
+  color: #e5e5e5 !important;
+}
+
+/* Landing / poly in dark */
+[data-theme="dark"] .poly-navbar,
+[data-theme="dark"] .poly-hero-title,
+[data-theme="dark"] .poly-section-title {
+  background: #262626 !important;
+  border-color: rgba(255,255,255,0.1) !important;
+  color: #e5e5e5 !important;
+}
+
+[data-theme="dark"] .poly-hero-subtitle,
+[data-theme="dark"] .poly-section-desc {
+  color: #a3a3a3 !important;
+}
+
+[data-theme="dark"] .poly-course-card {
+  background: #262626 !important;
+  border-color: rgba(255,255,255,0.1) !important;
+}
+
+[data-theme="dark"] .poly-course-title {
+  color: #e5e5e5 !important;
+}
+
+/* DesignNav: full width + strong contrast for logo and links in dark */
+.design-nav-header {
+  width: 100%;
+}
+[data-theme="dark"] .design-nav-header h1,
+[data-theme="dark"] .design-nav-header .font-bold {
+  color: #f5f5f5 !important;
+}
+[data-theme="dark"] .design-nav-header a:not([class*="upload-btn"]):not([class*="profile-btn"]) {
+  color: #d4d4d4 !important;
+}
+[data-theme="dark"] .design-nav-header a:hover:not([class*="upload-btn"]):not([class*="profile-btn"]) {
+  color: #6dbe8b !important;
+}
+/* Logo: dark-mode version (invert so it’s not a white box) */
+.logo-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 10px;
+}
+/* Landing logo: same gray rounded box and black logo in both themes (stays static on theme switch) */
+.landing-header .logo-box {
+  background: #d4d4d4;
+}
+.landing-header .logo-box img {
+  filter: none;
+}
+[data-theme="dark"] .design-nav-header .logo-box,
+[data-theme="dark"] header:not(.landing-header) .logo-box {
+  background: #262626;
+}
+[data-theme="dark"] .design-nav-header .logo-box img,
+[data-theme="dark"] header:not(.landing-header) .logo-box img {
+  filter: brightness(0) invert(1) opacity(0.92);
+}
+/* Landing logo unchanged in dark mode: same light box + no filter so logo stays visible */
+[data-theme="dark"] .landing-header .logo-box {
+  background: #d4d4d4;
+}
+[data-theme="dark"] .landing-header .logo-box img {
+  filter: none !important;
+}
+
+/* Course detail: no pure white – use dark gray cards/tabs/filters with contrast */
+[data-theme="dark"] .course-detail-note-card {
+  background: #2d2d2d !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+[data-theme="dark"] .course-detail-note-by,
+[data-theme="dark"] .course-detail-note-meta .course-detail-note-credits {
+  color: #b0b0b0 !important;
+}
+[data-theme="dark"] .course-detail-note-meta {
+  border-top-color: rgba(255, 255, 255, 0.1) !important;
+}
+[data-theme="dark"] .course-detail-tabs {
+  border-bottom-color: rgba(255, 255, 255, 0.12) !important;
+}
+[data-theme="dark"] .course-detail-tab {
+  color: #b0b0b0 !important;
+}
+[data-theme="dark"] .course-detail-tab.active {
+  color: #6dbe8b !important;
+}
+[data-theme="dark"] .course-detail-filter-label,
+[data-theme="dark"] .course-detail-notes-count {
+  color: #b0b0b0 !important;
+}
+[data-theme="dark"] .course-detail-filter-btn {
+  background: #2d2d2d !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  color: #e5e5e5 !important;
+}
+[data-theme="dark"] .course-detail-filter-btn:hover {
+  background: rgba(109, 190, 139, 0.2) !important;
+  border-color: #6dbe8b !important;
+  color: #6dbe8b !important;
+}
+[data-theme="dark"] .course-detail-filter-btn.active {
+  background: rgba(109, 190, 139, 0.25) !important;
+  border-color: #6dbe8b !important;
+  color: #6dbe8b !important;
+}
+[data-theme="dark"] .course-detail-note-votes .course-detail-note-vote-up,
+[data-theme="dark"] .course-detail-note-votes .course-detail-note-vote-down {
+  color: #d4d4d4 !important;
+}
+
+/* Upload page dark mode */
+[data-theme="dark"] .upload-page--design {
+  --upload-bg: #1a1a1a;
+  --upload-card: #2d2d2d;
+  --upload-text: #e5e5e5;
+  --upload-muted: #a3a3a3;
+  --upload-border: rgba(255, 255, 255, 0.12);
+  background: #1a1a1a !important;
+  color: #e5e5e5 !important;
+}
+[data-theme="dark"] .upload-main-card,
+[data-theme="dark"] .upload-sidecard--credits {
+  background: #2d2d2d !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+[data-theme="dark"] .upload-main-title,
+[data-theme="dark"] .upload-step-heading {
+  color: #e5e5e5 !important;
+}
+[data-theme="dark"] .upload-main-subtitle,
+[data-theme="dark"] .upload-label {
+  color: #b0b0b0 !important;
+}
+[data-theme="dark"] .upload-input,
+[data-theme="dark"] .upload-dragzone {
+  background: #262626 !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  color: #e5e5e5 !important;
+}
+[data-theme="dark"] .upload-sidecard-title,
+[data-theme="dark"] .upload-credits-item-title {
+  color: #e5e5e5 !important;
+}
+[data-theme="dark"] .upload-credits-item-desc,
+[data-theme="dark"] .upload-sidecard-tip,
+[data-theme="dark"] .upload-balance-label {
+  color: #b0b0b0 !important;
+}
+[data-theme="dark"] .upload-balance-value {
+  color: #e5e5e5 !important;
+}
+[data-theme="dark"] .upload-balance-box {
+  background: #262626 !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+/* Landing page dark mode */
+[data-theme="dark"] .landing-header {
+  background: #262626 !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+[data-theme="dark"] .landing-header button[aria-label="Toggle menu"] span {
+  background-color: #e5e5e5 !important;
+}
+
+[data-theme="dark"] .not-found-secondary-btn {
+  background: #2d2d2d !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  color: #d4d4d4 !important;
+}
+[data-theme="dark"] .not-found-secondary-btn:hover {
+  border-color: #6dbe8b !important;
+  color: #6dbe8b !important;
+}
+
+/* Load more buttons: dark style (no white) */
+[data-theme="dark"] .browse-load-more {
+  background: #2d2d2d !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  color: #e5e5e5 !important;
+}
+[data-theme="dark"] .browse-load-more:hover {
+  background: rgba(109, 190, 139, 0.2) !important;
+  border-color: #6dbe8b !important;
+  color: #6dbe8b !important;
+}
+[data-theme="dark"] .course-detail-load-more {
+  background: #2d2d2d !important;
+  border-color: #6dbe8b !important;
+  color: #6dbe8b !important;
+}
+[data-theme="dark"] .course-detail-load-more:hover {
+  background: rgba(109, 190, 139, 0.2) !important;
+  color: #6dbe8b !important;
+}
+[data-theme="dark"] .dashboard-load-more {
+  background: #2d2d2d !important;
+  border-color: #6dbe8b !important;
+  color: #e5e5e5 !important;
+}
+[data-theme="dark"] .dashboard-load-more:hover {
+  background: rgba(109, 190, 139, 0.2) !important;
+  border-color: #6dbe8b !important;
+}
+[data-theme="dark"] .landing-page nav button {
+  color: #d4d4d4 !important;
+}
+[data-theme="dark"] .landing-page nav button:hover {
+  color: #6dbe8b !important;
+}
+[data-theme="dark"] .landing-mobile-menu {
+  background: #262626 !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+[data-theme="dark"] .landing-mobile-menu button {
+  color: #d4d4d4 !important;
+}
+[data-theme="dark"] .landing-mobile-menu button:hover {
+  color: #6dbe8b !important;
+}
+[data-theme="dark"] .landing-page section {
+  color: inherit;
+}
+[data-theme="dark"] .landing-page h1,
+[data-theme="dark"] .landing-page h2,
+[data-theme="dark"] .landing-page h3,
+[data-theme="dark"] .landing-page h4 {
+  color: #e5e5e5 !important;
+}
+[data-theme="dark"] .landing-page section p {
+  color: #a3a3a3 !important;
+}
+[data-theme="dark"] .landing-page .font-bold.text-3xl {
+  color: #e5e5e5 !important;
+}
+
+/* Landing: no white section boxes in dark mode */
+[data-theme="dark"] .landing-page #how-it-works,
+[data-theme="dark"] .landing-page #features {
+  background: #2d2d2d !important;
+}
+[data-theme="dark"] .landing-page #why-poly-pages article {
+  background: #2d2d2d !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Landing tagline: lighter gray for better contrast, still grayish */
+.landing-tagline-gray {
+  color: #525252;
+}
+[data-theme="dark"] .landing-tagline-gray {
+  color: #c4c4c4 !important;
+}
+
+/* Landing footer: dark mode */
+[data-theme="dark"] .landing-footer {
+  background: #1a1a1a !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+[data-theme="dark"] .landing-footer h2 {
+  color: #6dbe8b !important;
+}
+[data-theme="dark"] .landing-footer p {
+  color: #a3a3a3 !important;
+}
+[data-theme="dark"] .landing-footer a {
+  color: #b8b8b8 !important;
+}
+[data-theme="dark"] .landing-footer a:hover {
+  color: #6dbe8b !important;
+}
+
+/* Apricot/accent buttons and badges: dark text for contrast (no white on orange) */
+[data-theme="dark"] .browse-upload-btn,
+[data-theme="dark"] .profile-page__upload-btn,
+[data-theme="dark"] .upload-nav-upload-btn {
+  color: #1a1512 !important;
+}
+[data-theme="dark"] .course-detail-term-badge,
+[data-theme="dark"] .browse-course-badge {
+  background: rgba(249, 199, 132, 0.85) !important;
+  color: #1a1512 !important;
+}
+
+/* Page background – uses theme variable (light/dark) */
+.page-bg {
+  background-color: var(--poly-bg-page);
 }
 
 /* Landing page – Poly layout */
