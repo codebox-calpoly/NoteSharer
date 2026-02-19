@@ -137,6 +137,7 @@ export async function GET(request: Request) {
   }
 
   const { searchParams } = new URL(request.url);
+  const classIdParam = searchParams.get("id")?.trim() || null;
   const limitParam = searchParams.get("limit");
   const offsetParam = searchParams.get("offset");
   const departmentParamRaw = searchParams.get("department")?.trim() || null;
@@ -144,6 +145,34 @@ export async function GET(request: Request) {
   const paginated = limitParam != null && limitParam !== "";
   const limit = paginated ? Math.min(Math.max(1, parseInt(limitParam, 10) || PAGE_SIZE), 1000) : PAGE_SIZE;
   const offset = paginated ? Math.max(0, parseInt(offsetParam ?? "0", 10)) : 0;
+
+  if (classIdParam) {
+    const { data: course, error } = await supabase
+      .from("courses")
+      .select("id, title, department, course_number, term, year")
+      .eq("id", classIdParam)
+      .maybeSingle();
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    if (!course) {
+      return NextResponse.json({ error: "Course not found" }, { status: 404 });
+    }
+
+    const classes = buildClasses([course as CourseRow], new Map<string, number>());
+
+    return NextResponse.json(
+      { classes, hasMore: false },
+      {
+        status: 200,
+        headers: {
+          "Cache-Control": "private, max-age=300, stale-while-revalidate=600",
+        },
+      }
+    );
+  }
 
   if (paginated) {
     let query = supabase

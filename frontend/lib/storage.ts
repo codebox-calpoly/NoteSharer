@@ -29,6 +29,37 @@ const getAdminClient = () => {
 
 export const SIGNED_URL_TTL_SECONDS = DEFAULT_SIGNED_URL_TTL_SECONDS;
 
+export async function generateSignedUrls(
+  bucket: string,
+  filePaths: string[],
+  expiresIn: number = DEFAULT_SIGNED_URL_TTL_SECONDS,
+): Promise<Map<string, string>> {
+  if (!bucket) {
+    throw new Error("Bucket is required to generate signed URLs.");
+  }
+
+  const paths = filePaths.filter((path) => Boolean(path));
+  if (paths.length === 0) return new Map<string, string>();
+
+  const { data, error } = await getAdminClient()
+    .storage
+    .from(bucket)
+    .createSignedUrls(paths, expiresIn);
+
+  if (error || !data) {
+    throw new Error(`Failed to generate signed URLs: ${error?.message ?? "Unknown error"}`);
+  }
+
+  const signedUrlMap = new Map<string, string>();
+  data.forEach((entry) => {
+    if (entry?.path && entry?.signedUrl) {
+      signedUrlMap.set(entry.path, entry.signedUrl);
+    }
+  });
+
+  return signedUrlMap;
+}
+
 export async function generateSignedUrl(
   bucket: string,
   filePath: string,
