@@ -7,7 +7,7 @@ import {
   useState,
   type FormEvent,
 } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import { getSessionWithRecovery, supabase } from "@/lib/supabaseClient";
 import PDFThumbnail from "@/app/components/pdf/PDFThumbnail";
@@ -56,7 +56,6 @@ function termYearLabel(term: string | null, year: number | null): string {
 
 export default function CourseDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const classId = typeof params.classId === "string" ? params.classId : null;
 
   const [course, setCourse] = useState<CourseOption | null>(null);
@@ -116,14 +115,15 @@ export default function CourseDetailPage() {
     if (!tokenLoaded || !accessToken || !classId) return;
     let active = true;
     const fetchCourses = async () => {
+      const endpoint = `/api/classes?id=${encodeURIComponent(classId)}`;
       try {
-        let res = await fetch("/api/classes", {
+        let res = await fetch(endpoint, {
           headers: { Authorization: `Bearer ${accessToken}` },
         });
         if (res.status === 401) {
           const newToken = await refreshToken();
           if (newToken) {
-            res = await fetch("/api/classes", {
+            res = await fetch(endpoint, {
               headers: { Authorization: `Bearer ${newToken}` },
             });
           }
@@ -135,8 +135,7 @@ export default function CourseDetailPage() {
           return;
         }
         const data = (await res.json()) as { classes?: CourseOption[] };
-        const list = data.classes ?? [];
-        const found = list.find((c) => c.id === classId) ?? null;
+        const found = data.classes?.[0] ?? null;
         setCourse(found);
         setCoursesError(found ? null : "Course not found");
       } catch {
@@ -450,7 +449,7 @@ export default function CourseDetailPage() {
         setVotingId(null);
       }
     },
-    [accessToken, votingId, refreshToken, fetchCredits, selectedNote],
+    [accessToken, votingId, refreshToken, fetchCredits],
   );
 
   const handleOpenNoteModal = (note: Note) => {
@@ -536,7 +535,12 @@ export default function CourseDetailPage() {
           rightSlot={
             <>
               <span className="browse-credits-pill">Credits: {credits ?? "—"}</span>
-              <Link href="/upload" className="browse-upload-btn">Upload Notes</Link>
+              <span className="browse-credits-pill">
+                Free downloads: {freeDownloads ?? "—"}
+              </span>
+              <Link href="/upload" className="browse-upload-btn">
+                Upload Notes
+              </Link>
               <ProfileIcons />
             </>
           }
@@ -556,164 +560,170 @@ export default function CourseDetailPage() {
         rightSlot={
           <>
             <span className="browse-credits-pill">Credits: {credits ?? "—"}</span>
-            <Link href="/upload" className="browse-upload-btn">Upload Notes</Link>
+            <span className="browse-credits-pill">
+              Free downloads: {freeDownloads ?? "—"}
+            </span>
+            <Link href="/upload" className="browse-upload-btn">
+              Upload Notes
+            </Link>
             <ProfileIcons />
           </>
         }
       />
 
       <div className="course-detail-body">
-        {course && (
-          <>
-            <header className="course-detail-header">
-              <div className="course-detail-header-info">
-                <div className="course-detail-header-top">
-                  <span className="course-detail-term-badge">
-                    {termYearLabel(course.term, course.year)}
-                  </span>
-                </div>
-                <h1 className="course-detail-title">{course.code ?? course.name}</h1>
-                {(() => {
-                  const subline = getCourseSubline(course.code);
-                  return subline ? <p className="course-detail-subline">{subline}</p> : null;
-                })()}
+        <>
+          <header className="course-detail-header">
+            <div className="course-detail-header-info">
+              <div className="course-detail-header-top">
+                <span className="course-detail-term-badge">
+                  {course ? termYearLabel(course.term, course.year) : "Loading course…"}
+                </span>
               </div>
+              <h1 className="course-detail-title">{course ? (course.code ?? course.name) : "Loading course…"}</h1>
+              {(() => {
+                if (!course) return null;
+                const subline = getCourseSubline(course.code);
+                return subline ? <p className="course-detail-subline">{subline}</p> : null;
+              })()}
+            </div>
+            {course ? (
               <Link
                 href={`/upload?course=${course.id}`}
                 className="course-detail-add-note"
               >
                 Add Note
               </Link>
-            </header>
+            ) : null}
+          </header>
 
-            <div className="course-detail-tabs">
-              <button type="button" className="course-detail-tab active">
-                Notes
-              </button>
-              <button type="button" className="course-detail-tab" disabled>
-                Resources
-              </button>
-              <button type="button" className="course-detail-tab" disabled>
-                Top Contributors
-              </button>
-            </div>
+          <div className="course-detail-tabs">
+            <button type="button" className="course-detail-tab active">
+              Notes
+            </button>
+            <button type="button" className="course-detail-tab" disabled>
+              Resources
+            </button>
+            <button type="button" className="course-detail-tab" disabled>
+              Top Contributors
+            </button>
+          </div>
 
-            <div className="course-detail-filters">
-              <div className="course-detail-filter-group">
-                <span className="course-detail-filter-label">Filter:</span>
-                <button
-                  type="button"
-                  className={`course-detail-filter-btn ${downloadedFilter === "downloaded" ? "active" : ""}`}
-                  onClick={() => {
-                    setDownloadedFilter("downloaded");
-                    setPage(1);
-                    setHasMore(false);
-                  }}
-                >
-                  Downloaded notes
-                </button>
-                <button
-                  type="button"
-                  className={`course-detail-filter-btn ${downloadedFilter === "not_downloaded" ? "active" : ""}`}
-                  onClick={() => {
-                    setDownloadedFilter("not_downloaded");
-                    setPage(1);
-                    setHasMore(false);
-                  }}
-                >
-                  New notes
-                </button>
-              </div>
-              <div className="course-detail-filter-group">
-                <span className="course-detail-filter-label">Sort:</span>
-                <button
-                  type="button"
-                  className={`course-detail-filter-btn ${sortOrder === "newest" ? "active" : ""}`}
-                  onClick={() => {
-                    setSortOrder("newest");
-                    setPage(1);
-                    setNotesVersion((v) => v + 1);
-                  }}
-                >
-                  Newest
-                </button>
-                <button
-                  type="button"
-                  className={`course-detail-filter-btn ${sortOrder === "oldest" ? "active" : ""}`}
-                  onClick={() => {
-                    setSortOrder("oldest");
-                    setPage(1);
-                    setNotesVersion((v) => v + 1);
-                  }}
-                >
-                  Oldest
-                </button>
-              </div>
-              <span className="course-detail-notes-count">
-                {filteredNotes.length} notes available
-              </span>
-            </div>
-
-            {downloadError && (
-              <p className="course-detail-error">{downloadError}</p>
-            )}
-            {voteError && (
-              <p className="course-detail-error" role="alert">
-                {voteError}
-              </p>
-            )}
-            {notesError && (
-              <p className="course-detail-error">{notesError}</p>
-            )}
-
-            <div className="course-detail-note-grid">
-              {filteredNotes.map((note) => (
-                <button
-                  key={note.id}
-                  type="button"
-                  className="course-detail-note-card"
-                  onClick={() => handleOpenNoteModal(note)}
-                >
-                  <h3 className="course-detail-note-title">{note.title}</h3>
-                  <p className="course-detail-note-by">
-                    by {note.profile_display_name ?? "Anonymous"}
-                  </p>
-                  <div className="course-detail-note-meta">
-                    <div className="course-detail-note-votes">
-                      <span className="course-detail-note-vote-up">
-                        ↑ {note.upvote_count ?? 0}
-                      </span>
-                      <span className="course-detail-note-vote-down">
-                        ↓ {note.downvote_count ?? 0}
-                      </span>
-                    </div>
-                    <span className="course-detail-note-credits">
-                      {note.downloaded ? "🔓" : "🔒"} {note.downloaded ? "Owned" : `−${note.download_cost} credits`}
-                    </span>
-                  </div>
-                </button>
-              ))}
-            </div>
-
-            {loadingNotes && (
-              <p className="course-detail-loading">Loading notes…</p>
-            )}
-            {!loadingNotes && hasMore && (
+          <div className="course-detail-filters">
+            <div className="course-detail-filter-group">
+              <span className="course-detail-filter-label">Filter:</span>
               <button
                 type="button"
-                className="course-detail-load-more"
-                onClick={handleLoadMore}
+                className={`course-detail-filter-btn ${downloadedFilter === "downloaded" ? "active" : ""}`}
+                onClick={() => {
+                  setDownloadedFilter("downloaded");
+                  setPage(1);
+                  setHasMore(false);
+                }}
               >
-                Load more
+                Downloaded notes
               </button>
+              <button
+                type="button"
+                className={`course-detail-filter-btn ${downloadedFilter === "not_downloaded" ? "active" : ""}`}
+                onClick={() => {
+                  setDownloadedFilter("not_downloaded");
+                  setPage(1);
+                  setHasMore(false);
+                }}
+              >
+                New notes
+              </button>
+            </div>
+            <div className="course-detail-filter-group">
+              <span className="course-detail-filter-label">Sort:</span>
+              <button
+                type="button"
+                className={`course-detail-filter-btn ${sortOrder === "newest" ? "active" : ""}`}
+                onClick={() => {
+                  setSortOrder("newest");
+                  setPage(1);
+                  setNotesVersion((v) => v + 1);
+                }}
+              >
+                Newest
+              </button>
+              <button
+                type="button"
+                className={`course-detail-filter-btn ${sortOrder === "oldest" ? "active" : ""}`}
+                onClick={() => {
+                  setSortOrder("oldest");
+                  setPage(1);
+                  setNotesVersion((v) => v + 1);
+                }}
+              >
+                Oldest
+              </button>
+            </div>
+            <span className="course-detail-notes-count">
+              {filteredNotes.length} notes available
+            </span>
+          </div>
+
+          {downloadError && (
+            <p className="course-detail-error">{downloadError}</p>
+          )}
+          {voteError && (
+            <p className="course-detail-error" role="alert">
+              {voteError}
+            </p>
+          )}
+          {notesError && (
+            <p className="course-detail-error">{notesError}</p>
+          )}
+
+          <div className="course-detail-note-grid">
+            {filteredNotes.map((note) => (
+              <button
+                key={note.id}
+                type="button"
+                className="course-detail-note-card"
+                onClick={() => handleOpenNoteModal(note)}
+              >
+                <h3 className="course-detail-note-title">{note.title}</h3>
+                <p className="course-detail-note-by">
+                  by {note.profile_display_name ?? "Anonymous"}
+                </p>
+                <div className="course-detail-note-meta">
+                  <div className="course-detail-note-votes">
+                    <span className="course-detail-note-vote-up">
+                      ↑ {note.upvote_count ?? 0}
+                    </span>
+                    <span className="course-detail-note-vote-down">
+                      ↓ {note.downvote_count ?? 0}
+                    </span>
+                  </div>
+                  <span className="course-detail-note-credits">
+                    {note.downloaded ? "🔓" : "🔒"} {note.downloaded ? "Owned" : `−${note.download_cost} credits`}
+                  </span>
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {loadingNotes && (
+            <p className="course-detail-loading">Loading notes…</p>
+          )}
+          {!loadingNotes && hasMore && (
+            <button
+              type="button"
+              className="course-detail-load-more"
+              onClick={handleLoadMore}
+            >
+              Load more
+            </button>
+          )}
+          {!loadingNotes &&
+            filteredNotes.length === 0 &&
+            !notesError && (
+              <p className="course-detail-empty">No notes in this course yet.</p>
             )}
-            {!loadingNotes &&
-              filteredNotes.length === 0 &&
-              !notesError && (
-                <p className="course-detail-empty">No notes in this course yet.</p>
-              )}
-          </>
-        )}
+        </>
       </div>
 
       {/* Note preview modal – download only from modal */}
