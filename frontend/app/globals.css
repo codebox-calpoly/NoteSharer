@@ -892,6 +892,67 @@ body {
  cursor: not-allowed;
 }
 
+/* Dark mode: Request a new course button (in sidebar/dropdown) and modal */
+[data-theme="dark"] .course-request-row {
+  border-bottom-color: rgba(255, 255, 255, 0.12);
+}
+
+[data-theme="dark"] .course-request-button {
+  background: rgba(255, 255, 255, 0.08);
+  color: #e5e5e5;
+}
+
+[data-theme="dark"] .course-request-button:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+[data-theme="dark"] .course-request-overlay {
+  background: rgba(0, 0, 0, 0.65);
+}
+
+[data-theme="dark"] .course-request-modal {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 22px 50px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .course-request-title {
+  color: #1a1a1a;
+}
+
+[data-theme="dark"] .course-request-close {
+  color: #64748b;
+}
+
+[data-theme="dark"] .course-request-close:hover {
+  color: #0f172a;
+}
+
+[data-theme="dark"] .course-request-label {
+  color: #475569;
+}
+
+[data-theme="dark"] .course-request-input,
+[data-theme="dark"] .course-request-textarea {
+  background: #ffffff;
+  color: #1a1a1a;
+  border-color: rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="dark"] .course-request-input::placeholder,
+[data-theme="dark"] .course-request-textarea::placeholder {
+  color: #737373;
+}
+
+[data-theme="dark"] .course-request-secondary {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+[data-theme="dark"] .course-request-secondary:hover {
+  background: #cbd5e1;
+}
+
 .note-modal-overlay {
   position: fixed;
   inset: 0;

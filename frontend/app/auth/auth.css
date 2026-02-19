@@ -131,9 +131,48 @@
   color: var(--poly-neutral-muted);
 }
 
-/* Dark mode: keep Poly Pages light theme for consistency, or uncomment below
-@media (prefers-color-scheme: dark) {
-  .auth-page { background: var(--poly-bg-page); }
-  .auth-card { border-color: var(--poly-border); }
+/* Dark mode: sign-in card stays a solid light panel so text stays readable.
+   Global --poly-neutral-* become light gray in dark theme; we override so
+   the card always uses dark text on light background (no washed-out look). */
+[data-theme="dark"] .auth-page {
+  background: var(--poly-bg-page);
 }
-*/
+
+[data-theme="dark"] .auth-card {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+}
+
+[data-theme="dark"] .auth-title,
+[data-theme="dark"] .auth-label {
+  color: #1a1a1a;
+}
+
+[data-theme="dark"] .auth-body {
+  color: #495565;
+}
+
+[data-theme="dark"] .auth-input {
+  background: #ffffff;
+  color: #1a1a1a;
+  border-color: rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="dark"] .auth-input::placeholder {
+  color: #737373;
+}
+
+[data-theme="dark"] .auth-loading {
+  color: #495565;
+}
+
+[data-theme="dark"] .auth-button-secondary {
+  color: #495565;
+  border-color: rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="dark"] .auth-button-secondary:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: #1a1a1a;
+}
