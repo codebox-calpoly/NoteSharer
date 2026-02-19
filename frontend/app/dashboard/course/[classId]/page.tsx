@@ -448,7 +448,7 @@ export default function CourseDetailPage() {
         setVotingId(null);
       }
     },
-    [accessToken, votingId, refreshToken, fetchCredits, selectedNote],
+    [accessToken, votingId, refreshToken, fetchCredits],
   );
 
   const handleOpenNoteModal = (note: Note) => {
@@ -544,6 +544,9 @@ export default function CourseDetailPage() {
             </div>
             <div className="browse-nav-right">
               <span className="browse-credits-pill">Credits: {credits ?? "—"}</span>
+              <span className="browse-credits-pill">
+                Free downloads: {freeDownloads ?? "—"}
+              </span>
               <Link href="/upload" className="browse-upload-btn">
                 Upload Notes
               </Link>
@@ -576,6 +579,9 @@ export default function CourseDetailPage() {
           </div>
           <div className="browse-nav-right">
             <span className="browse-credits-pill">Credits: {credits ?? "—"}</span>
+            <span className="browse-credits-pill">
+              Free downloads: {freeDownloads ?? "—"}
+            </span>
             <Link href="/upload" className="browse-upload-btn">
               Upload Notes
             </Link>
