@@ -7,7 +7,7 @@ import {
   useState,
   type FormEvent,
 } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import { getSessionWithRecovery, supabase } from "@/lib/supabaseClient";
 import PDFThumbnail from "@/app/components/pdf/PDFThumbnail";
@@ -56,7 +56,6 @@ function termYearLabel(term: string | null, year: number | null): string {
 
 export default function CourseDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const classId = typeof params.classId === "string" ? params.classId : null;
 
   const [course, setCourse] = useState<CourseOption | null>(null);
@@ -341,11 +340,10 @@ export default function CourseDetailPage() {
           }
           return updated;
         });
-        if (selectedNote?.id === noteId) {
-          setSelectedNote((prev) =>
-            prev ? { ...prev, downloaded: true } : null,
-          );
-        }
+        setSelectedNote((prev) => {
+          if (!prev || prev.id !== noteId) return prev;
+          return { ...prev, downloaded: true };
+        });
       } catch {
         setDownloadError("Failed to download note. Try again.");
       } finally {
@@ -357,7 +355,6 @@ export default function CourseDetailPage() {
       downloadingId,
       refreshToken,
       fetchCredits,
-      selectedNote?.id,
     ],
   );
 
@@ -450,7 +447,7 @@ export default function CourseDetailPage() {
         setVotingId(null);
       }
     },
-    [accessToken, votingId, refreshToken, fetchCredits, selectedNote],
+    [accessToken, votingId, refreshToken, fetchCredits],
   );
 
   const handleOpenNoteModal = (note: Note) => {
@@ -536,6 +533,9 @@ export default function CourseDetailPage() {
           rightSlot={
             <>
               <span className="browse-credits-pill">Credits: {credits ?? "—"}</span>
+              <span className="browse-credits-pill">
+                Free downloads: {freeDownloads ?? "—"}
+              </span>
               <Link href="/upload" className="browse-upload-btn">Upload Notes</Link>
               <ProfileIcons />
             </>
@@ -556,6 +556,9 @@ export default function CourseDetailPage() {
         rightSlot={
           <>
             <span className="browse-credits-pill">Credits: {credits ?? "—"}</span>
+            <span className="browse-credits-pill">
+              Free downloads: {freeDownloads ?? "—"}
+            </span>
             <Link href="/upload" className="browse-upload-btn">Upload Notes</Link>
             <ProfileIcons />
           </>

@@ -103,7 +103,7 @@ async function run() {
       }
       process.stderr.write(".");
       await sleep(DELAY_MS);
-    } catch (err) {
+    } catch {
       failed.push(url);
       process.stderr.write("x");
     }

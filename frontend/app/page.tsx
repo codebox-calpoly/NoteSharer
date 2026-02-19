@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @next/next/no-img-element */
 
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
@@ -8,7 +9,7 @@ const ANIMA_IMG = "https://c.animaapp.com/vYVdVbUl/img";
 
 export default function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [heroVisible, setHeroVisible] = useState(false);
+  const [heroVisible] = useState(true);
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
@@ -17,10 +18,6 @@ export default function Home() {
       setMobileMenuOpen(false);
     }
   };
-
-  useEffect(() => {
-    setHeroVisible(true);
-  }, []);
 
   return (
     <div

@@ -47,7 +47,6 @@ export default function UploadPage() {
   const [classesLoading, setClassesLoading] = useState(false);
 
   const [tokenLoaded, setTokenLoaded] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const router = useRouter();
 
   const [file, setFile] = useState<File | null>(null);
@@ -63,11 +62,7 @@ export default function UploadPage() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [isVisible, setIsVisible] = useState(false);
-
-  useEffect(() => {
-    setIsVisible(true);
-  }, []);
+  const [isVisible] = useState(true);
 
   useEffect(() => {
     (async () => {
@@ -77,7 +72,6 @@ export default function UploadPage() {
         router.replace("/auth");
         return;
       }
-      setIsAuthenticated(true);
     })();
   }, [router]);
 
@@ -480,7 +474,6 @@ export default function UploadPage() {
                         autoComplete="off"
                         aria-invalid={!!classNotFoundError}
                         aria-describedby={classNotFoundError ? "class-error" : undefined}
-                        aria-expanded={isClassListOpen && matchingClasses.length > 0}
                         aria-controls="class-results-list"
                       />
                       {isClassListOpen && classNumberInput.trim() && department && (
@@ -499,6 +492,7 @@ export default function UploadPage() {
                                 key={c.id}
                                 type="button"
                                 role="option"
+                                aria-selected={classId === c.id}
                                 className="upload-class-result-item"
                                 onMouseDown={(e) => {
                                   e.preventDefault();
@@ -526,6 +520,11 @@ export default function UploadPage() {
                     {classNotFoundError && (
                       <p id="class-error" className="upload-field-error" role="alert">
                         {classNotFoundError}
+                      </p>
+                    )}
+                    {classesError && !classNotFoundError && (
+                      <p className="upload-field-error" role="alert">
+                        {classesError}
                       </p>
                     )}
                     <a

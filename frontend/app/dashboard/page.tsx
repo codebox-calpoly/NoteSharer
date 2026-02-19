@@ -39,13 +39,6 @@ type CourseOption = {
   note_count: number;
 };
 
-function termYearLabel(term: string | null, year: number | null): string {
-  if (term && year != null) return `${term} ${year}`;
-  if (term) return term;
-  if (year != null) return String(year);
-  return "—";
-}
-
 export default function DashboardPage() {
   const [courses, setCourses] = useState<CourseOption[]>([]);
   const [selectedDepartment, setSelectedDepartment] = useState<string | null>(null);
@@ -58,7 +51,7 @@ export default function DashboardPage() {
   const [coursesLoading, setCoursesLoading] = useState(false);
   const [coursesLoadingMore, setCoursesLoadingMore] = useState(false);
   const [catalogTerms, setCatalogTerms] = useState<CatalogTerm[]>(FALLBACK_CATALOG_TERMS);
-  const [departments, setDepartments] = useState<string[]>(() => [...CALPOLY_DEPARTMENT_CODES]);
+  const [departments] = useState<string[]>(() => [...CALPOLY_DEPARTMENT_CODES]);
   const [credits, setCredits] = useState<number | null>(null);
   const [freeDownloads, setFreeDownloads] = useState<number | null>(null);
   /** Number of course cards to render (paginated for performance). */
@@ -66,7 +59,7 @@ export default function DashboardPage() {
   /** When no department selected, whether the API has more courses to fetch. */
   const [hasMoreFromApi, setHasMoreFromApi] = useState(false);
   /** Page enter animation (leaderboard-style). */
-  const [isVisible, setIsVisible] = useState(false);
+  const [isVisible] = useState(true);
 
   const refreshToken = useCallback(async () => {
     const { session, error } = await getSessionWithRecovery(supabase);
@@ -74,10 +67,6 @@ export default function DashboardPage() {
     const newToken = session?.access_token ?? null;
     if (newToken) setAccessToken(newToken);
     return newToken;
-  }, []);
-
-  useEffect(() => {
-    setIsVisible(true);
   }, []);
 
   useEffect(() => {
@@ -133,22 +122,23 @@ export default function DashboardPage() {
   );
 
   useEffect(() => {
-    if (!tokenLoaded || !accessToken) {
-      if (tokenLoaded && !accessToken) {
-        setCoursesError("Not authenticated");
-        setCoursesLoading(false);
-      }
-      return;
-    }
+    if (!tokenLoaded || !accessToken) return;
     let active = true;
-    setCoursesLoading(true);
-    setCoursesLoadingMore(false);
+    const loadingTimer = window.setTimeout(() => {
+      if (!active) return;
+      setCoursesLoading(true);
+      setCoursesLoadingMore(false);
+    }, 0);
     const pageSize = selectedDepartment ? DEPARTMENT_PAGE_SIZE : INITIAL_PAGE_SIZE;
 
     const run = async () => {
       try {
-        let token = accessToken;
-        let res = await fetchCoursesPage(token, 0, selectedDepartment, pageSize);
+        let res = await fetchCoursesPage(
+          accessToken,
+          0,
+          selectedDepartment,
+          pageSize,
+        );
         if (res.ok === false && res.error === "Not authenticated") {
           const newToken = await refreshToken();
           if (newToken) res = await fetchCoursesPage(newToken, 0, selectedDepartment, pageSize);
@@ -178,7 +168,10 @@ export default function DashboardPage() {
       }
     };
     run();
-    return () => { active = false; };
+    return () => {
+      active = false;
+      window.clearTimeout(loadingTimer);
+    };
   }, [accessToken, tokenLoaded, selectedDepartment, refreshToken, fetchCoursesPage]);
 
   useEffect(() => {
@@ -282,7 +275,10 @@ export default function DashboardPage() {
 
   /** Reset visible count when filters/search change so we don't show a short list after narrowing. */
   useEffect(() => {
-    setVisibleCourseCount(80);
+    const timer = window.setTimeout(() => {
+      setVisibleCourseCount(80);
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, [selectedDepartment, browseSearch]);
 
   const coursesToRender = allDisplayCourses.slice(0, visibleCourseCount);
@@ -301,11 +297,17 @@ export default function DashboardPage() {
       let cancelled = false;
       (async () => {
         try {
-          let token = accessToken;
-          let res = await fetchCoursesPage(token, offset, null, INITIAL_PAGE_SIZE);
-          if (res === null) {
+          let res = await fetchCoursesPage(
+            accessToken,
+            offset,
+            null,
+            INITIAL_PAGE_SIZE,
+          );
+          if (res.ok === false && res.error === "Not authenticated") {
             const newToken = await refreshToken();
-            if (newToken) res = await fetchCoursesPage(newToken, offset, null, INITIAL_PAGE_SIZE);
+            if (newToken) {
+              res = await fetchCoursesPage(newToken, offset, null, INITIAL_PAGE_SIZE);
+            }
           }
         if (cancelled) return;
         if (res.ok) {
@@ -341,6 +343,9 @@ export default function DashboardPage() {
         rightSlot={
           <>
             <span className="browse-credits-pill">Credits: {credits ?? "—"}</span>
+            <span className="browse-credits-pill">
+              Free downloads: {freeDownloads ?? "—"}
+            </span>
             <Link href="/upload" className="browse-upload-btn">Upload Notes</Link>
             <ProfileIcons />
           </>
