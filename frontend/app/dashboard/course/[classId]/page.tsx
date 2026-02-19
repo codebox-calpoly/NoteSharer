@@ -340,11 +340,10 @@ export default function CourseDetailPage() {
           }
           return updated;
         });
-        if (selectedNote?.id === noteId) {
-          setSelectedNote((prev) =>
-            prev ? { ...prev, downloaded: true } : null,
-          );
-        }
+        setSelectedNote((prev) => {
+          if (!prev || prev.id !== noteId) return prev;
+          return { ...prev, downloaded: true };
+        });
       } catch {
         setDownloadError("Failed to download note. Try again.");
       } finally {
@@ -356,7 +355,6 @@ export default function CourseDetailPage() {
       downloadingId,
       refreshToken,
       fetchCredits,
-      selectedNote?.id,
     ],
   );
 

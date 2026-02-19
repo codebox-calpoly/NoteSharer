@@ -59,7 +59,7 @@ export default function DashboardPage() {
   /** When no department selected, whether the API has more courses to fetch. */
   const [hasMoreFromApi, setHasMoreFromApi] = useState(false);
   /** Page enter animation (leaderboard-style). */
-  const [isVisible, setIsVisible] = useState(false);
+  const [isVisible] = useState(true);
 
   const refreshToken = useCallback(async () => {
     const { session, error } = await getSessionWithRecovery(supabase);
@@ -67,10 +67,6 @@ export default function DashboardPage() {
     const newToken = session?.access_token ?? null;
     if (newToken) setAccessToken(newToken);
     return newToken;
-  }, []);
-
-  useEffect(() => {
-    setIsVisible(true);
   }, []);
 
   useEffect(() => {
@@ -137,7 +133,12 @@ export default function DashboardPage() {
 
     const run = async () => {
       try {
-        let res = await fetchCoursesPage(accessToken, 0, selectedDepartment, pageSize);
+        let res = await fetchCoursesPage(
+          accessToken,
+          0,
+          selectedDepartment,
+          pageSize,
+        );
         if (res.ok === false && res.error === "Not authenticated") {
           const newToken = await refreshToken();
           if (newToken) res = await fetchCoursesPage(newToken, 0, selectedDepartment, pageSize);
@@ -296,7 +297,12 @@ export default function DashboardPage() {
       let cancelled = false;
       (async () => {
         try {
-          let res = await fetchCoursesPage(accessToken, offset, null, INITIAL_PAGE_SIZE);
+          let res = await fetchCoursesPage(
+            accessToken,
+            offset,
+            null,
+            INITIAL_PAGE_SIZE,
+          );
           if (res.ok === false && res.error === "Not authenticated") {
             const newToken = await refreshToken();
             if (newToken) {
