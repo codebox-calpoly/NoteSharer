@@ -287,15 +287,28 @@ export default function UploadPage() {
       setRequestCourseError(null);
       setRequestCourseSuccess(null);
 
-      if (
-        !requestDepartment.trim() ||
-        !requestCourseNumber.trim() ||
-        !requestTitle.trim() ||
-        !requestTerm.trim() ||
-        !requestYear.trim() ||
-        !requestJustification.trim()
-      ) {
-        setRequestCourseError("All fields are required.");
+      if (!requestDepartment.trim()) {
+        setRequestCourseError("Department is required.");
+        return;
+      }
+      if (!requestCourseNumber.trim()) {
+        setRequestCourseError("Course number is required.");
+        return;
+      }
+      if (!requestTitle.trim()) {
+        setRequestCourseError("Course title is required.");
+        return;
+      }
+      if (!requestTerm.trim()) {
+        setRequestCourseError("Term is required.");
+        return;
+      }
+      if (!requestYear.trim()) {
+        setRequestCourseError("Year is required.");
+        return;
+      }
+      if (!requestJustification.trim()) {
+        setRequestCourseError("Justification is required.");
         return;
       }
       if (!/^\d+$/.test(requestCourseNumber.trim())) {
@@ -865,14 +878,13 @@ export default function UploadPage() {
                 ×
               </button>
             </div>
-            <form className="upload-request-form" onSubmit={handleCourseRequestSubmit}>
+            <form className="upload-request-form" onSubmit={handleCourseRequestSubmit} noValidate>
               <label className="upload-label">
                 Department *
                 <select
                   className="upload-input"
                   value={requestDepartment}
                   onChange={(e) => setRequestDepartment(e.target.value)}
-                  required
                 >
                   <option value="">Select department</option>
                   {CALPOLY_DEPARTMENT_CODES.map((d) => (
@@ -890,7 +902,6 @@ export default function UploadPage() {
                   onChange={(e) => setRequestCourseNumber(e.target.value.replace(/\D/g, ""))}
                   placeholder="e.g. 101"
                   inputMode="numeric"
-                  required
                 />
               </label>
               <label className="upload-label">
@@ -900,7 +911,6 @@ export default function UploadPage() {
                   value={requestTitle}
                   onChange={(e) => setRequestTitle(e.target.value)}
                   placeholder="e.g. Data Structures"
-                  required
                 />
               </label>
               <div className="upload-request-form-row">
@@ -910,7 +920,6 @@ export default function UploadPage() {
                     className="upload-input"
                     value={requestTerm}
                     onChange={(e) => setRequestTerm(e.target.value)}
-                    required
                   >
                     <option value="">Select term</option>
                     {COURSE_REQUEST_TERMS.map((term) => (
@@ -926,7 +935,6 @@ export default function UploadPage() {
                     className="upload-input"
                     value={requestYear}
                     onChange={(e) => setRequestYear(e.target.value)}
-                    required
                   >
                     <option value="">Select year</option>
                     {COURSE_REQUEST_YEARS.map((year) => (
@@ -946,7 +954,6 @@ export default function UploadPage() {
                   placeholder="Explain what this course is."
                   rows={4}
                   maxLength={2000}
-                  required
                 />
               </label>
               {requestCourseError && (
@@ -965,15 +972,7 @@ export default function UploadPage() {
                 <button
                   type="submit"
                   className="upload-step-continue btn-lift"
-                  disabled={
-                    isSubmittingCourseRequest ||
-                    !requestDepartment.trim() ||
-                    !requestCourseNumber.trim() ||
-                    !requestTitle.trim() ||
-                    !requestTerm.trim() ||
-                    !requestYear.trim() ||
-                    !requestJustification.trim()
-                  }
+                  disabled={isSubmittingCourseRequest}
                 >
                   {isSubmittingCourseRequest ? "Submitting..." : "Submit request"}
                 </button>
