@@ -1307,6 +1307,12 @@
   gap: 12px;
 }
 
+.upload-request-form .upload-input::placeholder {
+  font-family: 'Roboto';
+  font-weight: 700;
+  color: rgb(222, 222, 222);
+}
+
 .upload-request-form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
