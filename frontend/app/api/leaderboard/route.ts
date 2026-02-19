@@ -7,6 +7,7 @@ type LeaderboardRow = {
   handle: string | null;
   display_name: string | null;
   uploaded_note_count: number | null;
+  total_credits_earned: number | null;
   credit_score: number | null;
 };
 
@@ -49,8 +50,9 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from("profiles")
-    .select("id, handle, display_name, uploaded_note_count, credit_score")
+    .select("id, handle, display_name, uploaded_note_count, total_credits_earned, credit_score")
     .order("uploaded_note_count", { ascending: false })
+    .order("total_credits_earned", { ascending: false })
     .order("credit_score", { ascending: false })
     .order("created_at", { ascending: true })
     .limit(100)
