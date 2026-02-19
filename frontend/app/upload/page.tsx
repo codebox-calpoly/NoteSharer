@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { getSessionWithRecovery, supabase } from "@/lib/supabaseClient";
 import { DesignNav } from "@/app/components/DesignNav";
@@ -35,6 +35,9 @@ const resourceTypeOptions = [
   { label: "Link", value: "link" },
 ] as const;
 
+const COURSE_REQUEST_TERMS = ["Fall", "Winter", "Spring", "Summer"] as const;
+const COURSE_REQUEST_YEARS = Array.from({ length: 51 }, (_, i) => String(2000 + i));
+
 export default function UploadPage() {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [classes, setClasses] = useState<ClassOption[]>([]);
@@ -47,6 +50,7 @@ export default function UploadPage() {
   const [classesLoading, setClassesLoading] = useState(false);
 
   const [tokenLoaded, setTokenLoaded] = useState(false);
+  const searchParams = useSearchParams();
   const router = useRouter();
 
   const [file, setFile] = useState<File | null>(null);
@@ -63,6 +67,17 @@ export default function UploadPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [isVisible] = useState(true);
+  const [showRequestCourseModal, setShowRequestCourseModal] = useState(false);
+  const [requestDepartment, setRequestDepartment] = useState("");
+  const [requestCourseNumber, setRequestCourseNumber] = useState("");
+  const [requestTitle, setRequestTitle] = useState("");
+  const [requestTerm, setRequestTerm] = useState("");
+  const [requestYear, setRequestYear] = useState("");
+  const [requestJustification, setRequestJustification] = useState("");
+  const [requestCourseError, setRequestCourseError] = useState<string | null>(null);
+  const [requestCourseSuccess, setRequestCourseSuccess] = useState<string | null>(null);
+  const [isSubmittingCourseRequest, setIsSubmittingCourseRequest] = useState(false);
+  const [showRequestCourseToast, setShowRequestCourseToast] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -200,6 +215,30 @@ export default function UploadPage() {
     });
   }, [displayClasses, classNumberInput]);
 
+  useEffect(() => {
+    const departmentParam = searchParams.get("department")?.trim().toUpperCase() ?? "";
+    const courseNumberParam = (searchParams.get("course_number")?.trim() ?? "").replace(/\D/g, "");
+    const titleParam = searchParams.get("title")?.trim() ?? "";
+    const termParam = searchParams.get("term")?.trim() ?? "";
+    const yearParam = searchParams.get("year")?.trim() ?? "";
+
+    if (departmentParam) {
+      setRequestDepartment(departmentParam);
+      if (!department) setDepartment(departmentParam);
+    }
+    if (courseNumberParam) {
+      setRequestCourseNumber(courseNumberParam);
+      if (!classNumberInput) setClassNumberInput(courseNumberParam);
+    }
+    if (titleParam) setRequestTitle(titleParam);
+    if (termParam && COURSE_REQUEST_TERMS.includes(termParam as (typeof COURSE_REQUEST_TERMS)[number])) {
+      setRequestTerm(termParam);
+    }
+    if (yearParam && COURSE_REQUEST_YEARS.includes(yearParam)) {
+      setRequestYear(yearParam);
+    }
+  }, [searchParams, department, classNumberInput]);
+
   const matchClassFromInput = useCallback((): string | null => {
     const q = classNumberInput.trim();
     setClassNotFoundError(null);
@@ -234,11 +273,112 @@ export default function UploadPage() {
     return matches[0].id;
   }, [classNumberInput, displayClasses, classesLoading]);
 
+  const openCourseRequestModal = useCallback(() => {
+    setRequestCourseError(null);
+    setRequestCourseSuccess(null);
+    setRequestDepartment((prev) => prev || department.trim().toUpperCase());
+    setRequestCourseNumber((prev) => prev || classNumberInput.trim());
+    setShowRequestCourseModal(true);
+  }, [department, classNumberInput]);
+
+  const handleCourseRequestSubmit = useCallback(
+    async (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      setRequestCourseError(null);
+      setRequestCourseSuccess(null);
+
+      if (
+        !requestDepartment.trim() ||
+        !requestCourseNumber.trim() ||
+        !requestTitle.trim() ||
+        !requestTerm.trim() ||
+        !requestYear.trim() ||
+        !requestJustification.trim()
+      ) {
+        setRequestCourseError("All fields are required.");
+        return;
+      }
+      if (!/^\d+$/.test(requestCourseNumber.trim())) {
+        setRequestCourseError("Course number must contain only numbers.");
+        return;
+      }
+      if (!accessToken) {
+        setRequestCourseError("Please sign in again.");
+        return;
+      }
+
+      const yearValue = requestYear.trim();
+      const parsedYear = yearValue ? Number.parseInt(yearValue, 10) : null;
+      if (
+        yearValue &&
+        (!Number.isFinite(parsedYear) || parsedYear == null || parsedYear < 2000 || parsedYear > 2050)
+      ) {
+        setRequestCourseError("Year must be between 2000 and 2050.");
+        return;
+      }
+      if (
+        requestTerm.trim() &&
+        !COURSE_REQUEST_TERMS.includes(requestTerm.trim() as (typeof COURSE_REQUEST_TERMS)[number])
+      ) {
+        setRequestCourseError("Please select a valid term.");
+        return;
+      }
+
+      setIsSubmittingCourseRequest(true);
+      try {
+        const res = await fetch("/api/course-submissions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({
+            department: requestDepartment.trim().toUpperCase(),
+            course_number: requestCourseNumber.trim(),
+            title: requestTitle.trim() || null,
+            term: requestTerm.trim() || null,
+            year: parsedYear,
+            justification: requestJustification.trim() || null,
+          }),
+        });
+
+        const payload = (await res.json().catch(() => ({}))) as { error?: string };
+        if (!res.ok) {
+          setRequestCourseError(payload.error || "Failed to submit course request.");
+          return;
+        }
+
+        setRequestCourseSuccess("Request submitted. The team has been notified.");
+        setShowRequestCourseToast(true);
+        setShowRequestCourseModal(false);
+      } catch {
+        setRequestCourseError("Failed to submit course request.");
+      } finally {
+        setIsSubmittingCourseRequest(false);
+      }
+    },
+    [
+      requestDepartment,
+      requestCourseNumber,
+      requestTitle,
+      requestTerm,
+      requestYear,
+      requestJustification,
+      accessToken,
+    ]
+  );
+
   useEffect(() => {
     if (!isSuccess) return;
     const t = window.setTimeout(() => router.push("/dashboard"), 1500);
     return () => window.clearTimeout(t);
   }, [isSuccess, router]);
+
+  useEffect(() => {
+    if (!showRequestCourseToast) return;
+    const t = window.setTimeout(() => setShowRequestCourseToast(false), 2000);
+    return () => window.clearTimeout(t);
+  }, [showRequestCourseToast]);
 
   useEffect(() => {
     return () => {
@@ -373,6 +513,28 @@ export default function UploadPage() {
           >
             <h1 className="upload-main-title">Upload Your Notes</h1>
             <p className="upload-main-subtitle">Share your knowledge and earn credits</p>
+            <div className="upload-request-course-banner">
+              <span className="upload-request-course-banner-text">
+                Can&apos;t find your class?
+              </span>
+              <button
+                type="button"
+                className="upload-request-course-banner-button"
+                onClick={openCourseRequestModal}
+              >
+                Request a new course
+              </button>
+            </div>
+            {requestCourseError && step === 1 && (
+              <p className="upload-field-error" role="alert">
+                {requestCourseError}
+              </p>
+            )}
+            {requestCourseSuccess && step === 1 && (
+              <p className="upload-field-success" role="status">
+                {requestCourseSuccess}
+              </p>
+            )}
 
             {step === 1 && (
               <div className="upload-step">
@@ -484,7 +646,17 @@ export default function UploadPage() {
                         >
                           {matchingClasses.length === 0 ? (
                             <div className="upload-class-results-empty">
-                              No classes match. Request a new course?
+                              <p>No classes match.</p>
+                              <button
+                                type="button"
+                                className="upload-class-results-request-btn"
+                                onMouseDown={(e) => {
+                                  e.preventDefault();
+                                  openCourseRequestModal();
+                                }}
+                              >
+                                Request this course
+                              </button>
                             </div>
                           ) : (
                             matchingClasses.slice(0, 80).map((c) => (
@@ -527,13 +699,23 @@ export default function UploadPage() {
                         {classesError}
                       </p>
                     )}
-                    <a
-                      href="#"
+                    <button
+                      type="button"
                       className="upload-request-course-link"
-                      onClick={(e) => e.preventDefault()}
+                      onClick={openCourseRequestModal}
                     >
                       Request a new course
-                    </a>
+                    </button>
+                    {requestCourseError && (
+                      <p className="upload-field-error" role="alert">
+                        {requestCourseError}
+                      </p>
+                    )}
+                    {requestCourseSuccess && (
+                      <p className="upload-field-success" role="status">
+                        {requestCourseSuccess}
+                      </p>
+                    )}
                   </div>
                   <div className="upload-field">
                     <label className="upload-label">Note title *</label>
@@ -660,6 +842,152 @@ export default function UploadPage() {
           </aside>
         </div>
       </div>
+
+      {showRequestCourseModal && (
+        <div className="upload-request-modal" onClick={() => setShowRequestCourseModal(false)}>
+          <div
+            className="upload-request-modal-content"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="request-course-title"
+          >
+            <div className="upload-request-modal-header">
+              <h3 id="request-course-title" className="upload-request-modal-title">
+                Request a New Course
+              </h3>
+              <button
+                type="button"
+                className="upload-request-modal-close"
+                onClick={() => setShowRequestCourseModal(false)}
+                aria-label="Close course request form"
+              >
+                ×
+              </button>
+            </div>
+            <form className="upload-request-form" onSubmit={handleCourseRequestSubmit}>
+              <label className="upload-label">
+                Department *
+                <select
+                  className="upload-input"
+                  value={requestDepartment}
+                  onChange={(e) => setRequestDepartment(e.target.value)}
+                  required
+                >
+                  <option value="">Select department</option>
+                  {CALPOLY_DEPARTMENT_CODES.map((d) => (
+                    <option key={d} value={d}>
+                      {d}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="upload-label">
+                Course number *
+                <input
+                  className="upload-input"
+                  value={requestCourseNumber}
+                  onChange={(e) => setRequestCourseNumber(e.target.value.replace(/\D/g, ""))}
+                  placeholder="e.g. 101"
+                  inputMode="numeric"
+                  required
+                />
+              </label>
+              <label className="upload-label">
+                Course title *
+                <input
+                  className="upload-input"
+                  value={requestTitle}
+                  onChange={(e) => setRequestTitle(e.target.value)}
+                  placeholder="e.g. Data Structures"
+                  required
+                />
+              </label>
+              <div className="upload-request-form-row">
+                <label className="upload-label">
+                  Term *
+                  <select
+                    className="upload-input"
+                    value={requestTerm}
+                    onChange={(e) => setRequestTerm(e.target.value)}
+                    required
+                  >
+                    <option value="">Select term</option>
+                    {COURSE_REQUEST_TERMS.map((term) => (
+                      <option key={term} value={term}>
+                        {term}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="upload-label">
+                  Year *
+                  <select
+                    className="upload-input"
+                    value={requestYear}
+                    onChange={(e) => setRequestYear(e.target.value)}
+                    required
+                  >
+                    <option value="">Select year</option>
+                    {COURSE_REQUEST_YEARS.map((year) => (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+              <label className="upload-label">
+                Why do you need this course?*
+                <textarea
+                  className="upload-input upload-textarea"
+                  value={requestJustification}
+                  onChange={(e) => setRequestJustification(e.target.value)}
+                  placeholder="Explain what this course is."
+                  rows={4}
+                  maxLength={2000}
+                  required
+                />
+              </label>
+              {requestCourseError && (
+                <p className="upload-field-error" role="alert">
+                  {requestCourseError}
+                </p>
+              )}
+              <div className="upload-request-modal-actions">
+                <button
+                  type="button"
+                  className="upload-step-back"
+                  onClick={() => setShowRequestCourseModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="upload-step-continue btn-lift"
+                  disabled={
+                    isSubmittingCourseRequest ||
+                    !requestDepartment.trim() ||
+                    !requestCourseNumber.trim() ||
+                    !requestTitle.trim() ||
+                    !requestTerm.trim() ||
+                    !requestYear.trim() ||
+                    !requestJustification.trim()
+                  }
+                >
+                  {isSubmittingCourseRequest ? "Submitting..." : "Submit request"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showRequestCourseToast && (
+        <div className="upload-request-toast" role="status" aria-live="polite">
+          Successfully submitted
+        </div>
+      )}
 
       {showPreview && filePreviewUrl && (
         <div className="upload-preview-modal" onClick={() => setShowPreview(false)}>

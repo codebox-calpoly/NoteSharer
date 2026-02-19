@@ -1,0 +1,266 @@
+.outerShell {
+  min-height: 100vh;
+  background: #1e2128;
+  display: flex;
+  justify-content: center;
+  padding: 26px 18px;
+}
+
+.pageFrame {
+  width: min(1000px, 100%);
+  background: #f5f5f6;
+  border: 2px solid #8aa0c0;
+  box-shadow: 0 0 0 1px #324156;
+  display: flex;
+  flex-direction: column;
+}
+
+.topBar {
+  height: 52px;
+  padding: 0 18px;
+  border-bottom: 1px solid #e1e2e5;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.brandIcon {
+  width: 22px;
+  height: 22px;
+  border: 1px solid #d3d9e4;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  background: #fffaf0;
+}
+
+.brandName {
+  font-size: 14px;
+  font-weight: 600;
+  color: #4a5564;
+}
+
+.authButton {
+  text-decoration: none;
+  font-size: 12px;
+  line-height: 1;
+  font-weight: 600;
+  color: #5b4a24;
+  background: linear-gradient(180deg, #f8dca6 0%, #efc57c 100%);
+  border: 1px solid #c69a59;
+  border-radius: 6px;
+  padding: 8px 10px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.main {
+  padding: 78px 34px 50px;
+  display: flex;
+  flex-direction: column;
+  gap: 100px;
+}
+
+.hero {
+  max-width: 760px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.heroTitle {
+  margin: 0;
+  color: #313841;
+  font-size: clamp(38px, 4.4vw, 58px);
+  line-height: 1.16;
+  font-weight: 700;
+}
+
+.heroSubtitle {
+  margin: 28px auto 0;
+  max-width: 680px;
+  color: #8a9099;
+  font-size: 18px;
+  line-height: 1.65;
+}
+
+.searchWrap {
+  margin: 32px auto 0;
+  max-width: 680px;
+  height: 46px;
+  border-radius: 8px;
+  background: #ffffff;
+  border: 1px solid #e0e3e9;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px;
+}
+
+.searchIcon {
+  font-size: 14px;
+  opacity: 0.65;
+}
+
+.searchInput {
+  width: 100%;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: #667082;
+  font-size: 13px;
+}
+
+.searchInput::placeholder {
+  color: #99a1ae;
+}
+
+.coursesSection {
+  max-width: 930px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.sectionTitle {
+  margin: 0;
+  color: #3a434e;
+  font-size: 39px;
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+.sectionSubtitle {
+  margin: 6px 0 0;
+  color: #8e959f;
+  font-size: 17px;
+}
+
+.coursesGrid {
+  margin-top: 26px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.courseCard {
+  background: #fcfcfd;
+  border: 1px solid #e6e8ed;
+  border-radius: 10px;
+  padding: 16px;
+  min-height: 118px;
+}
+
+.courseCode {
+  display: inline-block;
+  padding: 5px 10px;
+  border-radius: 7px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #7f887f;
+  background: #eef2eb;
+  border: 1px solid #e2e8dd;
+}
+
+.courseTitle {
+  margin: 14px 0 14px;
+  font-size: 20px;
+  line-height: 1.25;
+  font-weight: 600;
+  color: #4a535f;
+}
+
+.courseMeta {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  color: #9aa1ab;
+  font-size: 13px;
+}
+
+.footer {
+  border-top: 1px solid #e1e2e5;
+  padding: 16px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #8c94a0;
+  font-size: 12px;
+  background: #f8f8f9;
+}
+
+.copyright {
+  white-space: nowrap;
+}
+
+.footerNav {
+  display: flex;
+  gap: 24px;
+}
+
+.footerNav a {
+  text-decoration: none;
+  color: #8c94a0;
+}
+
+@media (max-width: 980px) {
+  .main {
+    padding: 58px 22px 40px;
+    gap: 70px;
+  }
+
+  .heroTitle {
+    font-size: clamp(30px, 6vw, 48px);
+  }
+
+  .heroSubtitle {
+    font-size: 15px;
+  }
+
+  .sectionTitle {
+    font-size: 31px;
+  }
+
+  .sectionSubtitle {
+    font-size: 15px;
+  }
+
+  .courseTitle {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 700px) {
+  .outerShell {
+    padding: 8px;
+  }
+
+  .main {
+    padding: 36px 14px 32px;
+    gap: 48px;
+  }
+
+  .topBar {
+    padding: 0 10px;
+  }
+
+  .coursesGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .footerNav {
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+}
