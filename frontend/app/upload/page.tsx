@@ -478,7 +478,6 @@ export default function UploadPage() {
             {credits != null && (
               <span className="upload-nav-credits">Credits: {credits}</span>
             )}
-            <Link href="/upload" className="upload-nav-upload-btn">Upload Notes</Link>
             <ProfileIcons />
           </>
         }

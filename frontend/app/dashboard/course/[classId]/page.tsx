@@ -536,9 +536,6 @@ export default function CourseDetailPage() {
               <span className="browse-credits-pill">
                 Free downloads: {freeDownloads ?? "—"}
               </span>
-              <Link href="/upload" className="browse-upload-btn">
-                Upload Notes
-              </Link>
               <ProfileIcons />
             </>
           }
@@ -561,9 +558,6 @@ export default function CourseDetailPage() {
             <span className="browse-credits-pill">
               Free downloads: {freeDownloads ?? "—"}
             </span>
-            <Link href="/upload" className="browse-upload-btn">
-              Upload Notes
-            </Link>
             <ProfileIcons />
           </>
         }

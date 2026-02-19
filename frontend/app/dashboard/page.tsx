@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { getSessionWithRecovery, supabase } from "@/lib/supabaseClient";
 import { CALPOLY_DEPARTMENT_CODES } from "./calpoly-catalog";
@@ -80,6 +80,11 @@ export default function DashboardPage() {
   const [hasMoreFromApi, setHasMoreFromApi] = useState(false);
   /** Page enter animation (leaderboard-style). */
   const [isVisible] = useState(true);
+  /** When no filter: search-by-query results (cached and debounced). */
+  const [searchResults, setSearchResults] = useState<CourseOption[] | null>(null);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const searchCacheRef = useRef<Map<string, CourseOption[]>>(new Map());
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [isCourseRequestOpen, setIsCourseRequestOpen] = useState(false);
   const [courseRequest, setCourseRequest] =
@@ -150,6 +155,27 @@ export default function DashboardPage() {
     []
   );
 
+  const fetchCoursesBySearch = useCallback(
+    async (token: string, search: string): Promise<{ ok: true; classes: CourseOption[] } | { ok: false; error: string }> => {
+      const normalized = search.trim().toUpperCase().replace(/\s+/g, " ");
+      if (!normalized) return { ok: true, classes: [] };
+      const params = new URLSearchParams();
+      params.set("search", normalized);
+      params.set("limit", "500");
+      const res = await fetch(`/api/classes?${params.toString()}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        classes?: CourseOption[];
+        error?: string;
+      };
+      if (res.status === 401) return { ok: false, error: "Not authenticated" };
+      if (!res.ok) return { ok: false, error: data.error ?? res.statusText ?? "Failed to search" };
+      return { ok: true, classes: data.classes ?? [] };
+    },
+    []
+  );
+
   useEffect(() => {
     if (!tokenLoaded || !accessToken) return;
     let active = true;
@@ -186,7 +212,6 @@ export default function DashboardPage() {
           setHasMoreFromApi(false);
         } else {
           setHasMoreFromApi(res.hasMore);
-          if (res.hasMore) setCoursesLoadingMore(true);
         }
       } catch (e) {
         if (active) {
@@ -202,6 +227,83 @@ export default function DashboardPage() {
       window.clearTimeout(loadingTimer);
     };
   }, [accessToken, tokenLoaded, selectedDepartment, refreshToken, fetchCoursesPage]);
+
+  const SEARCH_DEBOUNCE_MS = 280;
+
+  useEffect(() => {
+    if (selectedDepartment != null) {
+      setSearchResults(null);
+      setSearchLoading(false);
+      if (searchDebounceRef.current) {
+        clearTimeout(searchDebounceRef.current);
+        searchDebounceRef.current = null;
+      }
+      return;
+    }
+    const q = browseSearch.trim();
+    if (!q) {
+      setSearchResults(null);
+      setSearchLoading(false);
+      if (searchDebounceRef.current) {
+        clearTimeout(searchDebounceRef.current);
+        searchDebounceRef.current = null;
+      }
+      return;
+    }
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    searchDebounceRef.current = window.setTimeout(() => {
+      searchDebounceRef.current = null;
+      const normalized = q.toUpperCase().replace(/\s+/g, " ");
+      if (!normalized) {
+        setSearchResults(null);
+        setSearchLoading(false);
+        return;
+      }
+      const cached = searchCacheRef.current.get(normalized);
+      if (cached != null) {
+        setSearchResults(cached);
+        setSearchLoading(false);
+        return;
+      }
+      if (!accessToken) return;
+      setSearchLoading(true);
+      fetchCoursesBySearch(accessToken, normalized)
+        .then((res) => {
+          if (res.ok) {
+            searchCacheRef.current.set(normalized, res.classes);
+            setSearchResults(res.classes);
+            setSearchLoading(false);
+            return;
+          }
+          if (res.error === "Not authenticated") {
+            refreshToken().then((newToken) => {
+              if (newToken) {
+                fetchCoursesBySearch(newToken, normalized).then((r) => {
+                  if (r.ok) {
+                    searchCacheRef.current.set(normalized, r.classes);
+                    setSearchResults(r.classes);
+                  }
+                  setSearchLoading(false);
+                });
+              } else setSearchLoading(false);
+            });
+            return;
+          }
+          setSearchResults([]);
+          setSearchLoading(false);
+        })
+        .catch(() => {
+          setSearchResults([]);
+          setSearchLoading(false);
+        });
+    }, SEARCH_DEBOUNCE_MS);
+    return () => {
+      if (searchDebounceRef.current) {
+        clearTimeout(searchDebounceRef.current);
+        searchDebounceRef.current = null;
+      }
+    };
+  }, [browseSearch, selectedDepartment, accessToken, refreshToken, fetchCoursesBySearch]);
 
   useEffect(() => {
     if (!tokenLoaded || !accessToken) return;
@@ -362,15 +464,25 @@ export default function DashboardPage() {
     }
   };
 
+  /** When no filter and user has typed: use search API results (cached). Otherwise use main courses list. */
+  const isSearchMode = searchResults !== null && selectedDepartment == null && browseSearch.trim().length > 0;
+
   /** Courses from DB, filtered by department and search. One card per unique course code (deduplicated; note_count summed across terms). */
   const allDisplayCourses = useMemo((): CourseOption[] => {
-    let list = [...courses];
-    if (selectedDepartment) {
-      list = list.filter((c) => c.department === selectedDepartment);
-    }
     const q = browseSearch.trim().toLowerCase();
-    if (q) {
-      list = list.filter((c) => (c.code ?? "").toLowerCase().startsWith(q));
+    let list: CourseOption[];
+    if (isSearchMode && searchResults != null) {
+      list = q
+        ? searchResults.filter((c) => (c.code ?? "").toLowerCase().startsWith(q))
+        : searchResults;
+    } else {
+      list = [...courses];
+      if (selectedDepartment) {
+        list = list.filter((c) => c.department === selectedDepartment);
+      }
+      if (q) {
+        list = list.filter((c) => (c.code ?? "").toLowerCase().startsWith(q));
+      }
     }
     const sorted = list.sort((a, b) => {
       const codeA = (a.code ?? a.name).toLowerCase();
@@ -388,7 +500,7 @@ export default function DashboardPage() {
       }
     }
     return Array.from(seen.values());
-  }, [courses, selectedDepartment, browseSearch]);
+  }, [courses, selectedDepartment, browseSearch, isSearchMode, searchResults]);
 
   /** Reset visible count when filters/search change so we don't show a short list after narrowing. */
   useEffect(() => {
@@ -400,7 +512,7 @@ export default function DashboardPage() {
 
   const coursesToRender = allDisplayCourses.slice(0, visibleCourseCount);
   const hasMoreToShow = visibleCourseCount < allDisplayCourses.length;
-  const hasMoreToFetch = !selectedDepartment && (hasMoreFromApi || coursesLoadingMore);
+  const hasMoreToFetch = !isSearchMode && !selectedDepartment && (hasMoreFromApi || coursesLoadingMore);
   const hasMoreCourses = hasMoreToShow || hasMoreToFetch;
 
   const loadMoreCourses = useCallback(() => {
@@ -463,7 +575,6 @@ export default function DashboardPage() {
             <span className="browse-credits-pill">
               Free downloads: {freeDownloads ?? "—"}
             </span>
-            <Link href="/upload" className="browse-upload-btn">Upload Notes</Link>
             <ProfileIcons />
           </>
         }
@@ -566,11 +677,16 @@ export default function DashboardPage() {
               />
             </div>
           </div>
-          {(!tokenLoaded || coursesLoading) && !coursesError && (
+          {(!tokenLoaded || coursesLoading) && !isSearchMode && !coursesError && (
             <p className="browse-loading" aria-live="polite">Loading courses…</p>
           )}
-          {tokenLoaded && !coursesLoading && allDisplayCourses.length === 0 && !coursesError && (
-            <p className="browse-empty">No courses match your filters.</p>
+          {isSearchMode && searchLoading && (
+            <p className="browse-loading" aria-live="polite">Searching…</p>
+          )}
+          {tokenLoaded && !coursesLoading && !(isSearchMode && searchLoading) && allDisplayCourses.length === 0 && !coursesError && (
+            <p className="browse-empty">
+              {isSearchMode ? "No courses match your search." : "No courses match your filters."}
+            </p>
           )}
           <div className="browse-course-grid">
             {coursesToRender.map((course, index) => (
@@ -626,7 +742,7 @@ export default function DashboardPage() {
               </button>
             </div>
           )}
-          {coursesLoadingMore && (
+          {!isSearchMode && coursesLoadingMore && (
             <p className="browse-loading-more" aria-live="polite">Loading more courses…</p>
           )}
         </main>

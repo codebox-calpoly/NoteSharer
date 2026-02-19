@@ -78,35 +78,48 @@
 }
 
 .profile-page__credits-pill {
-  height: 47px;
-  padding: 0 20px;
+  height: 40px;
+  padding: 0 16px;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  border-radius: 999px;
-  background: var(--poly-sage);
-  color: #fff;
+  border-radius: var(--poly-radius-card);
+  background: var(--poly-sage-soft);
+  color: var(--poly-neutral-dark);
   font-size: 15px;
   font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+  border: 1px solid var(--poly-border);
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.profile-page__credits-pill:hover {
+  background: rgba(109, 190, 139, 0.18);
+  border-color: rgba(109, 190, 139, 0.35);
+  color: var(--poly-neutral-dark);
 }
 
 .profile-page__upload-btn {
-  height: 42px;
-  padding: 0 24px;
+  height: 40px;
+  padding: 0 18px;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  border-radius: 999px;
-  background: var(--poly-accent);
-  color: var(--poly-neutral-dark);
+  border-radius: var(--poly-radius-card);
+  background: var(--poly-sage);
+  color: #fff;
   font-size: 15px;
-  font-weight: 700;
+  font-weight: 600;
   text-decoration: none;
-  transition: opacity 0.2s;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .profile-page__upload-btn:hover {
-  opacity: 0.9;
+  background: #5dad7a;
+  box-shadow: 0 2px 8px rgba(109, 190, 139, 0.35);
 }
 
 .profile-page__profile-btn {
