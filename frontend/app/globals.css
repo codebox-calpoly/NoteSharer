@@ -1,6 +1,21 @@
 @import "tailwindcss";
 
 
+/* Seamless transition when navigating between pages (Browse, Upload, Profile, etc.) */
+.page-transition-wrapper {
+  animation: pageTransitionIn 0.3s ease forwards;
+}
+@keyframes pageTransitionIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Page enter animations (leaderboard-style: fade up on load) */
 .page-enter {
   transition: opacity 0.7s ease, transform 0.7s ease;
@@ -242,6 +257,36 @@ select {
 .design-nav-header {
   width: 100%;
 }
+
+/* Burger: high contrast so it’s always visible */
+.design-nav-burger-line {
+  background-color: #171717;
+  border-radius: 1px;
+}
+[data-theme="dark"] .design-nav-burger-line {
+  background-color: #f5f5f5;
+}
+
+/* Navbar right-slot: scale down proportionally so credits, theme, upload don’t overlap */
+@media (max-width: 1280px) {
+  .design-nav-header .browse-credits-pill {
+    padding: 0 12px;
+    font-size: 13px;
+    height: 36px;
+  }
+  .design-nav-header .browse-upload-btn {
+    padding: 0 14px;
+    font-size: 14px;
+    height: 40px;
+  }
+  .design-nav-header nav {
+    gap: 0.5rem;
+  }
+  .design-nav-header nav a.design-nav-link {
+    font-size: 16px;
+  }
+}
+
 [data-theme="dark"] .design-nav-header h1,
 [data-theme="dark"] .design-nav-header .font-bold {
   color: #f5f5f5 !important;
@@ -251,6 +296,33 @@ select {
 }
 [data-theme="dark"] .design-nav-header a:hover:not([class*="upload-btn"]):not([class*="profile-btn"]) {
   color: #6dbe8b !important;
+}
+[data-theme="dark"] .design-nav-header a.design-nav-link--active {
+  color: #6dbe8b !important;
+}
+
+/* Nav right-slot pills/buttons: dark theme to match design */
+[data-theme="dark"] .design-nav-header .browse-credits-pill,
+[data-theme="dark"] .design-nav-header .profile-page__credits-pill {
+  background: rgba(109, 190, 139, 0.15) !important;
+  border-color: rgba(109, 190, 139, 0.3) !important;
+  color: #e5e5e5 !important;
+}
+[data-theme="dark"] .design-nav-header .browse-credits-pill:hover,
+[data-theme="dark"] .design-nav-header .profile-page__credits-pill:hover {
+  background: rgba(109, 190, 139, 0.25) !important;
+  border-color: rgba(109, 190, 139, 0.45) !important;
+  color: #f5f5f5 !important;
+}
+[data-theme="dark"] .design-nav-header .browse-upload-btn,
+[data-theme="dark"] .design-nav-header .profile-page__upload-btn {
+  background: #6dbe8b !important;
+  color: #fff !important;
+}
+[data-theme="dark"] .design-nav-header .browse-upload-btn:hover,
+[data-theme="dark"] .design-nav-header .profile-page__upload-btn:hover {
+  background: #7dc999 !important;
+  box-shadow: 0 2px 12px rgba(109, 190, 139, 0.4) !important;
 }
 /* Logo: dark-mode version (invert so it’s not a white box) */
 .logo-box {
@@ -752,22 +824,31 @@ body {
 
 .course-request-overlay {
  position: fixed;
+ top: 0;
+ left: 0;
+ right: 0;
+ bottom: 0;
  inset: 0;
  background: rgba(15, 23, 42, 0.55);
  display: flex;
  align-items: center;
  justify-content: center;
  padding: 1.5rem;
- z-index: 50;
+ z-index: 9999;
+ overflow-y: auto;
 }
 
 .course-request-modal {
+ position: relative;
  width: min(520px, 100%);
+ max-height: calc(100vh - 3rem);
+ margin: auto;
  background: #ffffff;
  border-radius: 16px;
  padding: 1.5rem;
  box-shadow: 0 22px 50px rgba(15, 23, 42, 0.2);
  border: 1px solid rgba(148, 163, 184, 0.3);
+ overflow-y: auto;
 }
 
 .course-request-header {
@@ -890,6 +971,67 @@ body {
 .course-request-primary:disabled {
  background: #93c5fd;
  cursor: not-allowed;
+}
+
+/* Dark mode: Request a new course button (in sidebar/dropdown) and modal */
+[data-theme="dark"] .course-request-row {
+  border-bottom-color: rgba(255, 255, 255, 0.12);
+}
+
+[data-theme="dark"] .course-request-button {
+  background: rgba(255, 255, 255, 0.08);
+  color: #e5e5e5;
+}
+
+[data-theme="dark"] .course-request-button:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+[data-theme="dark"] .course-request-overlay {
+  background: rgba(0, 0, 0, 0.65);
+}
+
+[data-theme="dark"] .course-request-modal {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 22px 50px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .course-request-title {
+  color: #1a1a1a;
+}
+
+[data-theme="dark"] .course-request-close {
+  color: #64748b;
+}
+
+[data-theme="dark"] .course-request-close:hover {
+  color: #0f172a;
+}
+
+[data-theme="dark"] .course-request-label {
+  color: #475569;
+}
+
+[data-theme="dark"] .course-request-input,
+[data-theme="dark"] .course-request-textarea {
+  background: #ffffff;
+  color: #1a1a1a;
+  border-color: rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="dark"] .course-request-input::placeholder,
+[data-theme="dark"] .course-request-textarea::placeholder {
+  color: #737373;
+}
+
+[data-theme="dark"] .course-request-secondary {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+[data-theme="dark"] .course-request-secondary:hover {
+  background: #cbd5e1;
 }
 
 .note-modal-overlay {
@@ -1127,4 +1269,3 @@ body {
 .note-modal-close-btn:hover {
  background: #cbd5e1;
 }
-

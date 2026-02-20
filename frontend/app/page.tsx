@@ -3,13 +3,22 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ThemeToggle } from "@/app/components/ThemeToggle";
+import { getSessionWithRecovery, supabase } from "@/lib/supabaseClient";
 
 const ANIMA_IMG = "https://c.animaapp.com/vYVdVbUl/img";
 
 export default function Home() {
+  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [heroVisible] = useState(true);
+
+  useEffect(() => {
+    getSessionWithRecovery(supabase).then(({ session }) => {
+      if (session) router.replace("/dashboard");
+    });
+  }, [router]);
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);

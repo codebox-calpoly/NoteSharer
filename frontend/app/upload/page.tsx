@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { getSessionWithRecovery, supabase } from "@/lib/supabaseClient";
@@ -79,6 +80,15 @@ export default function UploadPage() {
   const [isSubmittingCourseRequest, setIsSubmittingCourseRequest] = useState(false);
   const [showRequestCourseToast, setShowRequestCourseToast] = useState(false);
 
+  const [isCourseRequestOpen, setIsCourseRequestOpen] = useState(false);
+  const [courseRequest, setCourseRequest] =
+    useState<CourseRequestForm>(emptyCourseRequest);
+  const [courseRequestStatus, setCourseRequestStatus] =
+    useState<CourseRequestStatus>("idle");
+  const [courseRequestMessage, setCourseRequestMessage] = useState<
+    string | null
+  >(null);
+
   useEffect(() => {
     (async () => {
       const { session, error } = await getSessionWithRecovery(supabase);
@@ -121,6 +131,95 @@ export default function UploadPage() {
     })();
     return () => { cancelled = true; };
   }, [tokenLoaded, accessToken]);
+
+  const openCourseRequest = () => {
+    setIsClassListOpen(false);
+    setIsCourseRequestOpen(true);
+    setCourseRequestStatus("idle");
+    setCourseRequestMessage(null);
+  };
+
+  const closeCourseRequest = () => {
+    setIsCourseRequestOpen(false);
+    setCourseRequestStatus("idle");
+    setCourseRequestMessage(null);
+  };
+
+  const handleCourseRequestChange =
+    (field: keyof CourseRequestForm) =>
+    (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      setCourseRequest((prev) => ({ ...prev, [field]: event.target.value }));
+    };
+
+  const handleCourseRequestSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setCourseRequestMessage(null);
+
+    if (!accessToken) {
+      setCourseRequestStatus("error");
+      setCourseRequestMessage("Not authenticated. Please sign in again.");
+      return;
+    }
+
+    const dept = courseRequest.department.trim();
+    const courseNumber = courseRequest.courseNumber.trim();
+
+    if (!dept || !courseNumber) {
+      setCourseRequestStatus("error");
+      setCourseRequestMessage("Department and course number are required.");
+      return;
+    }
+
+    const yearText = courseRequest.year.trim();
+    let yearValue: number | null = null;
+    if (yearText) {
+      const parsedYear = Number(yearText);
+      if (!Number.isFinite(parsedYear)) {
+        setCourseRequestStatus("error");
+        setCourseRequestMessage("Year must be a number.");
+        return;
+      }
+      yearValue = Math.trunc(parsedYear);
+    }
+
+    setCourseRequestStatus("submitting");
+
+    try {
+      const res = await fetch("/api/course-submissions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          department: dept,
+          course_number: courseNumber,
+          title: courseRequest.title.trim() || null,
+          term: courseRequest.term.trim() || null,
+          year: yearValue,
+          justification: courseRequest.justification.trim() || null,
+        }),
+      });
+
+      if (!res.ok) {
+        const payload = await res.json().catch(() => null);
+        const message =
+          payload && typeof payload === "object" && "error" in payload
+            ? String(payload.error)
+            : "Failed to submit the request.";
+        setCourseRequestStatus("error");
+        setCourseRequestMessage(message);
+        return;
+      }
+
+      setCourseRequestStatus("success");
+      setCourseRequestMessage("Request submitted. We will review it soon.");
+      setCourseRequest(emptyCourseRequest);
+    } catch {
+      setCourseRequestStatus("error");
+      setCourseRequestMessage("Failed to submit the request. Try again.");
+    }
+  };
 
   useEffect(() => {
     if (!tokenLoaded || !accessToken || !department.trim()) {
@@ -513,7 +612,6 @@ export default function UploadPage() {
             {credits != null && (
               <span className="upload-nav-credits">Credits: {credits}</span>
             )}
-            <Link href="/upload" className="upload-nav-upload-btn">Upload Notes</Link>
             <ProfileIcons />
           </>
         }
@@ -657,6 +755,15 @@ export default function UploadPage() {
                           className="upload-class-results"
                           role="listbox"
                         >
+                          <div className="course-request-row">
+                            <button
+                              type="button"
+                              className="course-request-button"
+                              onClick={openCourseRequest}
+                            >
+                              Request a new course
+                            </button>
+                          </div>
                           {matchingClasses.length === 0 ? (
                             <div className="upload-class-results-empty">
                               <p>No classes match.</p>
@@ -856,15 +963,17 @@ export default function UploadPage() {
         </div>
       </div>
 
-      {showRequestCourseModal && (
-        <div className="upload-request-modal" onClick={() => setShowRequestCourseModal(false)}>
-          <div
-            className="upload-request-modal-content"
-            onClick={(e) => e.stopPropagation()}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="request-course-title"
-          >
+      {showRequestCourseModal &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div className="upload-request-modal" onClick={() => setShowRequestCourseModal(false)}>
+            <div
+              className="upload-request-modal-content"
+              onClick={(e) => e.stopPropagation()}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="request-course-title"
+            >
             <div className="upload-request-modal-header">
               <h3 id="request-course-title" className="upload-request-modal-title">
                 Request a New Course
@@ -978,9 +1087,10 @@ export default function UploadPage() {
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
+            </div>
+          </div>,
+          document.body
+        )}
 
       {showRequestCourseToast && (
         <div className="upload-request-toast" role="status" aria-live="polite">
@@ -1044,6 +1154,131 @@ export default function UploadPage() {
           </div>
         </div>
       )}
+
+      {isCourseRequestOpen &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div
+            className="course-request-overlay"
+            role="presentation"
+            onClick={closeCourseRequest}
+          >
+            <div
+              className="course-request-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="course-request-title"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="course-request-header">
+                <h2 id="course-request-title" className="course-request-title">
+                  Request a new course
+                </h2>
+                <button
+                  type="button"
+                  className="course-request-close"
+                  onClick={closeCourseRequest}
+                  aria-label="Close"
+                >
+                  x
+                </button>
+              </div>
+              <form
+                className="course-request-form"
+                onSubmit={handleCourseRequestSubmit}
+              >
+                <div className="course-request-grid">
+                  <label className="course-request-field">
+                    <span className="course-request-label">Department *</span>
+                    <input
+                      className="course-request-input"
+                      value={courseRequest.department}
+                      onChange={handleCourseRequestChange("department")}
+                      autoComplete="off"
+                    />
+                  </label>
+                  <label className="course-request-field">
+                    <span className="course-request-label">Course number *</span>
+                    <input
+                      className="course-request-input"
+                      value={courseRequest.courseNumber}
+                      onChange={handleCourseRequestChange("courseNumber")}
+                      autoComplete="off"
+                    />
+                  </label>
+                </div>
+                <label className="course-request-field">
+                  <span className="course-request-label">Course title</span>
+                  <input
+                    className="course-request-input"
+                    value={courseRequest.title}
+                    onChange={handleCourseRequestChange("title")}
+                    autoComplete="off"
+                  />
+                </label>
+                <div className="course-request-grid">
+                  <label className="course-request-field">
+                    <span className="course-request-label">Term</span>
+                    <input
+                      className="course-request-input"
+                      value={courseRequest.term}
+                      onChange={handleCourseRequestChange("term")}
+                      autoComplete="off"
+                    />
+                  </label>
+                  <label className="course-request-field">
+                    <span className="course-request-label">Year</span>
+                    <input
+                      className="course-request-input"
+                      value={courseRequest.year}
+                      onChange={handleCourseRequestChange("year")}
+                      inputMode="numeric"
+                      autoComplete="off"
+                    />
+                  </label>
+                </div>
+                <label className="course-request-field">
+                  <span className="course-request-label">Justification</span>
+                  <textarea
+                    className="course-request-textarea"
+                    rows={3}
+                    value={courseRequest.justification}
+                    onChange={handleCourseRequestChange("justification")}
+                  />
+                </label>
+                {courseRequestMessage && (
+                  <p
+                    className={`course-request-message ${
+                      courseRequestStatus === "error" ? "is-error" : "is-success"
+                    }`}
+                    role="status"
+                  >
+                    {courseRequestMessage}
+                  </p>
+                )}
+                <div className="course-request-actions">
+                  <button
+                    type="button"
+                    className="course-request-secondary"
+                    onClick={closeCourseRequest}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="course-request-primary"
+                    disabled={courseRequestStatus === "submitting"}
+                  >
+                    {courseRequestStatus === "submitting"
+                      ? "Submitting..."
+                      : "Submit request"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>,
+          document.body
+        )}
     </main>
   );
 }
