@@ -515,19 +515,6 @@ export default function DashboardPage() {
   const hasMoreToShow = visibleCourseCount < allDisplayCourses.length;
   const hasMoreToFetch = !isSearchMode && !selectedDepartment && (hasMoreFromApi || coursesLoadingMore);
   const hasMoreCourses = hasMoreToShow || hasMoreToFetch;
-  const requestCourseHref = useMemo(() => {
-    const params = new URLSearchParams();
-    if (selectedDepartment) params.set("department", selectedDepartment);
-    const searchValue = browseSearch.trim();
-    if (searchValue) params.set("course_number", searchValue);
-    if (selectedTermYear) {
-      const [term, year] = selectedTermYear.split(" ");
-      if (term) params.set("term", term);
-      if (year) params.set("year", year);
-    }
-    const query = params.toString();
-    return `/upload${query ? `?${query}` : ""}`;
-  }, [selectedDepartment, browseSearch, selectedTermYear]);
 
   const loadMoreCourses = useCallback(() => {
     if (hasMoreToShow) {
@@ -672,13 +659,6 @@ export default function DashboardPage() {
             <p className="browse-subtitle">
               Select a course to view and download notes.
             </p>
-            <p className="browse-request-inline">
-              Can&apos;t find your class?{" "}
-              <Link href={requestCourseHref} className="browse-request-inline-link">
-                Request a new course
-              </Link>
-              .
-            </p>
             <div className="browse-main-search-wrap">
               <svg className="browse-main-search-icon" viewBox="0 0 20 20" fill="none" aria-hidden>
                 <path
@@ -705,19 +685,9 @@ export default function DashboardPage() {
             <p className="browse-loading" aria-live="polite">Searching…</p>
           )}
           {tokenLoaded && !coursesLoading && !(isSearchMode && searchLoading) && allDisplayCourses.length === 0 && !coursesError && (
-            isSearchMode ? (
-              <p className="browse-empty">No courses match your search.</p>
-            ) : (
-              <div className="browse-empty-card">
-                <p className="browse-empty">No courses match your filters.</p>
-                <p className="browse-empty-support">
-                  If this course is missing from the catalog, submit a request and the team will review it.
-                </p>
-                <Link href={requestCourseHref} className="browse-request-cta">
-                  Request this course
-                </Link>
-              </div>
-            )
+            <p className="browse-empty">
+              {isSearchMode ? "No courses match your search." : "No courses match your filters."}
+            </p>
           )}
           <div className="browse-course-grid">
             {coursesToRender.map((course, index) => (
