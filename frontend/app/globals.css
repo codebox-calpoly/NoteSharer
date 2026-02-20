@@ -824,22 +824,31 @@ body {
 
 .course-request-overlay {
  position: fixed;
+ top: 0;
+ left: 0;
+ right: 0;
+ bottom: 0;
  inset: 0;
  background: rgba(15, 23, 42, 0.55);
  display: flex;
  align-items: center;
  justify-content: center;
  padding: 1.5rem;
- z-index: 50;
+ z-index: 9999;
+ overflow-y: auto;
 }
 
 .course-request-modal {
+ position: relative;
  width: min(520px, 100%);
+ max-height: calc(100vh - 3rem);
+ margin: auto;
  background: #ffffff;
  border-radius: 16px;
  padding: 1.5rem;
  box-shadow: 0 22px 50px rgba(15, 23, 42, 0.2);
  border: 1px solid rgba(148, 163, 184, 0.3);
+ overflow-y: auto;
 }
 
 .course-request-header {

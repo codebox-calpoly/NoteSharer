@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getSessionWithRecovery, supabase } from "@/lib/supabaseClient";
@@ -844,127 +845,130 @@ export default function UploadPage() {
         </div>
       )}
 
-      {isCourseRequestOpen && (
-        <div
-          className="course-request-overlay"
-          role="presentation"
-          onClick={closeCourseRequest}
-        >
+      {isCourseRequestOpen &&
+        typeof document !== "undefined" &&
+        createPortal(
           <div
-            className="course-request-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="course-request-title"
-            onClick={(event) => event.stopPropagation()}
+            className="course-request-overlay"
+            role="presentation"
+            onClick={closeCourseRequest}
           >
-            <div className="course-request-header">
-              <h2 id="course-request-title" className="course-request-title">
-                Request a new course
-              </h2>
-              <button
-                type="button"
-                className="course-request-close"
-                onClick={closeCourseRequest}
-                aria-label="Close"
-              >
-                x
-              </button>
-            </div>
-            <form
-              className="course-request-form"
-              onSubmit={handleCourseRequestSubmit}
+            <div
+              className="course-request-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="course-request-title"
+              onClick={(event) => event.stopPropagation()}
             >
-              <div className="course-request-grid">
-                <label className="course-request-field">
-                  <span className="course-request-label">Department *</span>
-                  <input
-                    className="course-request-input"
-                    value={courseRequest.department}
-                    onChange={handleCourseRequestChange("department")}
-                    autoComplete="off"
-                  />
-                </label>
-                <label className="course-request-field">
-                  <span className="course-request-label">Course number *</span>
-                  <input
-                    className="course-request-input"
-                    value={courseRequest.courseNumber}
-                    onChange={handleCourseRequestChange("courseNumber")}
-                    autoComplete="off"
-                  />
-                </label>
-              </div>
-              <label className="course-request-field">
-                <span className="course-request-label">Course title</span>
-                <input
-                  className="course-request-input"
-                  value={courseRequest.title}
-                  onChange={handleCourseRequestChange("title")}
-                  autoComplete="off"
-                />
-              </label>
-              <div className="course-request-grid">
-                <label className="course-request-field">
-                  <span className="course-request-label">Term</span>
-                  <input
-                    className="course-request-input"
-                    value={courseRequest.term}
-                    onChange={handleCourseRequestChange("term")}
-                    autoComplete="off"
-                  />
-                </label>
-                <label className="course-request-field">
-                  <span className="course-request-label">Year</span>
-                  <input
-                    className="course-request-input"
-                    value={courseRequest.year}
-                    onChange={handleCourseRequestChange("year")}
-                    inputMode="numeric"
-                    autoComplete="off"
-                  />
-                </label>
-              </div>
-              <label className="course-request-field">
-                <span className="course-request-label">Justification</span>
-                <textarea
-                  className="course-request-textarea"
-                  rows={3}
-                  value={courseRequest.justification}
-                  onChange={handleCourseRequestChange("justification")}
-                />
-              </label>
-              {courseRequestMessage && (
-                <p
-                  className={`course-request-message ${
-                    courseRequestStatus === "error" ? "is-error" : "is-success"
-                  }`}
-                  role="status"
-                >
-                  {courseRequestMessage}
-                </p>
-              )}
-              <div className="course-request-actions">
+              <div className="course-request-header">
+                <h2 id="course-request-title" className="course-request-title">
+                  Request a new course
+                </h2>
                 <button
                   type="button"
-                  className="course-request-secondary"
+                  className="course-request-close"
                   onClick={closeCourseRequest}
+                  aria-label="Close"
                 >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="course-request-primary"
-                  disabled={courseRequestStatus === "submitting"}
-                >
-                  {courseRequestStatus === "submitting"
-                    ? "Submitting..."
-                    : "Submit request"}
+                  x
                 </button>
               </div>
-            </form>
-          </div>
-        </div>
-      )}
+              <form
+                className="course-request-form"
+                onSubmit={handleCourseRequestSubmit}
+              >
+                <div className="course-request-grid">
+                  <label className="course-request-field">
+                    <span className="course-request-label">Department *</span>
+                    <input
+                      className="course-request-input"
+                      value={courseRequest.department}
+                      onChange={handleCourseRequestChange("department")}
+                      autoComplete="off"
+                    />
+                  </label>
+                  <label className="course-request-field">
+                    <span className="course-request-label">Course number *</span>
+                    <input
+                      className="course-request-input"
+                      value={courseRequest.courseNumber}
+                      onChange={handleCourseRequestChange("courseNumber")}
+                      autoComplete="off"
+                    />
+                  </label>
+                </div>
+                <label className="course-request-field">
+                  <span className="course-request-label">Course title</span>
+                  <input
+                    className="course-request-input"
+                    value={courseRequest.title}
+                    onChange={handleCourseRequestChange("title")}
+                    autoComplete="off"
+                  />
+                </label>
+                <div className="course-request-grid">
+                  <label className="course-request-field">
+                    <span className="course-request-label">Term</span>
+                    <input
+                      className="course-request-input"
+                      value={courseRequest.term}
+                      onChange={handleCourseRequestChange("term")}
+                      autoComplete="off"
+                    />
+                  </label>
+                  <label className="course-request-field">
+                    <span className="course-request-label">Year</span>
+                    <input
+                      className="course-request-input"
+                      value={courseRequest.year}
+                      onChange={handleCourseRequestChange("year")}
+                      inputMode="numeric"
+                      autoComplete="off"
+                    />
+                  </label>
+                </div>
+                <label className="course-request-field">
+                  <span className="course-request-label">Justification</span>
+                  <textarea
+                    className="course-request-textarea"
+                    rows={3}
+                    value={courseRequest.justification}
+                    onChange={handleCourseRequestChange("justification")}
+                  />
+                </label>
+                {courseRequestMessage && (
+                  <p
+                    className={`course-request-message ${
+                      courseRequestStatus === "error" ? "is-error" : "is-success"
+                    }`}
+                    role="status"
+                  >
+                    {courseRequestMessage}
+                  </p>
+                )}
+                <div className="course-request-actions">
+                  <button
+                    type="button"
+                    className="course-request-secondary"
+                    onClick={closeCourseRequest}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="course-request-primary"
+                    disabled={courseRequestStatus === "submitting"}
+                  >
+                    {courseRequestStatus === "submitting"
+                      ? "Submitting..."
+                      : "Submit request"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>,
+          document.body
+        )}
     </main>
   );
 }
