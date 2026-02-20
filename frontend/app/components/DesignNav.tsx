@@ -19,15 +19,8 @@ export function DesignNav({
           Poly Pages
         </h1>
       </div>
-      <nav className="hidden md:flex items-center gap-8">
-        <Link
-          href="/"
-          className={`font-medium text-base transition-colors duration-200 ${
-            active === "home" ? "text-[#6dbe8b]" : "text-[#666666] hover:text-[#6dbe8b] [data-theme=dark]:text-gray-300 [data-theme=dark]:hover:text-[#6dbe8b]"
-          }`}
-        >
-          Home
-        </Link>
+      <nav className="hidden md:flex items-center gap-8 md:-translate-x-20">
+        
         <Link
           href="/dashboard"
           className={`font-medium text-base transition-colors duration-200 ${
