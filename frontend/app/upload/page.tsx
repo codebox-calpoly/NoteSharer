@@ -654,13 +654,15 @@ export default function UploadPage() {
                         {classesError}
                       </p>
                     )}
-                    <button
-                      type="button"
-                      className="upload-request-course-link"
-                      onClick={openCourseRequest}
-                    >
-                      Request a new course
-                    </button>
+                    <div className="upload-request-course-wrap">
+                      <button
+                        type="button"
+                        className="upload-request-course-link"
+                        onClick={openCourseRequest}
+                      >
+                        Request a new course
+                      </button>
+                    </div>
                   </div>
                   <div className="upload-field">
                     <label className="upload-label">Note title *</label>

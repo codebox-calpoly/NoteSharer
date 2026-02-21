@@ -1117,8 +1117,12 @@
   line-height: 1.35;
 }
 
+.upload-request-course-wrap {
+  margin-top: 12px;
+}
+
 .upload-request-course-link {
-  margin-top: 8px;
+  margin: 0;
   padding: 0;
   background: none;
   border: none;
