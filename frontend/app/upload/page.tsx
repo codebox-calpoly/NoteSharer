@@ -55,6 +55,20 @@ const emptyCourseRequest: CourseRequestForm = {
   justification: "",
 };
 
+type DepartmentRequestForm = {
+  departmentCode: string;
+  departmentName: string;
+  justification: string;
+};
+
+type DepartmentRequestStatus = "idle" | "submitting" | "success" | "error";
+
+const emptyDepartmentRequest: DepartmentRequestForm = {
+  departmentCode: "",
+  departmentName: "",
+  justification: "",
+};
+
 export default function UploadPage() {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [classes, setClasses] = useState<ClassOption[]>([]);
@@ -90,6 +104,15 @@ export default function UploadPage() {
   const [courseRequestStatus, setCourseRequestStatus] =
     useState<CourseRequestStatus>("idle");
   const [courseRequestMessage, setCourseRequestMessage] = useState<
+    string | null
+  >(null);
+
+  const [isDepartmentRequestOpen, setIsDepartmentRequestOpen] = useState(false);
+  const [departmentRequest, setDepartmentRequest] =
+    useState<DepartmentRequestForm>(emptyDepartmentRequest);
+  const [departmentRequestStatus, setDepartmentRequestStatus] =
+    useState<DepartmentRequestStatus>("idle");
+  const [departmentRequestMessage, setDepartmentRequestMessage] = useState<
     string | null
   >(null);
 
@@ -224,6 +247,65 @@ export default function UploadPage() {
     } catch {
       setCourseRequestStatus("error");
       setCourseRequestMessage("Failed to submit the request. Try again.");
+    }
+  };
+
+  const openDepartmentRequest = () => {
+    setDepartmentRequest(emptyDepartmentRequest);
+    setDepartmentRequestStatus("idle");
+    setDepartmentRequestMessage(null);
+    setIsDepartmentRequestOpen(true);
+  };
+  const closeDepartmentRequest = () => setIsDepartmentRequestOpen(false);
+  const handleDepartmentRequestChange =
+    (field: keyof DepartmentRequestForm) =>
+    (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      setDepartmentRequest((prev) => ({ ...prev, [field]: event.target.value }));
+    };
+  const handleDepartmentRequestSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setDepartmentRequestMessage(null);
+    if (!accessToken) {
+      setDepartmentRequestStatus("error");
+      setDepartmentRequestMessage("Not authenticated. Please sign in again.");
+      return;
+    }
+    const code = departmentRequest.departmentCode.trim();
+    if (!code) {
+      setDepartmentRequestStatus("error");
+      setDepartmentRequestMessage("Department code is required.");
+      return;
+    }
+    setDepartmentRequestStatus("submitting");
+    try {
+      const res = await fetch("/api/department-submissions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          department_code: code,
+          department_name: departmentRequest.departmentName.trim() || null,
+          justification: departmentRequest.justification.trim() || null,
+        }),
+      });
+      if (!res.ok) {
+        const payload = await res.json().catch(() => null);
+        const message =
+          payload && typeof payload === "object" && "error" in payload
+            ? String(payload.error)
+            : "Failed to submit the request.";
+        setDepartmentRequestStatus("error");
+        setDepartmentRequestMessage(message);
+        return;
+      }
+      setDepartmentRequestStatus("success");
+      setDepartmentRequestMessage("Request submitted. We will review it soon.");
+      setDepartmentRequest(emptyDepartmentRequest);
+    } catch {
+      setDepartmentRequestStatus("error");
+      setDepartmentRequestMessage("Failed to submit the request. Try again.");
     }
   };
 
@@ -562,6 +644,16 @@ export default function UploadPage() {
                         <option key={d} value={d}>{d}</option>
                       ))}
                     </select>
+                    <p className="upload-request-course-label" style={{ marginTop: "6px" }}>
+                      Don&apos;t see your department?{" "}
+                      <button
+                        type="button"
+                        className="upload-request-course-link"
+                        onClick={openDepartmentRequest}
+                      >
+                        Request a department
+                      </button>
+                    </p>
                   </div>
                   <div className="upload-field upload-field-class">
                     <label className="upload-label">Class *</label>
@@ -964,6 +1056,101 @@ export default function UploadPage() {
                     disabled={courseRequestStatus === "submitting"}
                   >
                     {courseRequestStatus === "submitting"
+                      ? "Submitting..."
+                      : "Submit request"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>,
+          document.body
+        )}
+
+      {isDepartmentRequestOpen &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div
+            className="course-request-overlay"
+            role="presentation"
+            onClick={closeDepartmentRequest}
+          >
+            <div
+              className="course-request-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="department-request-title"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="course-request-header">
+                <h2 id="department-request-title" className="course-request-title">
+                  Request a new department
+                </h2>
+                <button
+                  type="button"
+                  className="course-request-close"
+                  onClick={closeDepartmentRequest}
+                  aria-label="Close"
+                >
+                  x
+                </button>
+              </div>
+              <form
+                className="course-request-form"
+                onSubmit={handleDepartmentRequestSubmit}
+              >
+                <label className="course-request-field">
+                  <span className="course-request-label">Department code *</span>
+                  <input
+                    className="course-request-input"
+                    value={departmentRequest.departmentCode}
+                    onChange={handleDepartmentRequestChange("departmentCode")}
+                    placeholder="e.g. MATH, CSC"
+                    autoComplete="off"
+                  />
+                </label>
+                <label className="course-request-field">
+                  <span className="course-request-label">Department name</span>
+                  <input
+                    className="course-request-input"
+                    value={departmentRequest.departmentName}
+                    onChange={handleDepartmentRequestChange("departmentName")}
+                    placeholder="e.g. Mathematics"
+                    autoComplete="off"
+                  />
+                </label>
+                <label className="course-request-field">
+                  <span className="course-request-label">Justification</span>
+                  <textarea
+                    className="course-request-textarea"
+                    rows={3}
+                    value={departmentRequest.justification}
+                    onChange={handleDepartmentRequestChange("justification")}
+                  />
+                </label>
+                {departmentRequestMessage && (
+                  <p
+                    className={`course-request-message ${
+                      departmentRequestStatus === "error" ? "is-error" : "is-success"
+                    }`}
+                    role="status"
+                  >
+                    {departmentRequestMessage}
+                  </p>
+                )}
+                <div className="course-request-actions">
+                  <button
+                    type="button"
+                    className="course-request-secondary"
+                    onClick={closeDepartmentRequest}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="course-request-primary"
+                    disabled={departmentRequestStatus === "submitting"}
+                  >
+                    {departmentRequestStatus === "submitting"
                       ? "Submitting..."
                       : "Submit request"}
                   </button>
