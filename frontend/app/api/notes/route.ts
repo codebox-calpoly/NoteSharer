@@ -203,15 +203,19 @@ export async function GET(req: Request) {
             download_cost: row.download_cost ?? 0,
             downloaded: downloadedIds.has(row.id),
           };
+          
+          const previewPath =
+            row.preview_key && !row.preview_key.toLowerCase().endsWith(".pdf")
+            ? row.preview_key
+            : null;
 
-          const path = row.preview_key ?? row.file_key;
-          if (!path) {
+          if (!previewPath) {
             return { ...base, previewUrl: null };
           }
 
           let previewUrl: string | null = null;
           try {
-            previewUrl = await generateSignedUrl("resources", path);
+            previewUrl = await generateSignedUrl("resources", previewPath);
           } catch {
             previewUrl = null;
           }
