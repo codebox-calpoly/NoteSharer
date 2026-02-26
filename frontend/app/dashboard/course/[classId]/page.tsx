@@ -10,13 +10,14 @@ import {
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { getSessionWithRecovery, supabase } from "@/lib/supabaseClient";
-import PDFThumbnail from "@/app/components/pdf/PDFThumbnail";
 import { DesignNav } from "@/app/components/DesignNav";
 import ProfileIcons from "../../profile-icon";
 import { getCourseSubline } from "../../course-name-utils";
 import "../../dashboard.css";
 import "../../browse.css";
 import "../../course-detail.css";
+import Image from "next/image";
+
 
 type CourseOption = {
   id: string;
@@ -753,15 +754,18 @@ export default function CourseDetailPage() {
             <div className="note-modal-content">
               <div className="note-modal-preview">
                 {selectedNote.previewUrl ? (
-                  <PDFThumbnail
-                    fileUrl={selectedNote.previewUrl}
-                    width={400}
+                  <Image
+                    src={selectedNote.previewUrl}
+                    alt="Note preview"
+                    className="note-modal-preview-img"
+                    width={1200}
+                    height={1600}
                   />
                 ) : (
                   <div className="note-modal-no-preview">
                     No preview available
                   </div>
-                )}
+                )}  
               </div>
               <div className="note-modal-details">
                 <p>

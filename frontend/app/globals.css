@@ -1110,13 +1110,17 @@ body {
   overflow: hidden;
   border: 1px solid #e2e8f0;
   background: #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
 }
 
-.note-modal-preview > div,
-.note-modal-preview > div > div,
-.note-modal-preview canvas {
-  filter: blur(5px) !important;
-  transform: scale(1.05) !important;
+.note-modal-preview img {
+ max-width: 100%;
+ height: 100%;
+ object-fit: cover;
+ display: block;
 }
 
 .note-modal-no-preview {

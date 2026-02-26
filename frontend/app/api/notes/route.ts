@@ -187,7 +187,11 @@ export async function GET(req: Request) {
   const previewPaths = Array.from(
     new Set(
       pageRows
-        .map((row) => row.preview_key ?? row.file_key)
+        .map((row) =>
+          row.preview_key && !row.preview_key.toLowerCase().endsWith(".pdf")
+            ? row.preview_key
+            : null,
+        )
         .filter((path): path is string => Boolean(path)),
     ),
   );
@@ -204,7 +208,10 @@ export async function GET(req: Request) {
   const normalized = pageRows.map((row) => {
     const stats = voteMap.get(row.id) ?? { upvotes: 0, downvotes: 0, score: 0 };
     const myVote = myVoteMap.get(row.id) ?? null;
-    const path = row.preview_key ?? row.file_key;
+    const previewPath =
+      row.preview_key && !row.preview_key.toLowerCase().endsWith(".pdf")
+        ? row.preview_key
+        : null;
 
     return {
       id: row.id,
@@ -220,7 +227,7 @@ export async function GET(req: Request) {
       my_vote: myVote,
       download_cost: row.download_cost ?? 0,
       downloaded: downloadedIds.has(row.id),
-      previewUrl: path ? previewUrlMap.get(path) ?? null : null,
+      previewUrl: previewPath ? previewUrlMap.get(previewPath) ?? null : null,
     };
   });
 

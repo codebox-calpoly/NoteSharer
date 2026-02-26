@@ -114,6 +114,7 @@ export async function GET() {
 
   const { creditsEarned, creditsSpent } = sumCreditTotals(ledgerRows ?? []);
   const { rank, totalContributors } = getAllTimeRank(leaderboardRows ?? [], userId);
+  const profileCreditScore = (profileData as ProfileRow | null)?.credit_score ?? null;
 
   return NextResponse.json(
     {
@@ -122,7 +123,7 @@ export async function GET() {
         totalUpvotes,
         creditsEarned,
         creditsSpent,
-        netCredits: normalizeNetCredits(profileData?.credit_score),
+        netCredits: normalizeNetCredits(profileCreditScore),
       },
       rank: {
         allTime: rank,

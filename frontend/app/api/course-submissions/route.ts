@@ -101,8 +101,7 @@ export async function POST(request: Request) {
   const resendApiKey = process.env.RESEND_API_KEY?.trim();
   const fromEmail = process.env.COURSE_REQUEST_NOTIFY_FROM_EMAIL?.trim();
 
-  const hasEmailConfig = Boolean(notifyEmail && resendApiKey && fromEmail);
-  if (!hasEmailConfig) {
+  if (!notifyEmail || !resendApiKey || !fromEmail) {
     const missing: string[] = [];
     if (!notifyEmail) missing.push("COURSE_REQUEST_NOTIFY_EMAIL");
     if (!resendApiKey) missing.push("RESEND_API_KEY");

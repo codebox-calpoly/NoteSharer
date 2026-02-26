@@ -2,8 +2,14 @@ import { randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
+import fs from "node:fs";
+import path from "node:path";
+import os from "node:os";
+import { generateBlurredFirstPageBuffer } from "./helpers/preview";
+
 const MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024;
 const PDF_MIME_TYPES = new Set(["application/pdf"]);
+const STORAGE_ALLOWED_MIME_TYPES = new Set(["application/pdf", "image/jpeg"]);
 const STORAGE_BUCKET = "resources";
 const RESOURCE_TYPES = new Set([
   "lecture_notes",
@@ -33,23 +39,53 @@ const buildFilePath = (userId: string, originalName: string) => {
   return `${userId}/${suffix}-${normalizedBase}.pdf`;
 };
 
+function buildPreviewPath(pdfFilePath: string): string {
+  const parts = pdfFilePath.split("/");
+  const fileName = parts.pop() ?? "";
+  const userId = parts[0] ?? "unknown";
+  const baseName = fileName.replace(/\.pdf$/i, "");
+  const uuidMatch = baseName.match(
+    /^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i
+  );
+  const id = uuidMatch ? uuidMatch[1] : baseName || randomUUID();
+  return `previews/${userId}/${id}.jpg`;
+}
+
 const ensureResourcesBucket = async (adminClient: SupabaseClient) => {
   const { data: buckets, error: listError } = await adminClient.storage.listBuckets();
   if (listError) {
     throw listError;
   }
 
-  const exists = buckets?.some((bucket) => bucket.name === STORAGE_BUCKET);
-  if (exists) return;
+  const existing = buckets?.find((bucket) => bucket.name === STORAGE_BUCKET);
+  const desiredMimeTypes = Array.from(STORAGE_ALLOWED_MIME_TYPES);
 
-  const { error: createError } = await adminClient.storage.createBucket(STORAGE_BUCKET, {
+  if (!existing) {
+    const { error: createError } = await adminClient.storage.createBucket(STORAGE_BUCKET, {
+      public: false,
+      fileSizeLimit: `${MAX_FILE_SIZE_BYTES}`,
+      allowedMimeTypes: desiredMimeTypes,
+    });
+
+    if (createError && !createError.message.toLowerCase().includes("already exists")) {
+      throw createError;
+    }
+    return;
+  }
+
+  const existingMimeTypes = existing.allowed_mime_types ?? [];
+  const hasAllMimeTypes = desiredMimeTypes.every((mime) => existingMimeTypes.includes(mime));
+  if (hasAllMimeTypes) {
+    return;
+  }
+
+  const { error: updateError } = await adminClient.storage.updateBucket(STORAGE_BUCKET, {
     public: false,
     fileSizeLimit: `${MAX_FILE_SIZE_BYTES}`,
-    allowedMimeTypes: Array.from(PDF_MIME_TYPES),
+    allowedMimeTypes: desiredMimeTypes,
   });
-
-  if (createError && !createError.message.toLowerCase().includes("already exists")) {
-    throw createError;
+  if (updateError) {
+    throw updateError;
   }
 };
 
@@ -172,7 +208,33 @@ export async function POST(req: NextRequest) {
         },
       })
     : adminClient;
-
+  
+  let previewKey: string | null = null;
+  const tmpPdf = path.join(os.tmpdir(), `upload-${randomUUID()}.pdf`);
+  try {
+    fs.writeFileSync(tmpPdf, fileBuffer);
+    const blurredBuffer = await generateBlurredFirstPageBuffer(tmpPdf);
+    const previewPath = buildPreviewPath(filePath);
+    const { error: previewUploadError } = await adminClient.storage
+      .from(STORAGE_BUCKET)
+      .upload(previewPath, blurredBuffer, {
+        cacheControl: "3600",
+        contentType: "image/jpeg",
+        upsert: false,
+      });
+    if (previewUploadError) {
+      console.error("Preview upload failed", previewUploadError);
+    } else {
+      previewKey = previewPath;
+    }
+  } catch (previewErr) {
+    console.error("Preview generation failed", previewErr);
+  } finally {
+    if (fs.existsSync(tmpPdf)) {
+      fs.unlinkSync(tmpPdf);
+    }
+  }
+  
   const { data: resource, error: insertError } = await supabase
     .from("resources")
     .insert({
@@ -182,7 +244,7 @@ export async function POST(req: NextRequest) {
       resource_type: resourceType,
       description: description || null,
       file_key: filePath,
-      preview_key: filePath,
+      preview_key: previewKey,
     })
     .select()
     .single();
