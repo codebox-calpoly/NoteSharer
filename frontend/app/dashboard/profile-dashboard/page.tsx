@@ -55,6 +55,9 @@ export default function Page() {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [credits, setCredits] = useState<number | null>(null);
   const [creditsError, setCreditsError] = useState<string | null>(null);
+  // new stats
+  const [totalUploads, setTotalUploads] = useState<number | null>(null);
+  const [totalUpvotes, setTotalUpvotes] = useState<number | null>(null);
   const [loggingOut, setLoggingOut] = useState(false);
   const [activeTab, setActiveTab] = useState<"uploads" | "downloads" | "favorites">("uploads");
   const [uploads, setUploads] = useState<ProfileNote[]>([]);
@@ -93,14 +96,20 @@ export default function Page() {
       if (!res.ok) {
         setCreditsError("Failed to load credits");
         setCredits(null);
+        setTotalUploads(null);
+        setTotalUpvotes(null);
         return;
       }
       const data = await res.json();
       setCredits(Number.isFinite(data?.credits) ? Number(data.credits) : 0);
       setCreditsError(null);
+      setTotalUploads(Number.isFinite(data?.uploadCount) ? Number(data.uploadCount) : 0);
+      setTotalUpvotes(Number.isFinite(data?.upvoteCount) ? Number(data.upvoteCount) : 0);
     } catch {
       setCreditsError("Failed to load credits");
       setCredits(null);
+      setTotalUploads(null);
+      setTotalUpvotes(null);
     }
   }, []);
 
@@ -334,11 +343,11 @@ export default function Page() {
               <div className="profile-page__stats-grid">
                 <div className="profile-page__stat-row">
                   <span className="profile-page__stat-label">Total Uploads</span>
-                  <span className="profile-page__stat-value">0</span>
+                  <span className="profile-page__stat-value">{totalUploads ?? "—"}</span>
                 </div>
                 <div className="profile-page__stat-row">
                   <span className="profile-page__stat-label">Total Upvotes</span>
-                  <span className="profile-page__stat-value">0</span>
+                  <span className="profile-page__stat-value">{totalUpvotes ?? "—"}</span>
                 </div>
                 <div className="profile-page__stat-row">
                   <span className="profile-page__stat-label">Credits Earned</span>

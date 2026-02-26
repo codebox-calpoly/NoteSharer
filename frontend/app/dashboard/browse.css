@@ -199,6 +199,55 @@
   box-shadow: 0 0 0 2px rgba(109, 190, 139, 0.15);
 }
 
+/* department request link & form */
+.browse-dept-request-link {
+  font-size: 14px;
+  color: var(--poly-accent);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.browse-department-request-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.browse-department-request-form input {
+  height: 32px;
+  padding: 0 8px;
+  outline: none;
+  border: 1px solid rgb(86, 85, 85);
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.browse-department-search input:focus {
+  border: 1px solid var(--poly-sage);
+  box-shadow: 0 0 0 2px rgba(109, 190, 139, 0.15);
+}
+
+.browse-department-request-form button {
+  align-self: flex-start;
+  padding: 6px 12px;
+  background: var(--poly-sage);
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.browse-request-success {
+  color: var(--poly-sage);
+  font-size: 14px;
+}
+
+.browse-request-error {
+  color: var(--poly-danger, #e53e3e);
+  font-size: 14px;
+}
+
 .browse-filter-options {
   display: flex;
   flex-direction: column;

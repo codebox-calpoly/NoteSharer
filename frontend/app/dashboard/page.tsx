@@ -63,6 +63,14 @@ export default function DashboardPage() {
   const [freeDownloads, setFreeDownloads] = useState<number | null>(null);
   /** Number of course cards to render (paginated for performance). */
   const [visibleCourseCount, setVisibleCourseCount] = useState(80);
+  
+  // department submission UI state
+  const [showDeptRequestForm, setShowDeptRequestForm] = useState(false);
+  const [deptRequestName, setDeptRequestName] = useState("");
+  const [deptRequestNumber, setDeptRequestNumber] = useState("");
+  const [deptRequestStatus, setDeptRequestStatus] = useState<
+    "idle" | "loading" | "success" | "error"
+  >("idle");
   /** When no department selected, whether the API has more courses to fetch. */
   const [hasMoreFromApi, setHasMoreFromApi] = useState(false);
   /** Page enter animation (leaderboard-style). */
@@ -98,6 +106,41 @@ export default function DashboardPage() {
 
   const INITIAL_PAGE_SIZE = 200;
   const DEPARTMENT_PAGE_SIZE = 1000;
+
+  const submitDeptRequest = useCallback(async () => {
+    // simple validation
+    if (!deptRequestName.trim() || !deptRequestNumber.trim()) {
+      setDeptRequestStatus("error");
+      return;
+    }
+
+    setDeptRequestStatus("loading");
+    try {
+      const {
+        data: { user },
+        error: userErr,
+      } = await supabase.auth.getUser();
+      if (userErr || !user) throw userErr || new Error("no user");
+
+      const { error } = await supabase.from("department_submissions").insert({
+        submitter_id: user.id,
+        full_name: deptRequestName.trim(),
+        department_number: deptRequestNumber.trim(),
+      });
+
+      if (error) {
+        console.error("failed to insert department request", error);
+        setDeptRequestStatus("error");
+      } else {
+        setDeptRequestStatus("success");
+        setDeptRequestName("");
+        setDeptRequestNumber("");
+      }
+    } catch (err) {
+      console.error(err);
+      setDeptRequestStatus("error");
+    }
+  }, [deptRequestName, deptRequestNumber]);
 
   const fetchCoursesPage = useCallback(
     async (
@@ -354,7 +397,20 @@ export default function DashboardPage() {
         >
           <h2 className="browse-sidebar-title">Filters</h2>
           <div className="browse-filter-section">
-            <span className="browse-filter-heading">Department</span>
+            <span className="browse-filter-heading">
+            Department{' '}
+            <a
+              href="#"
+              className="browse-dept-request-link"
+              onClick={(e) => {
+                e.preventDefault();
+                setShowDeptRequestForm((prev) => !prev);
+                setDeptRequestStatus("idle");
+              }}
+            >
+              Don't see your department? Request it 
+            </a>
+          </span>
             <div className="browse-department-search-wrap">
               <input
                 type="search"
@@ -365,6 +421,35 @@ export default function DashboardPage() {
                 aria-label="Search departments"
               />
             </div>
+            {showDeptRequestForm && (
+              <div className="browse-department-request-form">
+                <input
+                  type="text"
+                  placeholder="Department full name"
+                  value={deptRequestName}
+                  onChange={(e) => setDeptRequestName(e.target.value)}
+                />
+                <input
+                  type="text"
+                  placeholder="Department number"
+                  value={deptRequestNumber}
+                  onChange={(e) => setDeptRequestNumber(e.target.value)}
+                />
+                <button
+                  type="button"
+                  onClick={submitDeptRequest}
+                  disabled={deptRequestStatus === "loading"}
+                >
+                  {deptRequestStatus === "loading" ? "Submitting..." : "Submit request"}
+                </button>
+                {deptRequestStatus === "success" && (
+                  <span className="browse-request-success">Request submitted!</span>
+                )}
+                {deptRequestStatus === "error" && (
+                  <span className="browse-request-error">Failed to submit</span>
+                )}
+              </div>
+            )}
             <div className="browse-filter-options">
               {filteredDepartments.map((dept) => (
                 <button

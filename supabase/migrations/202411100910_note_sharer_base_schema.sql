@@ -262,6 +262,20 @@ begin
     raise exception 'Resource % not available for download', p_resource_id;
   end if;
 
+create table if not exists public.department_submissions (
+  id bigserial primary key,
+  submitter_id uuid references auth.users(id) on delete set null,
+  full_name text not null,
+  department_number text not null,
+  created_at timestamptz default now()
+);
+
+alter table public.department_submissions enable row level security;
+
+create policy "Users insert own department submission" on public.department_submissions
+  for insert with check (auth.uid() = submitter_id);
+
+
   -- Try voucher first
   select id into v_voucher
   from public.download_vouchers

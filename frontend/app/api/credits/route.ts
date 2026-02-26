@@ -48,10 +48,34 @@ export async function GET() {
     return NextResponse.json({ error: voucherError.message }, { status: 500 });
   }
 
+  // count uploads rewarded to this profile
+  const { count: uploadCount, error: uploadError } = await supabase
+    .from("credits_ledger")
+    .select("id", { count: "exact", head: true })
+    .eq("profile_id", user.id)
+    .eq("metadata->>reason", "upload_reward");
+
+  if (uploadError) {
+    return NextResponse.json({ error: uploadError.message }, { status: 500 });
+  }
+
+  // count upvotes cast by this profile
+  const { count: upvoteCount, error: upvoteError } = await supabase
+    .from("votes")
+    .select("id", { count: "exact", head: true })
+    .eq("profile_id", user.id)
+    .eq("value", 1);
+
+  if (upvoteError) {
+    return NextResponse.json({ error: upvoteError.message }, { status: 500 });
+  }
+
   return NextResponse.json(
     {
       credits: creditData?.credit_score ?? 0,
       freeDownloads: voucherCount ?? 0,
+      uploadCount: uploadCount ?? 0,
+      upvoteCount: upvoteCount ?? 0,
     },
     { status: 200 },
   );
