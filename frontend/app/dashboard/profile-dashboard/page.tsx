@@ -259,7 +259,7 @@ export default function Page() {
                   <p className="profile-page__rank-value">
                     {loadingStats ? "—" : displayStatValue(leaderboardRank)}
                   </p>
-                  <p className="profile-page__rank-sub">Top contributor this week</p>
+                  <p className="profile-page__rank-sub">All-time contributor rank</p>
                 </div>
               </div>
             </section>
