@@ -1117,8 +1117,16 @@
   line-height: 1.35;
 }
 
-.upload-request-course-wrap {
-  margin-top: 12px;
+.upload-request-course-row {
+  margin-top: 4px;
+  padding-top: 12px;
+  border-top: 1px solid var(--upload-border);
+}
+
+.upload-request-course-label {
+  margin: 0 0 6px;
+  font-size: 13px;
+  color: var(--upload-muted);
 }
 
 .upload-request-course-link {
@@ -1127,10 +1135,12 @@
   background: none;
   border: none;
   font-size: 14px;
+  font-weight: 500;
   color: var(--upload-sage);
   cursor: pointer;
   text-decoration: underline;
   text-underline-offset: 2px;
+  display: inline-block;
 }
 
 .upload-request-course-link:hover {

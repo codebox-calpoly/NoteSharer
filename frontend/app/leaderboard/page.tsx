@@ -13,12 +13,15 @@ type LeaderboardEntry = {
   avatar: string;
 };
 
+type LeaderboardPeriod = "all_time" | "this_week";
+
 export default function LeaderboardPage() {
   const [isVisible, setIsVisible] = useState(false);
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [period, setPeriod] = useState<LeaderboardPeriod>("all_time");
 
   useEffect(() => {
     setIsVisible(true);
@@ -45,7 +48,8 @@ export default function LeaderboardPage() {
     setError(null);
 
     try {
-      const res = await fetch("/api/leaderboard", {
+      const params = new URLSearchParams({ period });
+      const res = await fetch(`/api/leaderboard?${params.toString()}`, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
 
@@ -64,7 +68,7 @@ export default function LeaderboardPage() {
     } finally {
       setLoading(false);
     }
-  }, [accessToken]);
+  }, [accessToken, period]);
 
   useEffect(() => {
     if (!accessToken) return;
@@ -83,6 +87,7 @@ export default function LeaderboardPage() {
   const third = entries[2] ?? null;
   const hasPodium = entries.length >= 3;
   const listStartIndex = hasPodium ? 3 : 0;
+  const creditLabel = period === "all_time" ? "credits" : "earned";
 
   return (
     <div className="flex flex-col min-h-screen page-bg" style={{ fontFamily: "var(--font-inter), Inter, Helvetica, sans-serif" }}>
@@ -95,7 +100,35 @@ export default function LeaderboardPage() {
             }`}
           >
             <h2 className="font-bold text-[var(--poly-neutral-dark)] text-3xl md:text-4xl mb-2">Leaderboard</h2>
-            <p className="font-normal text-[var(--poly-neutral-muted)] text-base md:text-lg">Ranked by total uploaded notes</p>
+            <p className="font-normal text-[var(--poly-neutral-muted)] text-base md:text-lg">
+              {period === "all_time" ? "Ranked by total uploaded notes" : "Ranked by notes uploaded this week"}
+            </p>
+            <div className="mt-5 flex items-center justify-center">
+              <div className="inline-flex rounded-full bg-white p-1 shadow-sm ring-1 ring-black/10">
+                <button
+                  type="button"
+                  onClick={() => setPeriod("all_time")}
+                  className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
+                    period === "all_time"
+                      ? "bg-[#6dbe8b] text-white"
+                      : "text-[var(--poly-neutral-muted)] hover:text-[var(--poly-neutral-dark)]"
+                  }`}
+                >
+                  All Time
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPeriod("this_week")}
+                  className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
+                    period === "this_week"
+                      ? "bg-[#6dbe8b] text-white"
+                      : "text-[var(--poly-neutral-muted)] hover:text-[var(--poly-neutral-dark)]"
+                  }`}
+                >
+                  This Week
+                </button>
+              </div>
+            </div>
           </div>
 
           {loading && <p className="text-center text-[#666666] mb-8">Loading leaderboard...</p>}
@@ -166,7 +199,7 @@ export default function LeaderboardPage() {
                     </div>
                     <div className="text-right">
                       <div className="font-bold text-[#6dbe8b] text-lg md:text-xl">{user.credits}</div>
-                      <div className="text-[#666666] text-xs">credits</div>
+                      <div className="text-[#666666] text-xs">{creditLabel}</div>
                     </div>
                   </div>
                 </div>
