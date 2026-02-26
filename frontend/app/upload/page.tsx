@@ -655,15 +655,16 @@ export default function UploadPage() {
                         {classesError}
                       </p>
                     )}
-                    <div className="upload-request-course-wrap">
-                      <button
-                        type="button"
-                        className="upload-request-course-link"
-                        onClick={openCourseRequest}
-                      >
-                        Request a new course
-                      </button>
-                    </div>
+                  </div>
+                  <div className="upload-field upload-request-course-row" role="region" aria-label="Request a new course">
+                    <p className="upload-request-course-label">Can&apos;t find your class?</p>
+                    <button
+                      type="button"
+                      className="upload-request-course-link"
+                      onClick={openCourseRequest}
+                    >
+                      Request a new course
+                    </button>
                   </div>
                   <div className="upload-field">
                     <label className="upload-label">Note title *</label>
