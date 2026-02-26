@@ -8,6 +8,7 @@ import type { User } from "@supabase/supabase-js";
 import { DesignNav } from "@/app/components/DesignNav";
 import { ThemeToggle } from "@/app/components/ThemeToggle";
 import { useTheme } from "@/app/components/ThemeProvider";
+import { displayStatValue, getRankValue, toProfileStats, type ProfileStats } from "./stats";
 import "./profile-dashboard.css";
 import "../course-detail.css";
 
@@ -62,6 +63,10 @@ export default function Page() {
   const [loadingUploads, setLoadingUploads] = useState(false);
   const [loadingDownloads, setLoadingDownloads] = useState(false);
   const [notesError, setNotesError] = useState<string | null>(null);
+  const [profileStats, setProfileStats] = useState<ProfileStats | null>(null);
+  const [leaderboardRank, setLeaderboardRank] = useState<number | null>(null);
+  const [loadingStats, setLoadingStats] = useState(false);
+  const [statsError, setStatsError] = useState<string | null>(null);
   const [isVisible, setIsVisible] = useState(false);
   const router = useRouter();
 
@@ -168,6 +173,45 @@ export default function Page() {
     void fetchDownloads();
   }, [tokenLoaded, accessToken, fetchDownloads]);
 
+  const fetchProfileStats = useCallback(async () => {
+    if (!accessToken) return;
+    setLoadingStats(true);
+    setStatsError(null);
+
+    try {
+      const res = await fetch("/api/profile/stats", {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+
+      if (!res.ok) {
+        const payload = (await res.json().catch(() => ({}))) as { error?: string };
+        setStatsError(payload.error ?? "Failed to load stats");
+        setProfileStats(null);
+        setLeaderboardRank(null);
+        return;
+      }
+
+      const payload = (await res.json()) as {
+        stats?: ProfileStats;
+        rank?: { allTime?: number | null; totalContributors?: number };
+      };
+
+      setProfileStats(toProfileStats(payload));
+      setLeaderboardRank(getRankValue(payload));
+    } catch {
+      setStatsError("Failed to load stats");
+      setProfileStats(null);
+      setLeaderboardRank(null);
+    } finally {
+      setLoadingStats(false);
+    }
+  }, [accessToken]);
+
+  useEffect(() => {
+    if (!tokenLoaded || !accessToken) return;
+    void fetchProfileStats();
+  }, [tokenLoaded, accessToken, fetchProfileStats]);
+
   const handleLogout = useCallback(async () => {
     setLoggingOut(true);
     await supabase.auth.signOut();
@@ -178,6 +222,7 @@ export default function Page() {
   const displayName = getDisplayName(user);
   const handle = getHandle(user);
   const { theme } = useTheme();
+  const displayedStats = profileStats ?? null;
 
   return (
     <div className="profile-page">
@@ -211,7 +256,9 @@ export default function Page() {
                 </div>
                 <div className="profile-page__rank-card">
                   <p className="profile-page__rank-label">Leaderboard Rank</p>
-                  <p className="profile-page__rank-value">—</p>
+                  <p className="profile-page__rank-value">
+                    {loadingStats ? "—" : displayStatValue(leaderboardRank)}
+                  </p>
                   <p className="profile-page__rank-sub">Top contributor this week</p>
                 </div>
               </div>
@@ -333,26 +380,39 @@ export default function Page() {
               <div className="profile-page__stats-grid">
                 <div className="profile-page__stat-row">
                   <span className="profile-page__stat-label">Total Uploads</span>
-                  <span className="profile-page__stat-value">0</span>
+                  <span className="profile-page__stat-value">
+                    {loadingStats ? "—" : displayStatValue(displayedStats?.totalUploads)}
+                  </span>
                 </div>
                 <div className="profile-page__stat-row">
                   <span className="profile-page__stat-label">Total Upvotes</span>
-                  <span className="profile-page__stat-value">0</span>
+                  <span className="profile-page__stat-value">
+                    {loadingStats ? "—" : displayStatValue(displayedStats?.totalUpvotes)}
+                  </span>
                 </div>
                 <div className="profile-page__stat-row">
                   <span className="profile-page__stat-label">Credits Earned</span>
-                  <span className="profile-page__stat-value">0</span>
+                  <span className="profile-page__stat-value">
+                    {loadingStats ? "—" : displayStatValue(displayedStats?.creditsEarned)}
+                  </span>
                 </div>
                 <div className="profile-page__stat-row">
                   <span className="profile-page__stat-label">Credits Spent</span>
-                  <span className="profile-page__stat-value">0</span>
+                  <span className="profile-page__stat-value">
+                    {loadingStats ? "—" : displayStatValue(displayedStats?.creditsSpent)}
+                  </span>
                 </div>
               </div>
               <div className="profile-page__stat-divider" />
               <div className="profile-page__stat-row profile-page__stat-row--net">
                 <span className="profile-page__stat-label">Net Credits</span>
-                <span className="profile-page__stat-value profile-page__stat-value--net">0</span>
+                <span className="profile-page__stat-value profile-page__stat-value--net">
+                  {loadingStats ? "—" : displayStatValue(displayedStats?.netCredits)}
+                </span>
               </div>
+              {statsError && (
+                <p className="profile-page__error-inline" role="alert">{statsError}</p>
+              )}
             </div>
             <div className="profile-page__stats-card profile-page__appearance">
               <h2 className="profile-page__stats-title">Appearance</h2>
