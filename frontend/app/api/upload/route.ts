@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 const MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024;
 const PDF_MIME_TYPES = new Set(["application/pdf"]);
@@ -33,7 +33,7 @@ const buildFilePath = (userId: string, originalName: string) => {
   return `${userId}/${suffix}-${normalizedBase}.pdf`;
 };
 
-const ensureResourcesBucket = async (adminClient: ReturnType<typeof createClient>) => {
+const ensureResourcesBucket = async (adminClient: SupabaseClient) => {
   const { data: buckets, error: listError } = await adminClient.storage.listBuckets();
   if (listError) {
     throw listError;

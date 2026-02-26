@@ -85,7 +85,7 @@ export default function DashboardPage() {
   const [searchResults, setSearchResults] = useState<CourseOption[] | null>(null);
   const [searchLoading, setSearchLoading] = useState(false);
   const searchCacheRef = useRef<Map<string, CourseOption[]>>(new Map());
-  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchDebounceRef = useRef<number | null>(null);
 
   const [isCourseRequestOpen, setIsCourseRequestOpen] = useState(false);
   const [courseRequest, setCourseRequest] =
@@ -232,26 +232,32 @@ export default function DashboardPage() {
   const SEARCH_DEBOUNCE_MS = 280;
 
   useEffect(() => {
-    if (selectedDepartment != null) {
-      setSearchResults(null);
-      setSearchLoading(false);
+    const clearSearchDebounce = () => {
       if (searchDebounceRef.current) {
         clearTimeout(searchDebounceRef.current);
         searchDebounceRef.current = null;
       }
+    };
+
+    const scheduleSearchReset = () => {
+      clearSearchDebounce();
+      searchDebounceRef.current = window.setTimeout(() => {
+        searchDebounceRef.current = null;
+        setSearchResults(null);
+        setSearchLoading(false);
+      }, 0);
+    };
+
+    if (selectedDepartment != null) {
+      scheduleSearchReset();
       return;
     }
     const q = browseSearch.trim();
     if (!q) {
-      setSearchResults(null);
-      setSearchLoading(false);
-      if (searchDebounceRef.current) {
-        clearTimeout(searchDebounceRef.current);
-        searchDebounceRef.current = null;
-      }
+      scheduleSearchReset();
       return;
     }
-    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    clearSearchDebounce();
     searchDebounceRef.current = window.setTimeout(() => {
       searchDebounceRef.current = null;
       const normalized = q.toUpperCase().replace(/\s+/g, " ");
@@ -299,10 +305,7 @@ export default function DashboardPage() {
         });
     }, SEARCH_DEBOUNCE_MS);
     return () => {
-      if (searchDebounceRef.current) {
-        clearTimeout(searchDebounceRef.current);
-        searchDebounceRef.current = null;
-      }
+      clearSearchDebounce();
     };
   }, [browseSearch, selectedDepartment, accessToken, refreshToken, fetchCoursesBySearch]);
 
