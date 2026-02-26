@@ -2,16 +2,7 @@ import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/utils/supabaseServerClient";
-
-type LeaderboardRow = {
-  id: string;
-  handle: string | null;
-  display_name: string | null;
-  uploaded_note_count: number | null;
-  total_credits_earned: number | null;
-  credit_score: number | null;
-  created_at: string;
-};
+import { buildInitials, sortLeaderboardRows, toLeaderboardEntries, type LeaderboardProfileRow } from "./helpers";
 
 type WeeklyResourceRow = {
   profile_id: string;
@@ -29,17 +20,6 @@ type ResourceStatusRow = {
 };
 
 type Period = "all_time" | "this_week";
-
-function buildInitials(displayName: string | null, handle: string | null): string {
-  const source = (displayName?.trim() || handle?.trim() || "U").replace(/^@/, "");
-  const parts = source.split(/\s+/).filter(Boolean);
-
-  if (parts.length >= 2) {
-    return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
-  }
-
-  return source.slice(0, 2).toUpperCase();
-}
 
 export async function GET(req: Request) {
   const headerStore = await headers();
@@ -83,39 +63,17 @@ export async function GET(req: Request) {
   const { data, error } = await adminClient
     .from("profiles")
     .select("id, handle, display_name, uploaded_note_count, total_credits_earned, credit_score, created_at")
-    .returns<LeaderboardRow[]>();
+    .returns<LeaderboardProfileRow[]>();
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
   const profiles = data ?? [];
-  const sortedAllTime = [...profiles].sort((a, b) => {
-    const uploadDiff = Number(b.uploaded_note_count ?? 0) - Number(a.uploaded_note_count ?? 0);
-    if (uploadDiff !== 0) return uploadDiff;
-
-    const creditsEarnedDiff = Number(b.total_credits_earned ?? 0) - Number(a.total_credits_earned ?? 0);
-    if (creditsEarnedDiff !== 0) return creditsEarnedDiff;
-
-    const creditScoreDiff = Number(b.credit_score ?? 0) - Number(a.credit_score ?? 0);
-    if (creditScoreDiff !== 0) return creditScoreDiff;
-
-    return a.created_at.localeCompare(b.created_at);
-  });
+  const sortedAllTime = sortLeaderboardRows(profiles);
 
   if (period === "all_time") {
-    const entries = sortedAllTime
-      .filter((row) => Number(row.uploaded_note_count ?? 0) > 0)
-      .map((row, index) => ({
-        rank: index + 1,
-        userId: row.id,
-        name: row.display_name?.trim() || row.handle || "Anonymous",
-        uploads: Number(row.uploaded_note_count ?? 0),
-        credits: Number(row.credit_score ?? 0),
-        avatar: buildInitials(row.display_name, row.handle),
-      }));
-
-    return NextResponse.json({ leaderboard: entries }, { status: 200 });
+    return NextResponse.json({ leaderboard: toLeaderboardEntries(profiles) }, { status: 200 });
   }
 
   const weekStart = new Date();
@@ -156,6 +114,7 @@ export async function GET(req: Request) {
         .map((row) => row.resource_id as string),
     ),
   );
+
   const activeUploadRewardResourceIds = new Set<string>();
   if (uploadRewardResourceIds.length > 0) {
     const { data: activeResources, error: activeResourcesError } = await adminClient
@@ -183,6 +142,7 @@ export async function GET(req: Request) {
     ) {
       continue;
     }
+
     weeklyCreditsEarned.set(
       row.profile_id,
       (weeklyCreditsEarned.get(row.profile_id) ?? 0) + Number(row.amount ?? 0),
