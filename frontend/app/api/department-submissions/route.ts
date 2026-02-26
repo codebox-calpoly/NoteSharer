@@ -4,7 +4,6 @@ import { Resend } from "resend";
 import { createClient } from "@/utils/supabaseServerClient";
 
 type SubmissionPayload = {
-  department_code?: string;
   department_name?: string | null;
   justification?: string | null;
 };
@@ -54,22 +53,18 @@ export async function POST(request: Request) {
     );
   }
 
-  const departmentCode =
-    typeof payload.department_code === "string"
-      ? payload.department_code.trim()
+  const departmentName =
+    typeof payload.department_name === "string" && payload.department_name.trim()
+      ? payload.department_name.trim()
       : "";
 
-  if (!departmentCode) {
+  if (!departmentName) {
     return NextResponse.json(
-      { error: "Department code is required." },
+      { error: "Department name is required." },
       { status: 400 }
     );
   }
 
-  const departmentName =
-    typeof payload.department_name === "string" && payload.department_name.trim()
-      ? payload.department_name.trim()
-      : null;
   const justification =
     typeof payload.justification === "string" && payload.justification.trim()
       ? payload.justification.trim()
@@ -79,7 +74,6 @@ export async function POST(request: Request) {
     .from("department_submissions")
     .insert({
       submitter_id: user.id,
-      department_code: departmentCode,
       department_name: departmentName,
       justification,
     });
@@ -117,15 +111,12 @@ export async function POST(request: Request) {
       await resend.emails.send({
         from: fromEmail,
         to: [notifyEmail],
-        subject: `[Poly Pages] New department request: ${departmentCode}`,
+        subject: `[Poly Pages] New department request: ${departmentName}`,
         html: [
           "<h2>New department request</h2>",
           "<p>A user has requested a new department be added to the catalog.</p>",
           "<table style='border-collapse: collapse;'>",
-          `<tr><td style='padding:6px 12px 6px 0;'><strong>Department code</strong></td><td>${escapeHtml(departmentCode)}</td></tr>`,
-          departmentName
-            ? `<tr><td style='padding:6px 12px 6px 0;'><strong>Department name</strong></td><td>${escapeHtml(departmentName)}</td></tr>`
-            : "",
+          `<tr><td style='padding:6px 12px 6px 0;'><strong>Department</strong></td><td>${escapeHtml(departmentName)}</td></tr>`,
           justification
             ? `<tr><td style='padding:6px 12px 6px 0;'><strong>Justification</strong></td><td>${escapeHtml(justification)}</td></tr>`
             : "",

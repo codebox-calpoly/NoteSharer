@@ -56,7 +56,6 @@ const emptyCourseRequest: CourseRequestForm = {
 };
 
 type DepartmentRequestForm = {
-  departmentCode: string;
   departmentName: string;
   justification: string;
 };
@@ -64,7 +63,6 @@ type DepartmentRequestForm = {
 type DepartmentRequestStatus = "idle" | "submitting" | "success" | "error";
 
 const emptyDepartmentRequest: DepartmentRequestForm = {
-  departmentCode: "",
   departmentName: "",
   justification: "",
 };
@@ -270,10 +268,10 @@ export default function UploadPage() {
       setDepartmentRequestMessage("Not authenticated. Please sign in again.");
       return;
     }
-    const code = departmentRequest.departmentCode.trim();
-    if (!code) {
+    const name = departmentRequest.departmentName.trim();
+    if (!name) {
       setDepartmentRequestStatus("error");
-      setDepartmentRequestMessage("Department code is required.");
+      setDepartmentRequestMessage("Department name is required.");
       return;
     }
     setDepartmentRequestStatus("submitting");
@@ -285,8 +283,7 @@ export default function UploadPage() {
           Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({
-          department_code: code,
-          department_name: departmentRequest.departmentName.trim() || null,
+          department_name: name,
           justification: departmentRequest.justification.trim() || null,
         }),
       });
@@ -1099,22 +1096,12 @@ export default function UploadPage() {
                 onSubmit={handleDepartmentRequestSubmit}
               >
                 <label className="course-request-field">
-                  <span className="course-request-label">Department code *</span>
-                  <input
-                    className="course-request-input"
-                    value={departmentRequest.departmentCode}
-                    onChange={handleDepartmentRequestChange("departmentCode")}
-                    placeholder="e.g. MATH, CSC"
-                    autoComplete="off"
-                  />
-                </label>
-                <label className="course-request-field">
-                  <span className="course-request-label">Department name</span>
+                  <span className="course-request-label">Department name *</span>
                   <input
                     className="course-request-input"
                     value={departmentRequest.departmentName}
                     onChange={handleDepartmentRequestChange("departmentName")}
-                    placeholder="e.g. Mathematics"
+                    placeholder="e.g. Mathematics, Computer Science"
                     autoComplete="off"
                   />
                 </label>

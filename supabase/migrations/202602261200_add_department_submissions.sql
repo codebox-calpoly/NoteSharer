@@ -2,8 +2,7 @@
 create table if not exists public.department_submissions (
   id bigserial primary key,
   submitter_id uuid references public.profiles on delete set null,
-  department_code text not null,
-  department_name text,
+  department_name text not null,
   justification text,
   status text not null default 'pending' check (status in ('pending','approved','rejected')),
   reviewer_id uuid references public.profiles on delete set null,
