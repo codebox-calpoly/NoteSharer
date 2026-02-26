@@ -4,7 +4,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { getSessionWithRecovery, supabase } from "@/lib/supabaseClient";
 import { DesignNav } from "@/app/components/DesignNav";
 import ProfileIcons from "@/app/dashboard/profile-icon";
@@ -126,7 +125,9 @@ export default function UploadPage() {
         if (cancelled) return;
         if (res.ok) {
           const data = (await res.json()) as { credits?: number };
-          setCredits(Number.isFinite(data?.credits) ? data.credits : 0);
+          const nextCredits =
+            typeof data?.credits === "number" && Number.isFinite(data.credits) ? data.credits : 0;
+          setCredits(nextCredits);
         } else {
           setCredits(null);
         }
