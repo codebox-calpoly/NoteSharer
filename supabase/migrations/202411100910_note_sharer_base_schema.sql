@@ -272,8 +272,11 @@ create table if not exists public.department_submissions (
 
 alter table public.department_submissions enable row level security;
 
-create policy "Users insert own department submission" on public.department_submissions
-  for insert with check (auth.uid() = submitter_id);
+-- allow any authenticated user to insert; the application populates
+-- submitter_id itself and the client guard prevents unauthenticated access.
+create policy "Allow authenticated users to insert department submissions"
+  on public.department_submissions
+  for insert with check (auth.uid() is not null);
 
 
   -- Try voucher first

@@ -116,20 +116,21 @@ export default function DashboardPage() {
 
     setDeptRequestStatus("loading");
     try {
-      const {
-        data: { user },
-        error: userErr,
-      } = await supabase.auth.getUser();
-      if (userErr || !user) throw userErr || new Error("no user");
+      const { session, error: sessErr } = await getSessionWithRecovery(supabase);
+      if (sessErr || !session?.user) {
+        throw sessErr || new Error("not authenticated");
+      }
+      const userId = session.user.id;
 
       const { error } = await supabase.from("department_submissions").insert({
-        submitter_id: user.id,
+        submitter_id: userId,
         full_name: deptRequestName.trim(),
         department_number: deptRequestNumber.trim(),
       });
 
       if (error) {
-        console.error("failed to insert department request", error);
+        console.log(error);
+        console.error("department submission failed", error);
         setDeptRequestStatus("error");
       } else {
         setDeptRequestStatus("success");
@@ -137,7 +138,7 @@ export default function DashboardPage() {
         setDeptRequestNumber("");
       }
     } catch (err) {
-      console.error(err);
+      console.error("error during department submission", err);
       setDeptRequestStatus("error");
     }
   }, [deptRequestName, deptRequestNumber]);
