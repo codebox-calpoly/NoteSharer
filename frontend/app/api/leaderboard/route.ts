@@ -104,14 +104,16 @@ export async function GET(req: Request) {
   });
 
   if (period === "all_time") {
-    const entries = sortedAllTime.map((row, index) => ({
-      rank: index + 1,
-      userId: row.id,
-      name: row.display_name?.trim() || row.handle || "Anonymous",
-      uploads: Number(row.uploaded_note_count ?? 0),
-      credits: Number(row.credit_score ?? 0),
-      avatar: buildInitials(row.display_name, row.handle),
-    }));
+    const entries = sortedAllTime
+      .filter((row) => Number(row.uploaded_note_count ?? 0) > 0)
+      .map((row, index) => ({
+        rank: index + 1,
+        userId: row.id,
+        name: row.display_name?.trim() || row.handle || "Anonymous",
+        uploads: Number(row.uploaded_note_count ?? 0),
+        credits: Number(row.credit_score ?? 0),
+        avatar: buildInitials(row.display_name, row.handle),
+      }));
 
     return NextResponse.json({ leaderboard: entries }, { status: 200 });
   }
