@@ -31,7 +31,7 @@ export default function AuthPage() {
     };
 
     checkSession();
-  }, [router]);
+  }, [router, redirectTo]);
 
   const content = checking ? (
     <p className="auth-loading">Checking your session…</p>

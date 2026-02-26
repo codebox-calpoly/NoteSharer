@@ -137,13 +137,93 @@ export async function GET(request: Request) {
   }
 
   const { searchParams } = new URL(request.url);
+  const classIdParam = searchParams.get("id")?.trim() || null;
   const limitParam = searchParams.get("limit");
   const offsetParam = searchParams.get("offset");
   const departmentParamRaw = searchParams.get("department")?.trim() || null;
   const departmentParam = departmentParamRaw ? departmentParamRaw.toUpperCase() : null;
+  const searchParamRaw = searchParams.get("search")?.trim() || searchParams.get("q")?.trim() || null;
+  const searchParam = searchParamRaw
+    ? searchParamRaw.toUpperCase().replace(/\s+/g, " ").slice(0, 80)
+    : null;
   const paginated = limitParam != null && limitParam !== "";
   const limit = paginated ? Math.min(Math.max(1, parseInt(limitParam, 10) || PAGE_SIZE), 1000) : PAGE_SIZE;
   const offset = paginated ? Math.max(0, parseInt(offsetParam ?? "0", 10)) : 0;
+  const searchLimit = Math.min(500, limit);
+
+  if (classIdParam) {
+    const { data: course, error } = await supabase
+      .from("courses")
+      .select("id, title, department, course_number, term, year")
+      .eq("id", classIdParam)
+      .maybeSingle();
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    if (!course) {
+      return NextResponse.json({ error: "Course not found" }, { status: 404 });
+    }
+
+    const classes = buildClasses([course as CourseRow], new Map<string, number>());
+
+    return NextResponse.json(
+      { classes, hasMore: false },
+      {
+        status: 200,
+        headers: {
+          "Cache-Control": "private, max-age=300, stale-while-revalidate=600",
+        },
+      }
+    );
+  }
+
+  if (searchParam && searchParam.length >= 1) {
+    const hasSpace = searchParam.includes(" ");
+    const deptPart = hasSpace ? searchParam.split(" ")[0] ?? "" : searchParam;
+    let query = supabase
+      .from("courses")
+      .select("id, title, department, course_number, term, year")
+      .order("department", { ascending: true })
+      .order("course_number", { ascending: true })
+      .limit(hasSpace ? 2000 : searchLimit);
+    if (hasSpace && deptPart.length > 0) {
+      query = query.eq("department", deptPart);
+    } else {
+      query = query.ilike("department", `${deptPart}%`);
+    }
+    const { data: searchRows, error: searchError } = await query;
+    if (searchError) {
+      return NextResponse.json({ error: searchError.message }, { status: 500 });
+    }
+    let rows = (searchRows ?? []) as CourseRow[];
+    if (hasSpace) {
+      const codePrefix = searchParam;
+      rows = rows.filter((r) => {
+        const code = `${r.department ?? ""} ${(r.course_number ?? "").toString().trim()}`.trim();
+        return code.startsWith(codePrefix) || code.replace(/\s+/g, " ").startsWith(codePrefix);
+      });
+      rows = rows.slice(0, searchLimit);
+    }
+    const courseIds = rows.map((c) => c.id);
+    let countMap: Map<string, number>;
+    try {
+      countMap = await getNoteCountMap(supabase, courseIds.length > 0 ? courseIds : null);
+    } catch {
+      countMap = new Map();
+    }
+    const classes = buildClasses(rows, countMap);
+    return NextResponse.json(
+      { classes, hasMore: false },
+      {
+        status: 200,
+        headers: {
+          "Cache-Control": "private, max-age=60, stale-while-revalidate=120",
+        },
+      }
+    );
+  }
 
   if (paginated) {
     let query = supabase

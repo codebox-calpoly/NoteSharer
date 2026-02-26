@@ -14,7 +14,7 @@ const DEPT_SLUGS = [
 // Use 4 digits to avoid matching "Formerly DEPT 121" etc. in body text.
 const COURSE_REGEX = /([A-Z]{2,5})\s+(\d{4}[A-Z]?)(?:\s+)?(.+?)\s*\(\d+(?:-\d+)?\s*units?\)/g;
 
-function parseCoursesFromText(text, departmentHint) {
+function parseCoursesFromText(text) {
   const courses = [];
   let m;
   COURSE_REGEX.lastIndex = 0;
@@ -56,7 +56,7 @@ async function run() {
     try {
       const html = await fetchPage(url);
       const text = html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ");
-      const parsed = parseCoursesFromText(text, slug);
+      const parsed = parseCoursesFromText(text);
       for (const c of parsed) {
         const key = `${c.department}-${c.code}`;
         if (!coursesByKey.has(key)) {

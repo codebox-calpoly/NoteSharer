@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
-import { generateSignedUrl } from "@/lib/storage";
+import { generateSignedUrls } from "@/lib/storage";
 import { createClient } from "@/utils/supabaseServerClient";
 
 type ResourceRow = {
@@ -102,7 +102,6 @@ export async function GET(req: Request) {
         download_cost,
         profiles ( display_name )
       `,
-      { count: "exact" },
     )
     .eq("status", "active"); // Only show active (approved) notes on dashboard
 
@@ -125,17 +124,19 @@ export async function GET(req: Request) {
     query = query.eq("course_id", classId);
   }
 
-  query = query.range(from, to);
+  // Over-fetch one row to compute hasMore without expensive exact counts.
+  query = query.range(from, to + 1);
 
-  const { data, error, count } = await query.returns<ResourceRow[]>();
+  const { data, error } = await query.returns<ResourceRow[]>();
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const total = count ?? 0;
-  const hasMore = to + 1 < total;
-  const ids = data?.map((row) => row.id) ?? [];
+  const rows = data ?? [];
+  const hasMore = rows.length > pageSize;
+  const pageRows = hasMore ? rows.slice(0, pageSize) : rows;
+  const ids = pageRows.map((row) => row.id);
 
   let voteStats: VoteStatRow[] = [];
   if (ids.length > 0) {
@@ -183,53 +184,59 @@ export async function GET(req: Request) {
     });
   }
 
-  const normalized = data
-    ? await Promise.all(
-        data.map(async (row) => {
-          const stats = voteMap.get(row.id) ?? { upvotes: 0, downvotes: 0, score: 0 };
-          const myVote = myVoteMap.get(row.id) ?? null;
-          const base = {
-            id: row.id,
-            title: row.title,
-            class_id: row.course_id,
-            created_at: row.created_at,
-            description: row.description ?? null,
-            storage_path: row.file_key,
-            profile_display_name: row.profiles?.display_name ?? null,
-            upvote_count: stats.upvotes,
-            downvote_count: stats.downvotes,
-            score: stats.score,
-            my_vote: myVote,
-            download_cost: row.download_cost ?? 0,
-            downloaded: downloadedIds.has(row.id),
-          };
-          
-          const previewPath =
-            row.preview_key && !row.preview_key.toLowerCase().endsWith(".pdf")
+  const previewPaths = Array.from(
+    new Set(
+      pageRows
+        .map((row) =>
+          row.preview_key && !row.preview_key.toLowerCase().endsWith(".pdf")
             ? row.preview_key
-            : null;
+            : null,
+        )
+        .filter((path): path is string => Boolean(path)),
+    ),
+  );
 
-          if (!previewPath) {
-            return { ...base, previewUrl: null };
-          }
+  let previewUrlMap = new Map<string, string>();
+  if (previewPaths.length > 0) {
+    try {
+      previewUrlMap = await generateSignedUrls("resources", previewPaths);
+    } catch {
+      previewUrlMap = new Map<string, string>();
+    }
+  }
 
-          let previewUrl: string | null = null;
-          try {
-            previewUrl = await generateSignedUrl("resources", previewPath);
-          } catch {
-            previewUrl = null;
-          }
-          return { ...base, previewUrl };
-        }),
-      )
-    : [];
+  const normalized = pageRows.map((row) => {
+    const stats = voteMap.get(row.id) ?? { upvotes: 0, downvotes: 0, score: 0 };
+    const myVote = myVoteMap.get(row.id) ?? null;
+    const previewPath =
+      row.preview_key && !row.preview_key.toLowerCase().endsWith(".pdf")
+        ? row.preview_key
+        : null;
+
+    return {
+      id: row.id,
+      title: row.title,
+      class_id: row.course_id,
+      created_at: row.created_at,
+      description: row.description ?? null,
+      storage_path: row.file_key,
+      profile_display_name: row.profiles?.display_name ?? null,
+      upvote_count: stats.upvotes,
+      downvote_count: stats.downvotes,
+      score: stats.score,
+      my_vote: myVote,
+      download_cost: row.download_cost ?? 0,
+      downloaded: downloadedIds.has(row.id),
+      previewUrl: previewPath ? previewUrlMap.get(previewPath) ?? null : null,
+    };
+  });
 
   return NextResponse.json(
     {
       notes: normalized,
       page,
       pageSize,
-      total,
+      total: null,
       hasMore,
     },
     {

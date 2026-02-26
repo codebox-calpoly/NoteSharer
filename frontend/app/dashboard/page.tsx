@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { getSessionWithRecovery, supabase } from "@/lib/supabaseClient";
 import { CALPOLY_DEPARTMENT_CODES } from "./calpoly-catalog";
@@ -39,12 +40,25 @@ type CourseOption = {
   note_count: number;
 };
 
-function termYearLabel(term: string | null, year: number | null): string {
-  if (term && year != null) return `${term} ${year}`;
-  if (term) return term;
-  if (year != null) return String(year);
-  return "—";
-}
+type CourseRequestForm = {
+  department: string;
+  courseNumber: string;
+  title: string;
+  term: string;
+  year: string;
+  justification: string;
+};
+
+type CourseRequestStatus = "idle" | "submitting" | "success" | "error";
+
+const emptyCourseRequest: CourseRequestForm = {
+  department: "",
+  courseNumber: "",
+  title: "",
+  term: "",
+  year: "",
+  justification: "",
+};
 
 export default function DashboardPage() {
   const [courses, setCourses] = useState<CourseOption[]>([]);
@@ -58,7 +72,7 @@ export default function DashboardPage() {
   const [coursesLoading, setCoursesLoading] = useState(false);
   const [coursesLoadingMore, setCoursesLoadingMore] = useState(false);
   const [catalogTerms, setCatalogTerms] = useState<CatalogTerm[]>(FALLBACK_CATALOG_TERMS);
-  const [departments, setDepartments] = useState<string[]>(() => [...CALPOLY_DEPARTMENT_CODES]);
+  const [departments] = useState<string[]>(() => [...CALPOLY_DEPARTMENT_CODES]);
   const [credits, setCredits] = useState<number | null>(null);
   const [freeDownloads, setFreeDownloads] = useState<number | null>(null);
   /** Number of course cards to render (paginated for performance). */
@@ -66,7 +80,21 @@ export default function DashboardPage() {
   /** When no department selected, whether the API has more courses to fetch. */
   const [hasMoreFromApi, setHasMoreFromApi] = useState(false);
   /** Page enter animation (leaderboard-style). */
-  const [isVisible, setIsVisible] = useState(false);
+  const [isVisible] = useState(true);
+  /** When no filter: search-by-query results (cached and debounced). */
+  const [searchResults, setSearchResults] = useState<CourseOption[] | null>(null);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const searchCacheRef = useRef<Map<string, CourseOption[]>>(new Map());
+  const searchDebounceRef = useRef<number | null>(null);
+
+  const [isCourseRequestOpen, setIsCourseRequestOpen] = useState(false);
+  const [courseRequest, setCourseRequest] =
+    useState<CourseRequestForm>(emptyCourseRequest);
+  const [courseRequestStatus, setCourseRequestStatus] =
+    useState<CourseRequestStatus>("idle");
+  const [courseRequestMessage, setCourseRequestMessage] = useState<
+    string | null
+  >(null);
 
   const refreshToken = useCallback(async () => {
     const { session, error } = await getSessionWithRecovery(supabase);
@@ -74,10 +102,6 @@ export default function DashboardPage() {
     const newToken = session?.access_token ?? null;
     if (newToken) setAccessToken(newToken);
     return newToken;
-  }, []);
-
-  useEffect(() => {
-    setIsVisible(true);
   }, []);
 
   useEffect(() => {
@@ -132,23 +156,45 @@ export default function DashboardPage() {
     []
   );
 
+  const fetchCoursesBySearch = useCallback(
+    async (token: string, search: string): Promise<{ ok: true; classes: CourseOption[] } | { ok: false; error: string }> => {
+      const normalized = search.trim().toUpperCase().replace(/\s+/g, " ");
+      if (!normalized) return { ok: true, classes: [] };
+      const params = new URLSearchParams();
+      params.set("search", normalized);
+      params.set("limit", "500");
+      const res = await fetch(`/api/classes?${params.toString()}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        classes?: CourseOption[];
+        error?: string;
+      };
+      if (res.status === 401) return { ok: false, error: "Not authenticated" };
+      if (!res.ok) return { ok: false, error: data.error ?? res.statusText ?? "Failed to search" };
+      return { ok: true, classes: data.classes ?? [] };
+    },
+    []
+  );
+
   useEffect(() => {
-    if (!tokenLoaded || !accessToken) {
-      if (tokenLoaded && !accessToken) {
-        setCoursesError("Not authenticated");
-        setCoursesLoading(false);
-      }
-      return;
-    }
+    if (!tokenLoaded || !accessToken) return;
     let active = true;
-    setCoursesLoading(true);
-    setCoursesLoadingMore(false);
+    const loadingTimer = window.setTimeout(() => {
+      if (!active) return;
+      setCoursesLoading(true);
+      setCoursesLoadingMore(false);
+    }, 0);
     const pageSize = selectedDepartment ? DEPARTMENT_PAGE_SIZE : INITIAL_PAGE_SIZE;
 
     const run = async () => {
       try {
-        let token = accessToken;
-        let res = await fetchCoursesPage(token, 0, selectedDepartment, pageSize);
+        let res = await fetchCoursesPage(
+          accessToken,
+          0,
+          selectedDepartment,
+          pageSize,
+        );
         if (res.ok === false && res.error === "Not authenticated") {
           const newToken = await refreshToken();
           if (newToken) res = await fetchCoursesPage(newToken, 0, selectedDepartment, pageSize);
@@ -167,7 +213,6 @@ export default function DashboardPage() {
           setHasMoreFromApi(false);
         } else {
           setHasMoreFromApi(res.hasMore);
-          if (res.hasMore) setCoursesLoadingMore(true);
         }
       } catch (e) {
         if (active) {
@@ -178,8 +223,91 @@ export default function DashboardPage() {
       }
     };
     run();
-    return () => { active = false; };
+    return () => {
+      active = false;
+      window.clearTimeout(loadingTimer);
+    };
   }, [accessToken, tokenLoaded, selectedDepartment, refreshToken, fetchCoursesPage]);
+
+  const SEARCH_DEBOUNCE_MS = 280;
+
+  useEffect(() => {
+    const clearSearchDebounce = () => {
+      if (searchDebounceRef.current) {
+        clearTimeout(searchDebounceRef.current);
+        searchDebounceRef.current = null;
+      }
+    };
+
+    const scheduleSearchReset = () => {
+      clearSearchDebounce();
+      searchDebounceRef.current = window.setTimeout(() => {
+        searchDebounceRef.current = null;
+        setSearchResults(null);
+        setSearchLoading(false);
+      }, 0);
+    };
+
+    if (selectedDepartment != null) {
+      scheduleSearchReset();
+      return;
+    }
+    const q = browseSearch.trim();
+    if (!q) {
+      scheduleSearchReset();
+      return;
+    }
+    clearSearchDebounce();
+    searchDebounceRef.current = window.setTimeout(() => {
+      searchDebounceRef.current = null;
+      const normalized = q.toUpperCase().replace(/\s+/g, " ");
+      if (!normalized) {
+        setSearchResults(null);
+        setSearchLoading(false);
+        return;
+      }
+      const cached = searchCacheRef.current.get(normalized);
+      if (cached != null) {
+        setSearchResults(cached);
+        setSearchLoading(false);
+        return;
+      }
+      if (!accessToken) return;
+      setSearchLoading(true);
+      fetchCoursesBySearch(accessToken, normalized)
+        .then((res) => {
+          if (res.ok) {
+            searchCacheRef.current.set(normalized, res.classes);
+            setSearchResults(res.classes);
+            setSearchLoading(false);
+            return;
+          }
+          if (res.error === "Not authenticated") {
+            refreshToken().then((newToken) => {
+              if (newToken) {
+                fetchCoursesBySearch(newToken, normalized).then((r) => {
+                  if (r.ok) {
+                    searchCacheRef.current.set(normalized, r.classes);
+                    setSearchResults(r.classes);
+                  }
+                  setSearchLoading(false);
+                });
+              } else setSearchLoading(false);
+            });
+            return;
+          }
+          setSearchResults([]);
+          setSearchLoading(false);
+        })
+        .catch(() => {
+          setSearchResults([]);
+          setSearchLoading(false);
+        });
+    }, SEARCH_DEBOUNCE_MS);
+    return () => {
+      clearSearchDebounce();
+    };
+  }, [browseSearch, selectedDepartment, accessToken, refreshToken, fetchCoursesBySearch]);
 
   useEffect(() => {
     if (!tokenLoaded || !accessToken) return;
@@ -252,15 +380,113 @@ export default function DashboardPage() {
     return departments.filter((d) => d.toLowerCase().includes(q));
   }, [departments, departmentFilterSearch]);
 
+  const openCourseRequest = () => {
+    setIsCourseRequestOpen(true);
+    setCourseRequestStatus("idle");
+    setCourseRequestMessage(null);
+  };
+
+  const closeCourseRequest = () => {
+    setIsCourseRequestOpen(false);
+    setCourseRequestStatus("idle");
+    setCourseRequestMessage(null);
+  };
+
+  const handleCourseRequestChange =
+    (field: keyof CourseRequestForm) =>
+    (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      setCourseRequest((prev) => ({ ...prev, [field]: event.target.value }));
+    };
+
+  const handleCourseRequestSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setCourseRequestMessage(null);
+
+    if (!accessToken) {
+      setCourseRequestStatus("error");
+      setCourseRequestMessage("Not authenticated. Please sign in again.");
+      return;
+    }
+
+    const dept = courseRequest.department.trim();
+    const courseNumber = courseRequest.courseNumber.trim();
+
+    if (!dept || !courseNumber) {
+      setCourseRequestStatus("error");
+      setCourseRequestMessage("Department and course number are required.");
+      return;
+    }
+
+    const yearText = courseRequest.year.trim();
+    let yearValue: number | null = null;
+    if (yearText) {
+      const parsedYear = Number(yearText);
+      if (!Number.isFinite(parsedYear)) {
+        setCourseRequestStatus("error");
+        setCourseRequestMessage("Year must be a number.");
+        return;
+      }
+      yearValue = Math.trunc(parsedYear);
+    }
+
+    setCourseRequestStatus("submitting");
+
+    try {
+      const res = await fetch("/api/course-submissions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          department: dept,
+          course_number: courseNumber,
+          title: courseRequest.title.trim() || null,
+          term: courseRequest.term.trim() || null,
+          year: yearValue,
+          justification: courseRequest.justification.trim() || null,
+        }),
+      });
+
+      if (!res.ok) {
+        const payload = await res.json().catch(() => null);
+        const message =
+          payload && typeof payload === "object" && "error" in payload
+            ? String(payload.error)
+            : "Failed to submit the request.";
+        setCourseRequestStatus("error");
+        setCourseRequestMessage(message);
+        return;
+      }
+
+      setCourseRequestStatus("success");
+      setCourseRequestMessage("Request submitted. We will review it soon.");
+      setCourseRequest(emptyCourseRequest);
+    } catch {
+      setCourseRequestStatus("error");
+      setCourseRequestMessage("Failed to submit the request. Try again.");
+    }
+  };
+
+  /** When no filter and user has typed: use search API results (cached). Otherwise use main courses list. */
+  const isSearchMode = searchResults !== null && selectedDepartment == null && browseSearch.trim().length > 0;
+
   /** Courses from DB, filtered by department and search. One card per unique course code (deduplicated; note_count summed across terms). */
   const allDisplayCourses = useMemo((): CourseOption[] => {
-    let list = [...courses];
-    if (selectedDepartment) {
-      list = list.filter((c) => c.department === selectedDepartment);
-    }
     const q = browseSearch.trim().toLowerCase();
-    if (q) {
-      list = list.filter((c) => (c.code ?? "").toLowerCase().startsWith(q));
+    let list: CourseOption[];
+    if (isSearchMode && searchResults != null) {
+      list = q
+        ? searchResults.filter((c) => (c.code ?? "").toLowerCase().startsWith(q))
+        : searchResults;
+    } else {
+      list = [...courses];
+      if (selectedDepartment) {
+        list = list.filter((c) => c.department === selectedDepartment);
+      }
+      if (q) {
+        list = list.filter((c) => (c.code ?? "").toLowerCase().startsWith(q));
+      }
     }
     const sorted = list.sort((a, b) => {
       const codeA = (a.code ?? a.name).toLowerCase();
@@ -278,16 +504,19 @@ export default function DashboardPage() {
       }
     }
     return Array.from(seen.values());
-  }, [courses, selectedDepartment, browseSearch]);
+  }, [courses, selectedDepartment, browseSearch, isSearchMode, searchResults]);
 
   /** Reset visible count when filters/search change so we don't show a short list after narrowing. */
   useEffect(() => {
-    setVisibleCourseCount(80);
+    const timer = window.setTimeout(() => {
+      setVisibleCourseCount(80);
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, [selectedDepartment, browseSearch]);
 
   const coursesToRender = allDisplayCourses.slice(0, visibleCourseCount);
   const hasMoreToShow = visibleCourseCount < allDisplayCourses.length;
-  const hasMoreToFetch = !selectedDepartment && (hasMoreFromApi || coursesLoadingMore);
+  const hasMoreToFetch = !isSearchMode && !selectedDepartment && (hasMoreFromApi || coursesLoadingMore);
   const hasMoreCourses = hasMoreToShow || hasMoreToFetch;
 
   const loadMoreCourses = useCallback(() => {
@@ -301,11 +530,17 @@ export default function DashboardPage() {
       let cancelled = false;
       (async () => {
         try {
-          let token = accessToken;
-          let res = await fetchCoursesPage(token, offset, null, INITIAL_PAGE_SIZE);
-          if (res === null) {
+          let res = await fetchCoursesPage(
+            accessToken,
+            offset,
+            null,
+            INITIAL_PAGE_SIZE,
+          );
+          if (res.ok === false && res.error === "Not authenticated") {
             const newToken = await refreshToken();
-            if (newToken) res = await fetchCoursesPage(newToken, offset, null, INITIAL_PAGE_SIZE);
+            if (newToken) {
+              res = await fetchCoursesPage(newToken, offset, null, INITIAL_PAGE_SIZE);
+            }
           }
         if (cancelled) return;
         if (res.ok) {
@@ -341,7 +576,9 @@ export default function DashboardPage() {
         rightSlot={
           <>
             <span className="browse-credits-pill">Credits: {credits ?? "—"}</span>
-            <Link href="/upload" className="browse-upload-btn">Upload Notes</Link>
+            <span className="browse-credits-pill">
+              Free downloads: {freeDownloads ?? "—"}
+            </span>
             <ProfileIcons />
           </>
         }
@@ -404,6 +641,15 @@ export default function DashboardPage() {
               Clear all filters
             </button>
           )}
+          <div className="browse-filter-section">
+            <button
+              type="button"
+              className="course-request-button"
+              onClick={openCourseRequest}
+            >
+              Request a new course
+            </button>
+          </div>
         </aside>
 
         <main className="browse-main">
@@ -435,11 +681,16 @@ export default function DashboardPage() {
               />
             </div>
           </div>
-          {(!tokenLoaded || coursesLoading) && !coursesError && (
+          {(!tokenLoaded || coursesLoading) && !isSearchMode && !coursesError && (
             <p className="browse-loading" aria-live="polite">Loading courses…</p>
           )}
-          {tokenLoaded && !coursesLoading && allDisplayCourses.length === 0 && !coursesError && (
-            <p className="browse-empty">No courses match your filters.</p>
+          {isSearchMode && searchLoading && (
+            <p className="browse-loading" aria-live="polite">Searching…</p>
+          )}
+          {tokenLoaded && !coursesLoading && !(isSearchMode && searchLoading) && allDisplayCourses.length === 0 && !coursesError && (
+            <p className="browse-empty">
+              {isSearchMode ? "No courses match your search." : "No courses match your filters."}
+            </p>
           )}
           <div className="browse-course-grid">
             {coursesToRender.map((course, index) => (
@@ -495,11 +746,136 @@ export default function DashboardPage() {
               </button>
             </div>
           )}
-          {coursesLoadingMore && (
+          {!isSearchMode && coursesLoadingMore && (
             <p className="browse-loading-more" aria-live="polite">Loading more courses…</p>
           )}
         </main>
       </div>
+
+      {isCourseRequestOpen &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div
+            className="course-request-overlay"
+            role="presentation"
+            onClick={closeCourseRequest}
+          >
+            <div
+              className="course-request-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="course-request-title"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="course-request-header">
+                <h2 id="course-request-title" className="course-request-title">
+                  Request a new course
+                </h2>
+                <button
+                  type="button"
+                  className="course-request-close"
+                  onClick={closeCourseRequest}
+                  aria-label="Close"
+                >
+                  x
+                </button>
+              </div>
+              <form
+                className="course-request-form"
+                onSubmit={handleCourseRequestSubmit}
+              >
+                <div className="course-request-grid">
+                  <label className="course-request-field">
+                    <span className="course-request-label">Department *</span>
+                    <input
+                      className="course-request-input"
+                      value={courseRequest.department}
+                      onChange={handleCourseRequestChange("department")}
+                      autoComplete="off"
+                    />
+                  </label>
+                  <label className="course-request-field">
+                    <span className="course-request-label">Course number *</span>
+                    <input
+                      className="course-request-input"
+                      value={courseRequest.courseNumber}
+                      onChange={handleCourseRequestChange("courseNumber")}
+                      autoComplete="off"
+                    />
+                  </label>
+                </div>
+                <label className="course-request-field">
+                  <span className="course-request-label">Course title</span>
+                  <input
+                    className="course-request-input"
+                    value={courseRequest.title}
+                    onChange={handleCourseRequestChange("title")}
+                    autoComplete="off"
+                  />
+                </label>
+                <div className="course-request-grid">
+                  <label className="course-request-field">
+                    <span className="course-request-label">Term</span>
+                    <input
+                      className="course-request-input"
+                      value={courseRequest.term}
+                      onChange={handleCourseRequestChange("term")}
+                      autoComplete="off"
+                    />
+                  </label>
+                  <label className="course-request-field">
+                    <span className="course-request-label">Year</span>
+                    <input
+                      className="course-request-input"
+                      value={courseRequest.year}
+                      onChange={handleCourseRequestChange("year")}
+                      inputMode="numeric"
+                      autoComplete="off"
+                    />
+                  </label>
+                </div>
+                <label className="course-request-field">
+                  <span className="course-request-label">Justification</span>
+                  <textarea
+                    className="course-request-textarea"
+                    rows={3}
+                    value={courseRequest.justification}
+                    onChange={handleCourseRequestChange("justification")}
+                  />
+                </label>
+                {courseRequestMessage && (
+                  <p
+                    className={`course-request-message ${
+                      courseRequestStatus === "error" ? "is-error" : "is-success"
+                    }`}
+                    role="status"
+                  >
+                    {courseRequestMessage}
+                  </p>
+                )}
+                <div className="course-request-actions">
+                  <button
+                    type="button"
+                    className="course-request-secondary"
+                    onClick={closeCourseRequest}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="course-request-primary"
+                    disabled={courseRequestStatus === "submitting"}
+                  >
+                    {courseRequestStatus === "submitting"
+                      ? "Submitting..."
+                      : "Submit request"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>,
+          document.body
+        )}
     </div>
   );
 }

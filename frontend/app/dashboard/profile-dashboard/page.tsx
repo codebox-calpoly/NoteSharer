@@ -186,7 +186,6 @@ export default function Page() {
         rightSlot={
           <>
             <span className="profile-page__credits-pill">Credits: {credits ?? "—"}</span>
-            <Link href="/upload" className="profile-page__upload-btn">Upload Note</Link>
             <Link href="/dashboard/profile-dashboard" className="profile-page__profile-btn" aria-label="Profile">
               {initial}
             </Link>

@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 import fs from "node:fs";
 import path from "node:path";
@@ -51,7 +51,7 @@ function buildPreviewPath(pdfFilePath: string): string {
   return `previews/${userId}/${id}.jpg`;
 }
 
-const ensureResourcesBucket = async (adminClient: ReturnType<typeof createClient>) => {
+const ensureResourcesBucket = async (adminClient: SupabaseClient) => {
   const { data: buckets, error: listError } = await adminClient.storage.listBuckets();
   if (listError) {
     throw listError;
@@ -93,7 +93,8 @@ export async function POST(req: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  const bypassEnabled = process.env.NEXT_PUBLIC_UPLOAD_BYPASS === "true";
+  const bypassEnabled =
+    process.env.NODE_ENV !== "production" && process.env.NEXT_PUBLIC_UPLOAD_BYPASS === "true";
   const bypassProfileId = process.env.UPLOAD_BYPASS_PROFILE_ID;
 
   if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceRoleKey) {
@@ -251,38 +252,6 @@ export async function POST(req: NextRequest) {
   if (insertError || !resource) {
     return NextResponse.json(
       { error: "Failed to save resource metadata.", details: insertError?.message },
-      { status: 500 },
-    );
-  }
-
-  // update credit_score in profiles database
-
-  // read current credit_score
-  const { data: profile, error: readError } = await adminClient
-    .from("profiles")
-    .select("credit_score")
-    .eq("id", userId)
-    .single();
-
-  if (readError || !profile) {
-    return NextResponse.json(
-      { error: "failed to read credit score", details: readError?.message },
-      { status: 500 },
-    );
-  }
-
-  // create new credit_score
-  const newCreditScore = (profile.credit_score ?? 0) + 5;
-
-  // update credit_score in database
-  const { error: updateError } = await adminClient
-    .from("profiles")
-    .update({ credit_score: newCreditScore })
-    .eq("id", userId);
-
-  if (updateError) {
-    return NextResponse.json(
-      { error: "failed to update credit score", details: updateError.message },
       { status: 500 },
     );
   }
