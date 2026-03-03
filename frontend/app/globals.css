@@ -297,6 +297,61 @@ select {
   color: #a3a3a3 !important;
 }
 
+/* Note preview modal dark mode */
+[data-theme="dark"] .note-modal {
+  background: #262626 !important;
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .note-modal-title,
+[data-theme="dark"] .note-modal-details p {
+  color: #e5e5e5 !important;
+}
+
+[data-theme="dark"] .note-modal-details strong {
+  color: #e5e5e5 !important;
+}
+
+[data-theme="dark"] .note-modal-close {
+  color: #a3a3a3;
+}
+
+[data-theme="dark"] .note-modal-close:hover {
+  color: #e5e5e5;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .note-modal-preview {
+  background: #1a1a1a !important;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .note-modal-no-preview {
+  color: #666 !important;
+}
+
+[data-theme="dark"] .note-modal-score-hint,
+[data-theme="dark"] .note-modal-score-desc {
+  color: #a3a3a3 !important;
+}
+
+[data-theme="dark"] .note-modal-actions {
+  background: #1f1f1f !important;
+  border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .note-modal-report-btn {
+  background: transparent !important;
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #e5e5e5 !important;
+}
+
+[data-theme="dark"] .note-modal-report-btn:hover {
+  color: #f87171 !important;
+  background: rgba(248, 113, 113, 0.1) !important;
+}
+
 [data-theme="dark"] .course-detail-note-title,
 [data-theme="dark"] .course-detail-note-by,
 [data-theme="dark"] .profile-page__note-card {
@@ -1107,10 +1162,11 @@ body {
   background: #cbd5e1;
 }
 
+/* Note preview modal – matches app design system */
 .note-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.55);
+  background: rgba(46, 46, 46, 0.4);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   display: flex;
@@ -1121,228 +1177,249 @@ body {
 }
 
 .note-modal {
- width: min(640px, 100%);
- background: rgba(37, 37, 37, 0.95);
- backdrop-filter: blur(10px);
- -webkit-backdrop-filter: blur(10px);
- border-radius: 16px;
- padding: 1.5rem;
- box-shadow: 0 22px 50px rgba(0, 0, 0, 0.5);
- border: 1px solid #365314;
- max-height: 90vh;
- overflow-y: auto;
+  width: min(560px, 100%);
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12), 0 0 1px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--poly-border-subtle, rgba(0, 0, 0, 0.06));
 }
 
 .note-modal-header {
- display: flex;
- align-items: center;
- justify-content: space-between;
- margin-bottom: 1.5rem;
- gap: 1rem;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem 0;
+  flex-shrink: 0;
 }
 
 .note-modal-title {
- font-size: 1.25rem;
- font-weight: 700;
- color: #ffffff;
- margin: 0;
- flex: 1;
- word-break: break-word;
- text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5), 0 0 6px rgba(0, 0, 0, 0.3);
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--poly-neutral-dark);
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+  word-break: break-word;
+  line-height: 1.35;
 }
 
 .note-modal-close {
- background: transparent;
- border: none;
- font-size: 1.5rem;
- color: #e5e7eb;
- cursor: pointer;
- padding: 0;
- width: 32px;
- height: 32px;
- display: flex;
- align-items: center;
- justify-content: center;
- flex-shrink: 0;
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--poly-neutral-muted);
+  cursor: pointer;
+  padding: 0.375rem;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 8px;
+  transition: color 0.15s, background 0.15s;
 }
 
 .note-modal-close:hover {
- color: #ffffff;
+  color: var(--poly-neutral-dark);
+  background: var(--poly-sage-soft);
 }
 
 .note-modal-content {
- display: flex;
- flex-direction: column;
- gap: 1.5rem;
- margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.25rem 1.5rem;
+  overflow-y: auto;
 }
 
 .note-modal-preview {
   width: 100%;
-  border-radius: 12px;
+  border-radius: 10px;
   overflow: hidden;
-  border: 1px solid #e2e8f0;
-  background: #f1f5f9;
+  border: 1px solid var(--poly-border-subtle, rgba(0, 0, 0, 0.08));
+  background: #f8fafc;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
+  min-height: 200px;
+}
+
+.note-modal-preview-img {
+  max-width: 100%;
+  height: auto;
+  max-height: 50vh;
+  object-fit: contain;
+  display: block;
 }
 
 .note-modal-preview img {
- max-width: 100%;
- height: 100%;
- object-fit: cover;
- display: block;
+  max-width: 100%;
+  height: auto;
+  max-height: 50vh;
+  object-fit: contain;
+  display: block;
 }
 
 .note-modal-no-preview {
- width: 100%;
- min-height: 200px;
- display: flex;
- align-items: center;
- justify-content: center;
- color: #94a3b8;
- font-size: 0.95rem;
+  width: 100%;
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--poly-neutral-muted);
+  font-size: 0.9rem;
 }
 
 .note-modal-details {
- display: flex;
- flex-direction: column;
- gap: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .note-modal-details p {
- margin: 0;
- font-size: 0.95rem;
- color: #e5e7eb;
- line-height: 1.5;
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--poly-neutral-dark);
+  line-height: 1.5;
 }
 
 .note-modal-details strong {
- color: #4ade80;
- font-weight: 600;
+  color: var(--poly-neutral-dark);
+  font-weight: 600;
+  margin-right: 0.25rem;
 }
 
 .note-modal-score-hint {
- margin: 0;
- font-size: 0.85rem;
- color: #94a3b8;
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--poly-neutral-muted);
 }
 
 .note-modal-score-desc {
- font-weight: normal;
- color: #64748b;
+  font-weight: 400;
+  color: var(--poly-neutral-muted);
 }
 
 .note-modal-vote-row {
- display: flex;
- align-items: center;
- gap: 1rem;
- margin-top: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.5rem;
 }
 
 .note-modal-vote-arrow {
- display: inline-flex;
- align-items: center;
- gap: 6px;
- padding: 2px 0;
- font-size: 0.95rem;
- border: none;
- background: transparent;
- cursor: pointer;
- transition: all 150ms ease;
- font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.9rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background 0.15s, color 0.15s;
+  font-weight: 500;
 }
 
 .note-modal-vote-arrow:hover:not(:disabled) {
- filter: brightness(1.15);
+  background: var(--poly-sage-soft);
 }
 
 .note-modal-vote-arrow:disabled {
- opacity: 0.7;
- cursor: not-allowed;
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .note-modal-vote-up {
- color: #9be2b2;
-}
-
-.note-modal-vote-up:hover:not(:disabled) {
- background: transparent;
+  color: var(--poly-sage);
 }
 
 .note-modal-vote-up.note-modal-vote-active {
- background: transparent;
- color: #4ade80;
+  color: var(--poly-sage);
+  background: var(--poly-sage-soft);
 }
 
 .note-modal-vote-down {
- color: #f2a0a0;
+  color: var(--poly-neutral-muted);
 }
 
 .note-modal-vote-down:hover:not(:disabled) {
- background: transparent;
+  color: #b91c1c;
+  background: rgba(185, 28, 28, 0.08);
 }
 
 .note-modal-vote-down.note-modal-vote-active {
- background: transparent;
- color: #ef4444;
+  color: #b91c1c;
+  background: rgba(185, 28, 28, 0.08);
 }
 
 .note-modal-vote-count {
- min-width: 1.25em;
- text-align: left;
+  min-width: 1.25em;
+  text-align: left;
 }
 
 .note-modal-vote-row-static .note-modal-vote-arrow {
- pointer-events: none;
- cursor: default;
+  pointer-events: none;
+  cursor: default;
 }
 
 .note-modal-vote-static:hover {
- filter: none;
+  background: transparent;
 }
 
 .note-modal-details .dashboard-vote-error {
- margin-top: 0.5rem;
- font-size: 0.85rem;
- color: #f2a0a0;
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  color: #b91c1c;
 }
 
 .note-modal-actions {
- display: flex;
- justify-content: flex-end;
- gap: 0.75rem;
- padding-top: 1rem;
- border-top: 1px solid #e2e8f0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem 1.25rem;
+  border-top: 1px solid var(--poly-border-subtle, rgba(0, 0, 0, 0.06));
+  background: #fafafa;
+  flex-shrink: 0;
+  min-width: 0;
 }
 
-.note-modal-report-btn,
-.note-modal-close-btn {
- border-radius: 9999px;
- padding: 0.6rem 1.2rem;
- font-size: 0.9rem;
- font-weight: 600;
- border: none;
- cursor: pointer;
- transition: all 0.2s ease;
+.note-modal-download-btn {
+  flex-shrink: 0;
+  margin-right: auto;
 }
+
+.note-modal-actions-votes {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
 
 .note-modal-report-btn {
- background: #ef4444;
- color: #ffffff;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border: 1px solid var(--poly-border-subtle, rgba(0, 0, 0, 0.1));
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  background: transparent;
+  color: var(--poly-neutral-muted);
+  flex-shrink: 0;
 }
 
 .note-modal-report-btn:hover {
- background: #dc2626;
-}
-
-.note-modal-close-btn {
- background: #e2e8f0;
- color: #0f172a;
-}
-
-.note-modal-close-btn:hover {
- background: #cbd5e1;
+  color: #b91c1c;
+  background: rgba(185, 28, 28, 0.06);
 }

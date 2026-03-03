@@ -828,53 +828,48 @@ export default function CourseDetailPage() {
                     ? "Download again"
                     : `Download (−${selectedNote.download_cost} credits)`}
               </button>
-              <button
-                type="button"
-                className={`note-modal-vote-arrow note-modal-vote-up ${selectedNote.my_vote === 1 ? "note-modal-vote-active" : ""}`}
-                onClick={() => handleVote(selectedNote.id, 1)}
-                disabled={
-                  !selectedNote.downloaded || votingId === selectedNote.id
-                }
-                title={
-                  selectedNote.downloaded
-                    ? "Upvote this note"
-                    : "Download this note to vote"
-                }
-                aria-label="Upvote"
-              >
-                <span className="note-modal-vote-arrow-icon">↑</span>
-                <span className="note-modal-vote-count">Upvote</span>
-              </button>
-              <button
-                type="button"
-                className={`note-modal-vote-arrow note-modal-vote-down ${selectedNote.my_vote === -1 ? "note-modal-vote-active" : ""}`}
-                onClick={() => handleVote(selectedNote.id, -1)}
-                disabled={
-                  !selectedNote.downloaded || votingId === selectedNote.id
-                }
-                title={
-                  selectedNote.downloaded
-                    ? "Downvote this note"
-                    : "Download this note to vote"
-                }
-                aria-label="Downvote"
-              >
-                <span className="note-modal-vote-arrow-icon">↓</span>
-                <span className="note-modal-vote-count">Downvote</span>
-              </button>
+              <div className="note-modal-actions-votes">
+                <button
+                  type="button"
+                  className={`note-modal-vote-arrow note-modal-vote-up ${selectedNote.my_vote === 1 ? "note-modal-vote-active" : ""}`}
+                  onClick={() => handleVote(selectedNote.id, 1)}
+                  disabled={
+                    !selectedNote.downloaded || votingId === selectedNote.id
+                  }
+                  title={
+                    selectedNote.downloaded
+                      ? "Upvote this note"
+                      : "Download this note to vote"
+                  }
+                  aria-label="Upvote"
+                >
+                  <span className="note-modal-vote-arrow-icon">↑</span>
+                  <span className="note-modal-vote-count">Upvote</span>
+                </button>
+                <button
+                  type="button"
+                  className={`note-modal-vote-arrow note-modal-vote-down ${selectedNote.my_vote === -1 ? "note-modal-vote-active" : ""}`}
+                  onClick={() => handleVote(selectedNote.id, -1)}
+                  disabled={
+                    !selectedNote.downloaded || votingId === selectedNote.id
+                  }
+                  title={
+                    selectedNote.downloaded
+                      ? "Downvote this note"
+                      : "Download this note to vote"
+                  }
+                  aria-label="Downvote"
+                >
+                  <span className="note-modal-vote-arrow-icon">↓</span>
+                  <span className="note-modal-vote-count">Downvote</span>
+                </button>
+              </div>
               <button
                 type="button"
                 className="note-modal-report-btn"
                 onClick={handleReportNote}
               >
                 Report
-              </button>
-              <button
-                type="button"
-                className="note-modal-close-btn"
-                onClick={handleCloseNoteModal}
-              >
-                Close
               </button>
             </div>
           </div>
