@@ -28,9 +28,15 @@ export function DesignNav({
     <header className="design-nav-header flex flex-col w-full sticky top-0 z-50 bg-white border-b border-neutral-200 transition-colors [data-theme=dark]:bg-[#262626] [data-theme=dark]:border-neutral-700">
       <div className="flex h-[72px] items-center justify-between px-4 md:px-8 w-full">
         <div className="flex items-center gap-3">
-          <h1 className="font-bold text-[#2e2e2e] text-xl md:text-2xl [data-theme=dark]:text-gray-100">
-            Poly Pages
-          </h1>
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center gap-2 rounded-lg px-1 py-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#6dbe8b] focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
+            aria-label="Go to Browse"
+          >
+            <h1 className="font-bold text-[#2e2e2e] text-xl md:text-2xl [data-theme=dark]:text-gray-100">
+              Poly Pages
+            </h1>
+          </Link>
         </div>
         <nav className="hidden lg:flex items-center gap-2">
           <Link href="/dashboard" className={linkClass(active === "browse")}>

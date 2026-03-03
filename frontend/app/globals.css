@@ -558,6 +558,35 @@ select {
   color: #d4d4d4 !important;
 }
 
+/* DesignNav (top nav + mobile menu) theme alignment */
+.design-nav-header {
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+[data-theme="dark"] .design-nav-header {
+  background: #262626;
+  border-bottom-color: #404040;
+}
+
+.design-nav-mobile-menu {
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+[data-theme="dark"] .design-nav-mobile-menu {
+  background: #262626;
+  border-bottom-color: #404040;
+}
+
+.design-nav-burger-line {
+  background: #111827;
+}
+
+[data-theme="dark"] .design-nav-burger-line {
+  background: #e5e5e5;
+}
+
 /* Upload page dark mode */
 [data-theme="dark"] .upload-page--design {
   --upload-bg: #1a1a1a;
