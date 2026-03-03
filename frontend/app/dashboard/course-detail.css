@@ -107,6 +107,33 @@
   gap: 12px;
 }
 
+.course-detail-search-row {
+  flex: 1 1 100%;
+  min-width: 0;
+}
+
+.course-detail-search-input {
+  flex: 1;
+  min-width: 160px;
+  max-width: 320px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(229, 231, 235, 1);
+  background: #fff;
+  font-size: 14px;
+  color: var(--poly-neutral-dark);
+}
+
+.course-detail-search-input::placeholder {
+  color: var(--poly-neutral-muted);
+}
+
+.course-detail-search-input:focus {
+  outline: none;
+  border-color: var(--poly-sage);
+  box-shadow: 0 0 0 2px rgba(94, 129, 112, 0.15);
+}
+
 .course-detail-filter-label {
   font-size: 14px;
   font-weight: 500;

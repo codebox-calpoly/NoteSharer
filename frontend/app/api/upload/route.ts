@@ -257,6 +257,15 @@ export async function POST(req: NextRequest) {
     console.warn("[upload] Text extraction failed, storing without extracted_text:", extractErr);
   }
 
+  // Only admin/moderator/developer roles get notes auto-approved (for test notes); others stay pending for moderator review.
+  let status: "pending" | "active" = "pending";
+  const { data: roles } = await adminClient
+    .from("user_roles")
+    .select("role")
+    .eq("profile_id", userId)
+    .in("role", ["admin", "moderator", "developer"]);
+  if (roles && roles.length > 0) status = "active";
+
   const { data: resource, error: insertError } = await supabase
     .from("resources")
     .insert({
@@ -267,6 +276,7 @@ export async function POST(req: NextRequest) {
       description: description || null,
       file_key: filePath,
       preview_key: previewKey,
+      ...(status === "active" && { status: "active" }),
       ...(extractedText != null && { extracted_text: extractedText }),
     })
     .select()

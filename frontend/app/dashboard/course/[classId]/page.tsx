@@ -90,6 +90,9 @@ function CourseDetailPage() {
   const [resourceTypeFilter, setResourceTypeFilter] = useState<string | null>(
     null,
   );
+  const [noteSearchQuery, setNoteSearchQuery] = useState("");
+  const [noteSearchInput, setNoteSearchInput] = useState("");
+  const noteSearchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [tokenLoaded, setTokenLoaded] = useState(false);
   const [credits, setCredits] = useState<number | null>(null);
@@ -245,6 +248,7 @@ function CourseDetailPage() {
       params.set("page_size", "16");
       params.set("sort", sortOrder);
       if (resourceTypeFilter) params.set("resource_type", resourceTypeFilter);
+      if (noteSearchQuery.trim()) params.set("search", noteSearchQuery.trim());
       try {
         let res = await fetch(`/api/notes?${params.toString()}`, {
           headers: accessToken
@@ -292,6 +296,7 @@ function CourseDetailPage() {
     classId,
     sortOrder,
     resourceTypeFilter,
+    noteSearchQuery,
     accessToken,
     tokenLoaded,
     refreshToken,
@@ -301,7 +306,29 @@ function CourseDetailPage() {
   useEffect(() => {
     setPage(1);
     setHasMore(false);
-  }, [resourceTypeFilter]);
+  }, [resourceTypeFilter, noteSearchQuery]);
+
+  // Debounced live search: sync query from input as user types (300ms after last keystroke).
+  useEffect(() => {
+    if (noteSearchDebounceRef.current) {
+      clearTimeout(noteSearchDebounceRef.current);
+      noteSearchDebounceRef.current = null;
+    }
+    if (noteSearchInput.trim() === "") {
+      setNoteSearchQuery("");
+      return;
+    }
+    noteSearchDebounceRef.current = setTimeout(() => {
+      noteSearchDebounceRef.current = null;
+      setNoteSearchQuery(noteSearchInput.trim());
+    }, 300);
+    return () => {
+      if (noteSearchDebounceRef.current) {
+        clearTimeout(noteSearchDebounceRef.current);
+        noteSearchDebounceRef.current = null;
+      }
+    };
+  }, [noteSearchInput]);
 
   const filteredNotes = useMemo(() => {
     const list = notes.filter((n) =>
@@ -781,6 +808,42 @@ function CourseDetailPage() {
           </header>
 
           <div className="course-detail-filters">
+            <div className="course-detail-filter-group course-detail-search-row">
+              <label htmlFor="note-search" className="course-detail-filter-label">
+                Search notes:
+              </label>
+              <input
+                id="note-search"
+                type="search"
+                placeholder="Keywords in title, description, or content…"
+                value={noteSearchInput}
+                onChange={(e) => setNoteSearchInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    if (noteSearchDebounceRef.current) {
+                      clearTimeout(noteSearchDebounceRef.current);
+                      noteSearchDebounceRef.current = null;
+                    }
+                    setNoteSearchQuery(noteSearchInput.trim());
+                  }
+                }}
+                className="course-detail-search-input"
+                aria-label="Search notes by keyword"
+              />
+              {noteSearchInput ? (
+                <button
+                  type="button"
+                  className="course-detail-filter-btn"
+                  onClick={() => {
+                    setNoteSearchInput("");
+                    setNoteSearchQuery("");
+                  }}
+                >
+                  Clear
+                </button>
+              ) : null}
+            </div>
             <div className="course-detail-filter-group">
               <span className="course-detail-filter-label">Filter:</span>
               <button

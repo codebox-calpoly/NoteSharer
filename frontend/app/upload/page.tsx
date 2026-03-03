@@ -542,8 +542,10 @@ export default function UploadPage() {
       <main className="upload-status-screen">
         <div className="upload-status-card">
           <div className="upload-success-check" aria-hidden="true">✓</div>
-          <h1 className="upload-status-title">Upload successful</h1>
-          <p className="upload-status-subtitle">Redirecting you to your dashboard…</p>
+          <h1 className="upload-status-title">Upload request received</h1>
+          <p className="upload-status-subtitle">
+            Your note will be reviewed by a moderator before it appears in Browse. Redirecting you to your dashboard…
+          </p>
         </div>
       </main>
     );
