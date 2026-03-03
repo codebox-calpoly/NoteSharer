@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { createClient } from "@/utils/supabaseServerClient";
+import { DEFAULT_CATALOG_TERMS } from "../default-catalog-terms";
 
 type TermRow = {
   id: string;
@@ -46,12 +47,13 @@ export async function GET() {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const terms = (rows ?? []).map((t) => ({
+  const fromDb = (rows ?? []).map((t) => ({
     id: t.id,
     label: t.label,
     term: t.term,
     year: t.year,
   }));
 
+  const terms = fromDb.length > 0 ? fromDb : DEFAULT_CATALOG_TERMS;
   return NextResponse.json({ terms }, { status: 200 });
 }

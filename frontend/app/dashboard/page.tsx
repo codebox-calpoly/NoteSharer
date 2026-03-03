@@ -116,6 +116,7 @@ export default function DashboardPage() {
   const [departmentRequestMessage, setDepartmentRequestMessage] = useState<
     string | null
   >(null);
+  const [catalogSectionOpen, setCatalogSectionOpen] = useState(false);
 
   const refreshToken = useCallback(async () => {
     const { session, error } = await getSessionWithRecovery(supabase);
@@ -668,7 +669,18 @@ export default function DashboardPage() {
           className={`browse-sidebar page-enter ${isVisible ? "page-enter-visible" : "page-enter-hidden"}`}
           style={{ transitionDelay: "100ms" }}
         >
-          <h2 className="browse-sidebar-title">Filters</h2>
+          <div className="browse-sidebar-header">
+            <h2 className="browse-sidebar-title">Filters</h2>
+            <button
+              type="button"
+              className={`browse-clear-filters ${hasActiveFilters ? "" : "browse-clear-filters-disabled"}`}
+              onClick={clearFilters}
+              disabled={!hasActiveFilters}
+              aria-label="Clear all filters"
+            >
+              Clear all filters
+            </button>
+          </div>
           <div className="browse-filter-section">
             <span className="browse-filter-heading">Department</span>
             <div className="browse-department-search-wrap">
@@ -697,44 +709,54 @@ export default function DashboardPage() {
               )}
             </div>
           </div>
-          <div className="browse-filter-section">
-            <span className="browse-filter-heading">2026-2028 Catalog</span>
-            <div className="browse-filter-options">
-              {catalogTerms.map((t) => (
-                <button
-                  key={t.id}
-                  type="button"
-                  className={`browse-filter-option ${selectedTermYear === t.label ? "active" : ""}`}
-                  onClick={() => setSelectedTermYear(selectedTermYear === t.label ? null : t.label)}
-                >
-                  {t.label}
-                </button>
-              ))}
-              {catalogTerms.length === 0 && (
-                <span className="browse-empty">No terms</span>
-              )}
-            </div>
+          <div className="browse-filter-section browse-catalog-section">
+            <button
+              type="button"
+              className="browse-catalog-toggle"
+              onClick={() => setCatalogSectionOpen((o) => !o)}
+              aria-expanded={catalogSectionOpen}
+              aria-controls="browse-catalog-terms"
+            >
+              <span className="browse-filter-heading">2026-2028 Catalog</span>
+              <span className="browse-catalog-chevron" aria-hidden>
+                {catalogSectionOpen ? "▼" : "▶"}
+              </span>
+            </button>
+            {catalogSectionOpen && (
+              <div id="browse-catalog-terms" className="browse-filter-options">
+                {catalogTerms.map((t) => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    className={`browse-filter-option ${selectedTermYear === t.label ? "active" : ""}`}
+                    onClick={() => setSelectedTermYear(selectedTermYear === t.label ? null : t.label)}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+                {catalogTerms.length === 0 && (
+                  <span className="browse-empty">No terms</span>
+                )}
+              </div>
+            )}
           </div>
-          {hasActiveFilters && (
-            <button type="button" className="browse-clear-filters" onClick={clearFilters}>
-              Clear all filters
-            </button>
-          )}
           <div className="browse-filter-section">
-            <button
-              type="button"
-              className="course-request-button"
-              onClick={openCourseRequest}
-            >
-              Request a new course
-            </button>
-            <button
-              type="button"
-              className="course-request-button"
-              onClick={openDepartmentRequest}
-            >
-              Request a department
-            </button>
+            <div className="browse-filter-options">
+              <button
+                type="button"
+                className="browse-filter-option"
+                onClick={openCourseRequest}
+              >
+                Request a new course
+              </button>
+              <button
+                type="button"
+                className="browse-filter-option"
+                onClick={openDepartmentRequest}
+              >
+                Request a department
+              </button>
+            </div>
           </div>
         </aside>
 

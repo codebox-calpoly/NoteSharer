@@ -224,6 +224,79 @@ select {
   color: var(--poly-sage);
 }
 
+[data-theme="dark"] .browse-clear-filters {
+  background: #262626 !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  color: #e5e5e5 !important;
+}
+
+[data-theme="dark"] .browse-clear-filters:hover:not(:disabled) {
+  background: var(--poly-sage-soft) !important;
+}
+
+[data-theme="dark"] .browse-clear-filters-disabled,
+[data-theme="dark"] .browse-clear-filters:disabled {
+  color: #666 !important;
+  opacity: 0.6;
+}
+
+[data-theme="dark"] .browse-catalog-toggle .browse-filter-heading {
+  color: #e5e5e5 !important;
+}
+
+[data-theme="dark"] .browse-catalog-chevron {
+  color: #a3a3a3;
+}
+
+/* Leaderboard dark mode */
+[data-theme="dark"] .leaderboard-tabs {
+  background: #262626 !important;
+  box-shadow: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  --tw-ring-color: rgba(255, 255, 255, 0.15);
+}
+
+[data-theme="dark"] .leaderboard-tab:not(.leaderboard-tab-active) {
+  color: #a3a3a3 !important;
+}
+
+[data-theme="dark"] .leaderboard-tab:not(.leaderboard-tab-active):hover {
+  color: #e5e5e5 !important;
+}
+
+[data-theme="dark"] .leaderboard-title {
+  color: #e5e5e5 !important;
+}
+
+[data-theme="dark"] .leaderboard-subtitle {
+  color: #a3a3a3 !important;
+}
+
+[data-theme="dark"] .leaderboard-podium-card,
+[data-theme="dark"] .leaderboard-list-card {
+  background: #262626 !important;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .leaderboard-podium-card .font-semibold,
+[data-theme="dark"] .leaderboard-list-card h3 {
+  color: #e5e5e5 !important;
+}
+
+[data-theme="dark"] .leaderboard-list-card p,
+[data-theme="dark"] .leaderboard-podium-card p.font-semibold {
+  color: #e5e5e5 !important;
+}
+
+[data-theme="dark"] .leaderboard-list-card .text-xs,
+[data-theme="dark"] .leaderboard-list-card p.text-sm {
+  color: #a3a3a3 !important;
+}
+
+[data-theme="dark"] .leaderboard-muted {
+  color: #a3a3a3 !important;
+}
+
 [data-theme="dark"] .course-detail-note-title,
 [data-theme="dark"] .course-detail-note-by,
 [data-theme="dark"] .profile-page__note-card {

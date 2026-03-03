@@ -99,18 +99,18 @@ export default function LeaderboardPage() {
               isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
             }`}
           >
-            <h2 className="font-bold text-[var(--poly-neutral-dark)] text-3xl md:text-4xl mb-2">Leaderboard</h2>
-            <p className="font-normal text-[var(--poly-neutral-muted)] text-base md:text-lg">
+            <h2 className="leaderboard-title font-bold text-[var(--poly-neutral-dark)] text-3xl md:text-4xl mb-2">Leaderboard</h2>
+            <p className="leaderboard-subtitle font-normal text-[var(--poly-neutral-muted)] text-base md:text-lg">
               {period === "all_time" ? "Ranked by total uploaded notes" : "Ranked by notes uploaded this week"}
             </p>
             <div className="mt-5 flex items-center justify-center">
-              <div className="inline-flex rounded-full bg-white p-1 shadow-sm ring-1 ring-black/10">
+              <div className="leaderboard-tabs inline-flex rounded-full bg-white p-1 shadow-sm ring-1 ring-black/10">
                 <button
                   type="button"
                   onClick={() => setPeriod("all_time")}
-                  className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
+                  className={`leaderboard-tab rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
                     period === "all_time"
-                      ? "bg-[#6dbe8b] text-white"
+                      ? "leaderboard-tab-active bg-[#6dbe8b] text-white"
                       : "text-[var(--poly-neutral-muted)] hover:text-[var(--poly-neutral-dark)]"
                   }`}
                 >
@@ -119,9 +119,9 @@ export default function LeaderboardPage() {
                 <button
                   type="button"
                   onClick={() => setPeriod("this_week")}
-                  className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
+                  className={`leaderboard-tab rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
                     period === "this_week"
-                      ? "bg-[#6dbe8b] text-white"
+                      ? "leaderboard-tab-active bg-[#6dbe8b] text-white"
                       : "text-[var(--poly-neutral-muted)] hover:text-[var(--poly-neutral-dark)]"
                   }`}
                 >
@@ -131,10 +131,10 @@ export default function LeaderboardPage() {
             </div>
           </div>
 
-          {loading && <p className="text-center text-[#666666] mb-8">Loading leaderboard...</p>}
+          {loading && <p className="leaderboard-muted text-center text-[#666666] mb-8">Loading leaderboard...</p>}
           {!loading && error && <p className="text-center text-red-600 mb-8">{error}</p>}
           {!loading && !error && entries.length === 0 && (
-            <p className="text-center text-[#666666] mb-8">No contributors yet.</p>
+            <p className="leaderboard-muted text-center text-[#666666] mb-8">No contributors yet.</p>
           )}
 
           {!loading && !error && first && second && third && (
@@ -148,7 +148,7 @@ export default function LeaderboardPage() {
                   <div className={`w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-br ${getMedalColor(2)} flex items-center justify-center text-white text-xl md:text-2xl font-bold mb-3 shadow-lg`}>
                     {second.avatar}
                   </div>
-                  <div className="bg-white rounded-t-xl p-4 md:p-6 text-center shadow-lg w-32 md:w-40 h-32 md:h-40 flex flex-col justify-center">
+                  <div className="leaderboard-podium-card bg-white rounded-t-xl p-4 md:p-6 text-center shadow-lg w-32 md:w-40 h-32 md:h-40 flex flex-col justify-center">
                     <div className="text-3xl md:text-4xl font-bold text-gray-400 mb-2">2</div>
                     <p className="font-semibold text-[#2e2e2e] text-sm md:text-base mb-1">{second.name.split(" ")[0]}</p>
                     <p className="text-[#6dbe8b] text-xs md:text-sm font-bold">{second.uploads} uploads</p>
@@ -158,7 +158,7 @@ export default function LeaderboardPage() {
                   <div className={`w-20 h-20 md:w-24 md:h-24 rounded-full bg-gradient-to-br ${getMedalColor(1)} flex items-center justify-center text-white text-2xl md:text-3xl font-bold mb-3 shadow-xl`}>
                     {first.avatar}
                   </div>
-                  <div className="bg-white rounded-t-xl p-4 md:p-6 text-center shadow-xl w-32 md:w-40 h-40 md:h-48 flex flex-col justify-center">
+                  <div className="leaderboard-podium-card bg-white rounded-t-xl p-4 md:p-6 text-center shadow-xl w-32 md:w-40 h-40 md:h-48 flex flex-col justify-center">
                     <div className="text-4xl md:text-5xl font-bold text-yellow-500 mb-2">1</div>
                     <p className="font-semibold text-[#2e2e2e] text-sm md:text-base mb-1">{first.name.split(" ")[0]}</p>
                     <p className="text-[#6dbe8b] text-xs md:text-sm font-bold">{first.uploads} uploads</p>
@@ -168,7 +168,7 @@ export default function LeaderboardPage() {
                   <div className={`w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-br ${getMedalColor(3)} flex items-center justify-center text-white text-xl md:text-2xl font-bold mb-3 shadow-lg`}>
                     {third.avatar}
                   </div>
-                  <div className="bg-white rounded-t-xl p-4 md:p-6 text-center shadow-lg w-32 md:w-40 h-28 md:h-32 flex flex-col justify-center">
+                  <div className="leaderboard-podium-card bg-white rounded-t-xl p-4 md:p-6 text-center shadow-lg w-32 md:w-40 h-28 md:h-32 flex flex-col justify-center">
                     <div className="text-3xl md:text-4xl font-bold text-orange-500 mb-2">3</div>
                     <p className="font-semibold text-[#2e2e2e] text-sm md:text-base mb-1">{third.name.split(" ")[0]}</p>
                     <p className="text-[#6dbe8b] text-xs md:text-sm font-bold">{third.uploads} uploads</p>
@@ -183,7 +183,7 @@ export default function LeaderboardPage() {
               {entries.slice(listStartIndex).map((user, index) => (
                 <div
                   key={user.userId}
-                  className={`bg-white rounded-xl shadow-md p-4 md:p-6 transition-all duration-700 hover:shadow-lg hover:-translate-y-1 ${
+                  className={`leaderboard-list-card bg-white rounded-xl shadow-md p-4 md:p-6 transition-all duration-700 hover:shadow-lg hover:-translate-y-1 ${
                     isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
                   }`}
                   style={{ transitionDelay: `${(index + 4) * 100}ms` }}
