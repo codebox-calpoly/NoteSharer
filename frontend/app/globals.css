@@ -496,15 +496,6 @@ select {
 [data-theme="dark"] .course-detail-note-meta {
   border-top-color: rgba(255, 255, 255, 0.1) !important;
 }
-[data-theme="dark"] .course-detail-tabs {
-  border-bottom-color: rgba(255, 255, 255, 0.12) !important;
-}
-[data-theme="dark"] .course-detail-tab {
-  color: #b0b0b0 !important;
-}
-[data-theme="dark"] .course-detail-tab.active {
-  color: #6dbe8b !important;
-}
 [data-theme="dark"] .course-detail-filter-label,
 [data-theme="dark"] .course-detail-notes-count {
   color: #b0b0b0 !important;

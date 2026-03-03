@@ -36,6 +36,7 @@ type Note = {
   created_at: string;
   class_id: string | null;
   storage_path: string | null;
+  resource_type: string | null;
   previewUrl: string | null;
   profile_display_name: string | null;
   upvote_count: number;
@@ -45,6 +46,13 @@ type Note = {
   download_cost: number;
   downloaded: boolean;
 };
+
+const RESOURCE_TYPE_FILTER_OPTIONS: { value: string | null; label: string }[] = [
+  { value: null, label: "All types" },
+  { value: "lecture_notes", label: "Lecture Notes" },
+  { value: "study_guide", label: "Study Guide" },
+  { value: "class_overview", label: "Class Overview" },
+];
 
 type ReportStatus = "idle" | "submitting" | "success" | "error";
 
@@ -70,6 +78,9 @@ export default function CourseDetailPage() {
   const [downloadedFilter, setDownloadedFilter] = useState<
     "downloaded" | "not_downloaded"
   >("not_downloaded");
+  const [resourceTypeFilter, setResourceTypeFilter] = useState<string | null>(
+    null,
+  );
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [tokenLoaded, setTokenLoaded] = useState(false);
   const [credits, setCredits] = useState<number | null>(null);
@@ -214,6 +225,7 @@ export default function CourseDetailPage() {
       params.set("page", String(page));
       params.set("page_size", "16");
       params.set("sort", sortOrder);
+      if (resourceTypeFilter) params.set("resource_type", resourceTypeFilter);
       try {
         let res = await fetch(`/api/notes?${params.toString()}`, {
           headers: accessToken
@@ -260,11 +272,17 @@ export default function CourseDetailPage() {
     page,
     classId,
     sortOrder,
+    resourceTypeFilter,
     accessToken,
     tokenLoaded,
     refreshToken,
     notesVersion,
   ]);
+
+  useEffect(() => {
+    setPage(1);
+    setHasMore(false);
+  }, [resourceTypeFilter]);
 
   const filteredNotes = useMemo(() => {
     const list = notes.filter((n) =>
@@ -590,18 +608,6 @@ export default function CourseDetailPage() {
             ) : null}
           </header>
 
-          <div className="course-detail-tabs">
-            <button type="button" className="course-detail-tab active">
-              Notes
-            </button>
-            <button type="button" className="course-detail-tab" disabled>
-              Resources
-            </button>
-            <button type="button" className="course-detail-tab" disabled>
-              Top Contributors
-            </button>
-          </div>
-
           <div className="course-detail-filters">
             <div className="course-detail-filter-group">
               <span className="course-detail-filter-label">Filter:</span>
@@ -627,6 +633,21 @@ export default function CourseDetailPage() {
               >
                 New notes
               </button>
+            </div>
+            <div className="course-detail-filter-group">
+              <span className="course-detail-filter-label">Type:</span>
+              {RESOURCE_TYPE_FILTER_OPTIONS.map((opt) => (
+                <button
+                  key={opt.label}
+                  type="button"
+                  className={`course-detail-filter-btn ${resourceTypeFilter === opt.value ? "active" : ""}`}
+                  onClick={() => {
+                    setResourceTypeFilter(opt.value);
+                  }}
+                >
+                  {opt.label}
+                </button>
+              ))}
             </div>
             <div className="course-detail-filter-group">
               <span className="course-detail-filter-label">Sort:</span>

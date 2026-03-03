@@ -4,6 +4,12 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { generateSignedUrls } from "@/lib/storage";
 import { createClient } from "@/utils/supabaseServerClient";
 
+const RESOURCE_TYPE_FILTERS = new Set([
+  "lecture_notes",
+  "study_guide",
+  "class_overview",
+]);
+
 type ResourceRow = {
   id: string;
   title: string;
@@ -13,6 +19,7 @@ type ResourceRow = {
   file_key: string | null;
   preview_key: string | null;
   download_cost: number;
+  resource_type: string | null;
   profiles: {
     display_name: string | null;
   } | null;
@@ -65,6 +72,11 @@ export async function GET(req: Request) {
   const searchQuery = searchParams.get("search");
   const mine = searchParams.get("mine") === "1";
   const downloaded = searchParams.get("downloaded") === "1";
+  const resourceTypeParam = searchParams.get("resource_type");
+  const resourceType =
+    resourceTypeParam && RESOURCE_TYPE_FILTERS.has(resourceTypeParam)
+      ? resourceTypeParam
+      : null;
   const page = Number(searchParams.get("page") ?? "1");
   const pageSize = Number(searchParams.get("page_size") ?? "16");
   const sort = searchParams.get("sort") === "oldest" ? "oldest" : "newest";
@@ -100,6 +112,7 @@ export async function GET(req: Request) {
         file_key,
         preview_key,
         download_cost,
+        resource_type,
         profiles ( display_name )
       `,
     )
@@ -110,6 +123,9 @@ export async function GET(req: Request) {
   }
   if (downloaded) {
     query = query.in("id", downloadedResourceIds);
+  }
+  if (resourceType) {
+    query = query.eq("resource_type", resourceType);
   }
 
   // Full-text search using the FTS index (searches title and description)
@@ -220,6 +236,7 @@ export async function GET(req: Request) {
       created_at: row.created_at,
       description: row.description ?? null,
       storage_path: row.file_key,
+      resource_type: row.resource_type ?? null,
       profile_display_name: row.profiles?.display_name ?? null,
       upvote_count: stats.upvotes,
       downvote_count: stats.downvotes,

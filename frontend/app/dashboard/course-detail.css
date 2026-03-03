@@ -91,38 +91,6 @@
   opacity: 0.9;
 }
 
-/* Tabs – Notes (active), Resources, Top Contributors */
-.course-detail-tabs {
-  display: flex;
-  align-items: center;
-  gap: 0;
-  border-bottom: 1px solid rgba(229, 231, 235, 1);
-  margin-bottom: 24px;
-}
-
-.course-detail-tab {
-  padding: 12px 20px;
-  font-size: 16px;
-  font-weight: 500;
-  color: var(--poly-neutral-muted);
-  background: none;
-  border: none;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -1px;
-  cursor: pointer;
-  text-decoration: none;
-  transition: color 0.2s, border-color 0.2s;
-}
-
-.course-detail-tab:hover {
-  color: var(--poly-neutral-dark);
-}
-
-.course-detail-tab.active {
-  color: var(--poly-sage);
-  border-bottom-color: var(--poly-sage);
-}
-
 /* Filter row */
 .course-detail-filters {
   display: flex;

@@ -15,7 +15,6 @@ const RESOURCE_TYPES = new Set([
   "lecture_notes",
   "study_guide",
   "class_overview",
-  "link",
 ]);
 
 const isUuid = (value: string) =>

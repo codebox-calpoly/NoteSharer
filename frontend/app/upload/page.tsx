@@ -32,7 +32,6 @@ const resourceTypeOptions = [
   { label: "Lecture Notes", value: "lecture_notes" },
   { label: "Study Guide", value: "study_guide" },
   { label: "Class Overview", value: "class_overview" },
-  { label: "Link", value: "link" },
 ] as const;
 
 type CourseRequestForm = {
