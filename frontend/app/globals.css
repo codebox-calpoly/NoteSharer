@@ -200,6 +200,10 @@ select {
   color: #e5e5e5 !important;
 }
 
+[data-theme="dark"] .profile-page__email {
+  color: #a3a3a3 !important;
+}
+
 [data-theme="dark"] .browse-subtitle,
 [data-theme="dark"] .browse-course-code,
 [data-theme="dark"] .browse-course-subline,

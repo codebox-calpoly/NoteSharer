@@ -25,29 +25,24 @@ type ProfileNote = {
   downloaded: boolean;
 };
 
+/** Derive avatar initials from display name (e.g. "Violet Peacock" → "VP", "VioletPeacock" → "Vi"). */
+function getInitialsFromDisplayName(displayName: string): string {
+  const s = displayName.trim();
+  if (!s) return "?";
+  const parts = s.split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) {
+    const first = parts[0][0] ?? "";
+    const last = parts[parts.length - 1][0] ?? "";
+    return (first + last).toUpperCase().slice(0, 2);
+  }
+  return s.slice(0, 2).toUpperCase();
+}
+
 function getDisplayInitial(user: User | null): string {
   if (!user) return "?";
-  const name = user.user_metadata?.full_name as string | undefined;
-  if (name && typeof name === "string") {
-    const parts = name.trim().split(/\s+/);
-    if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase().slice(0, 2);
-    if (parts[0]) return parts[0].slice(0, 2).toUpperCase();
-  }
   const email = user.email;
   if (email) return email.slice(0, 2).toUpperCase();
   return "?";
-}
-
-function getDisplayName(user: User | null): string {
-  if (!user) return "Guest";
-  const name = user.user_metadata?.full_name as string | undefined;
-  if (name && typeof name === "string") return name.trim();
-  return user.email?.split("@")[0] ?? "User";
-}
-
-function getHandle(user: User | null): string {
-  if (!user) return "guest";
-  return user.user_metadata?.user_name as string ?? user.email?.split("@")[0] ?? "user";
 }
 
 export default function Page() {
@@ -67,6 +62,8 @@ export default function Page() {
   const [leaderboardRank, setLeaderboardRank] = useState<number | null>(null);
   const [loadingStats, setLoadingStats] = useState(false);
   const [statsError, setStatsError] = useState<string | null>(null);
+  const [profileDisplayName, setProfileDisplayName] = useState<string | null>(null);
+  const [profileHandle, setProfileHandle] = useState<string | null>(null);
   const [isVisible, setIsVisible] = useState(false);
   const router = useRouter();
 
@@ -84,6 +81,29 @@ export default function Page() {
     };
     loadSession();
   }, []);
+
+  useEffect(() => {
+    if (!user?.id) {
+      setProfileDisplayName(null);
+      setProfileHandle(null);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("display_name, handle")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (cancelled) return;
+      const row = data as { display_name: string | null; handle: string | null } | null;
+      setProfileDisplayName(row?.display_name?.trim() ?? null);
+      setProfileHandle(row?.handle?.trim() ?? null);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id]);
 
   const refreshCredits = useCallback(async () => {
     const { session } = await getSessionWithRecovery(supabase);
@@ -218,9 +238,12 @@ export default function Page() {
     router.replace("/");
   }, [router]);
 
-  const initial = getDisplayInitial(user);
-  const displayName = getDisplayName(user);
-  const handle = getHandle(user);
+  const nickname =
+    profileDisplayName ?? profileHandle ?? user?.email?.split("@")[0] ?? "User";
+  const initial =
+    profileDisplayName ?? profileHandle
+      ? getInitialsFromDisplayName(profileDisplayName ?? profileHandle ?? "")
+      : getDisplayInitial(user);
   const { theme } = useTheme();
   const displayedStats = profileStats ?? null;
 
@@ -249,8 +272,10 @@ export default function Page() {
                 <div className="profile-page__profile-info">
                   <div className="profile-page__avatar" aria-hidden>{initial}</div>
                   <div className="profile-page__profile-meta">
-                    <h1 className="profile-page__handle">{handle}</h1>
-                    <p className="profile-page__name">{displayName}</p>
+                    <h1 className="profile-page__handle">{nickname}</h1>
+                    {user?.email && (
+                      <p className="profile-page__email">{user.email}</p>
+                    )}
                     <p className="profile-page__bio">Share notes and earn credits.</p>
                   </div>
                 </div>

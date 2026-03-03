@@ -228,6 +228,13 @@
   margin: 0;
 }
 
+.profile-page__email {
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--poly-neutral-muted, #666);
+  margin: 0;
+}
+
 .profile-page__bio {
   font-size: 15px;
   line-height: 24px;
