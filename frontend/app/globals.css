@@ -1294,7 +1294,7 @@ body {
   min-height: 200px;
   max-height: 50vh;
   border: none;
-  filter: blur(6px);
+  filter: blur(3px);
   pointer-events: none;
   display: block;
 }

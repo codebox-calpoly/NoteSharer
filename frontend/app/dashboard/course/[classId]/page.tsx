@@ -21,7 +21,6 @@ import { getCourseSubline } from "../../course-name-utils";
 import "../../dashboard.css";
 import "../../browse.css";
 import "../../course-detail.css";
-import Image from "next/image";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.mjs`;
 
@@ -114,6 +113,10 @@ function CourseDetailPage() {
   const [pdfViewLoading, setPdfViewLoading] = useState(false);
   const [pdfViewError, setPdfViewError] = useState<string | null>(null);
   const pdfBlobUrlRef = useRef<string | null>(null);
+  const [previewBlobUrl, setPreviewBlobUrl] = useState<string | null>(null);
+  const [previewBlobLoading, setPreviewBlobLoading] = useState(false);
+  const [previewBlobError, setPreviewBlobError] = useState<string | null>(null);
+  const previewBlobUrlRef = useRef<string | null>(null);
 
   const refreshToken = useCallback(async () => {
     const { session, error } = await getSessionWithRecovery(supabase);
@@ -513,6 +516,10 @@ function CourseDetailPage() {
       URL.revokeObjectURL(pdfBlobUrlRef.current);
       pdfBlobUrlRef.current = null;
     }
+    if (previewBlobUrlRef.current) {
+      URL.revokeObjectURL(previewBlobUrlRef.current);
+      previewBlobUrlRef.current = null;
+    }
     setIsNoteModalOpen(false);
     setSelectedNote(null);
     setIsReportOpen(false);
@@ -520,6 +527,8 @@ function CourseDetailPage() {
     setPdfPageNumber(1);
     setNumPdfPages(null);
     setPdfViewError(null);
+    setPreviewBlobUrl(null);
+    setPreviewBlobError(null);
   };
 
   // When modal opens with a downloaded note, fetch PDF as blob and show in viewer (same as upload preview).
@@ -580,6 +589,69 @@ function CourseDetailPage() {
       cancelled = true;
     };
   }, [isNoteModalOpen, selectedNote?.id, selectedNote?.downloaded, accessToken, refreshToken]);
+
+  // For non-downloaded notes: fetch preview with auth so it actually loads (img/iframe don't send cookies).
+  useEffect(() => {
+    if (
+      !isNoteModalOpen ||
+      !selectedNote ||
+      selectedNote.downloaded ||
+      !selectedNote.previewUrl ||
+      !accessToken
+    ) {
+      setPreviewBlobUrl(null);
+      setPreviewBlobError(null);
+      return;
+    }
+    if (previewBlobUrlRef.current) {
+      URL.revokeObjectURL(previewBlobUrlRef.current);
+      previewBlobUrlRef.current = null;
+    }
+    let cancelled = false;
+    setPreviewBlobLoading(true);
+    setPreviewBlobError(null);
+    setPreviewBlobUrl(null);
+    const previewUrl = selectedNote.previewUrl;
+    (async () => {
+      try {
+        let res = await fetch(previewUrl, {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        if (res.status === 401) {
+          const newToken = await refreshToken();
+          if (newToken)
+            res = await fetch(previewUrl, {
+              headers: { Authorization: `Bearer ${newToken}` },
+            });
+        }
+        if (cancelled) return;
+        if (!res.ok) {
+          setPreviewBlobError("Preview could not be loaded.");
+          setPreviewBlobLoading(false);
+          return;
+        }
+        const blob = await res.blob();
+        if (cancelled) return;
+        const blobUrl = URL.createObjectURL(blob);
+        previewBlobUrlRef.current = blobUrl;
+        setPreviewBlobUrl(blobUrl);
+      } catch {
+        if (!cancelled) setPreviewBlobError("Preview could not be loaded.");
+      } finally {
+        if (!cancelled) setPreviewBlobLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    isNoteModalOpen,
+    selectedNote?.id,
+    selectedNote?.downloaded,
+    selectedNote?.previewUrl,
+    accessToken,
+    refreshToken,
+  ]);
 
   const handleReportNote = () => {
     if (!selectedNote) return;
@@ -964,21 +1036,33 @@ function CourseDetailPage() {
                     )}
                   </>
                 ) : selectedNote.previewUrl ? (
-                  selectedNote.previewIsPdf ? (
-                    <iframe
-                      src={selectedNote.previewUrl}
-                      title="Note preview (blurred until downloaded)"
-                      className="note-modal-preview-iframe"
-                    />
-                  ) : (
-                    <Image
-                      src={selectedNote.previewUrl}
-                      alt="Note preview (blurred until downloaded)"
-                      className="note-modal-preview-img"
-                      width={1200}
-                      height={1600}
-                    />
-                  )
+                  <>
+                    {previewBlobLoading && (
+                      <div className="note-modal-pdf-loading">
+                        Loading preview…
+                      </div>
+                    )}
+                    {previewBlobError && (
+                      <div className="note-modal-pdf-error">
+                        {previewBlobError}
+                      </div>
+                    )}
+                    {!previewBlobLoading && !previewBlobError && previewBlobUrl && (
+                      selectedNote.previewIsPdf ? (
+                        <iframe
+                          src={previewBlobUrl}
+                          title="Note preview (blurred until downloaded)"
+                          className="note-modal-preview-iframe"
+                        />
+                      ) : (
+                        <img
+                          src={previewBlobUrl}
+                          alt="Note preview (blurred until downloaded)"
+                          className="note-modal-preview-img"
+                        />
+                      )
+                    )}
+                  </>
                 ) : (
                   <div className="note-modal-no-preview">
                     No preview available. Download to view.
