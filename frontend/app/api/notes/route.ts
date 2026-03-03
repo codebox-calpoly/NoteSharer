@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
-import { generateSignedUrls } from "@/lib/storage";
 import { createClient } from "@/utils/supabaseServerClient";
 
 const RESOURCE_TYPE_FILTERS = new Set([
@@ -128,10 +127,12 @@ export async function GET(req: Request) {
     query = query.eq("resource_type", resourceType);
   }
 
-  // Full-text search using the FTS index (searches title and description)
+  // Keyword search: title, description, and extracted PDF text (typed or OCR)
   if (searchQuery && searchQuery.trim()) {
     const searchTerm = `%${searchQuery.trim()}%`;
-    query = query.or(`title.ilike.${searchTerm},description.ilike.${searchTerm}`);
+    query = query.or(
+      `title.ilike.${searchTerm},description.ilike.${searchTerm},extracted_text.ilike.${searchTerm}`
+    );
   }
 
   query = query.order("created_at", { ascending: sort === "oldest" });
@@ -200,34 +201,15 @@ export async function GET(req: Request) {
     });
   }
 
-  const previewPaths = Array.from(
-    new Set(
-      pageRows
-        .map((row) =>
-          row.preview_key && !row.preview_key.toLowerCase().endsWith(".pdf")
-            ? row.preview_key
-            : null,
-        )
-        .filter((path): path is string => Boolean(path)),
-    ),
-  );
-
-  let previewUrlMap = new Map<string, string>();
-  if (previewPaths.length > 0) {
-    try {
-      previewUrlMap = await generateSignedUrls("resources", previewPaths);
-    } catch {
-      previewUrlMap = new Map<string, string>();
-    }
-  }
-
+  // Preview URLs go through our backend proxy (GET /api/notes/[id]/preview) so no signed
+  // storage URL is ever sent to the client; auth is required and inspect cannot get a shareable link.
   const normalized = pageRows.map((row) => {
     const stats = voteMap.get(row.id) ?? { upvotes: 0, downvotes: 0, score: 0 };
     const myVote = myVoteMap.get(row.id) ?? null;
-    const previewPath =
-      row.preview_key && !row.preview_key.toLowerCase().endsWith(".pdf")
-        ? row.preview_key
-        : null;
+    const hasPreview = Boolean(row.preview_key);
+    const previewUrl = hasPreview ? `/api/notes/${row.id}/preview` : null;
+    const previewIsPdf =
+      Boolean(row.preview_key?.toLowerCase().endsWith(".pdf"));
 
     return {
       id: row.id,
@@ -244,7 +226,8 @@ export async function GET(req: Request) {
       my_vote: myVote,
       download_cost: row.download_cost ?? 0,
       downloaded: downloadedIds.has(row.id),
-      previewUrl: previewPath ? previewUrlMap.get(previewPath) ?? null : null,
+      previewUrl,
+      previewIsPdf,
     };
   });
 

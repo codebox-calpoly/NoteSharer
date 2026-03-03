@@ -5,7 +5,11 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
+import { extract } from "@/lib/textextractor";
 import { generateBlurredFirstPageBuffer } from "./helpers/preview";
+
+/** Max characters of extracted text to store for search (avoids huge rows). */
+const MAX_EXTRACTED_TEXT_LENGTH = 100_000;
 
 const MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024;
 const PDF_MIME_TYPES = new Set(["application/pdf"]);
@@ -233,7 +237,26 @@ export async function POST(req: NextRequest) {
       fs.unlinkSync(tmpPdf);
     }
   }
-  
+
+  // If blurred preview failed, fall back to file_key so we still have a preview_key (required by schema).
+  // Notes API will return a signed URL for the PDF and the UI can show a blurred PDF preview.
+  if (previewKey == null) {
+    previewKey = filePath;
+  }
+
+  let extractedText: string | null = null;
+  try {
+    const result = await extract(fileBuffer, { maxOcrPages: 10 });
+    if (result.text?.trim()) {
+      extractedText =
+        result.text.length > MAX_EXTRACTED_TEXT_LENGTH
+          ? result.text.slice(0, MAX_EXTRACTED_TEXT_LENGTH)
+          : result.text;
+    }
+  } catch (extractErr) {
+    console.warn("[upload] Text extraction failed, storing without extracted_text:", extractErr);
+  }
+
   const { data: resource, error: insertError } = await supabase
     .from("resources")
     .insert({
@@ -244,6 +267,7 @@ export async function POST(req: NextRequest) {
       description: description || null,
       file_key: filePath,
       preview_key: previewKey,
+      ...(extractedText != null && { extracted_text: extractedText }),
     })
     .select()
     .single();

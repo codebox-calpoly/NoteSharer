@@ -106,11 +106,11 @@ export async function POST(request: Request) {
     );
   } else {
     try {
-      const resend = new Resend(resendApiKey);
+      const resend = new Resend(resendApiKey!);
       const submitterEmail = user.email ?? "(not shared)";
       await resend.emails.send({
-        from: fromEmail,
-        to: [notifyEmail],
+        from: fromEmail!,
+        to: [notifyEmail!],
         subject: `[Poly Pages] New department request: ${departmentName}`,
         html: [
           "<h2>New department request</h2>",

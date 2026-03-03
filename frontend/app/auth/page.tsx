@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getSessionWithRecovery, supabase } from "@/lib/supabaseClient";
 import "./auth.css";
 
-export default function AuthPage() {
+function AuthPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirect") || "/auth/callback";
@@ -158,4 +158,18 @@ export default function AuthPage() {
   );
 
   return <main className="auth-page">{content}</main>;
+}
+
+export default function AuthPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="auth-page">
+          <p className="auth-loading">Loading…</p>
+        </main>
+      }
+    >
+      <AuthPageContent />
+    </Suspense>
+  );
 }

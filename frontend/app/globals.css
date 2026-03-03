@@ -331,8 +331,34 @@ select {
   border-color: rgba(255, 255, 255, 0.1);
 }
 
+[data-theme="dark"] .note-modal-preview--pdf {
+  background: #1a1a1a !important;
+}
+
+[data-theme="dark"] .note-modal-preview-iframe {
+  background: #1a1a1a;
+}
+
 [data-theme="dark"] .note-modal-no-preview {
   color: #666 !important;
+}
+
+[data-theme="dark"] .note-modal-pdf-loading {
+  color: #a3a3a3 !important;
+}
+
+[data-theme="dark"] .note-modal-pdf-nav-btn {
+  background: #2a2a2a !important;
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #e5e5e5;
+}
+
+[data-theme="dark"] .note-modal-pdf-nav-btn:hover:not(:disabled) {
+  background: #3a3a3a !important;
+}
+
+[data-theme="dark"] .note-modal-pdf-page-info {
+  color: #a3a3a3 !important;
 }
 
 [data-theme="dark"] .note-modal-score-hint,
@@ -1246,11 +1272,30 @@ body {
   min-height: 200px;
 }
 
+/* When showing full PDF viewer: allow scroll, don't clip */
+.note-modal-preview--pdf {
+  overflow: visible;
+  min-height: 300px;
+  flex-direction: column;
+  align-items: stretch;
+}
+
 .note-modal-preview-img {
   max-width: 100%;
   height: auto;
   max-height: 50vh;
   object-fit: contain;
+  display: block;
+}
+
+/* Blurred PDF preview when no image preview (e.g. fallback from upload) */
+.note-modal-preview-iframe {
+  width: 100%;
+  min-height: 200px;
+  max-height: 50vh;
+  border: none;
+  filter: blur(6px);
+  pointer-events: none;
   display: block;
 }
 
@@ -1270,6 +1315,90 @@ body {
   justify-content: center;
   color: var(--poly-neutral-muted);
   font-size: 0.9rem;
+}
+
+.note-modal-pdf-loading,
+.note-modal-pdf-error {
+  width: 100%;
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  color: var(--poly-neutral-muted);
+}
+
+.note-modal-pdf-error {
+  color: var(--poly-error, #b91c1c);
+}
+
+.note-modal-pdf-viewer {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Scrollable area for the PDF page; keep compact so details and nav stay visible below */
+.note-modal-pdf-scroll {
+  width: 100%;
+  max-height: 42vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.5rem 0;
+}
+
+.note-modal-pdf-viewer .react-pdf__Document {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.note-modal-pdf-viewer .react-pdf__Page {
+  max-width: 100%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Ensure PDF.js canvas and text layer are visible and not clipped */
+.note-modal-pdf-viewer .react-pdf__Page__canvas {
+  max-width: 100%;
+  height: auto !important;
+}
+
+.note-modal-pdf-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.note-modal-pdf-nav-btn {
+  padding: 0.4rem 0.75rem;
+  font-size: 0.875rem;
+  border: 1px solid var(--poly-border-subtle, rgba(0, 0, 0, 0.15));
+  border-radius: 8px;
+  background: var(--poly-bg, #fff);
+  color: var(--poly-neutral-dark);
+  cursor: pointer;
+}
+
+.note-modal-pdf-nav-btn:hover:not(:disabled) {
+  background: var(--poly-neutral-muted, #e5e5e5);
+}
+
+.note-modal-pdf-nav-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.note-modal-pdf-page-info {
+  font-size: 0.875rem;
+  color: var(--poly-neutral-muted);
 }
 
 .note-modal-details {

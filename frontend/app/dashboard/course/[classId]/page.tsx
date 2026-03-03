@@ -1,14 +1,19 @@
 "use client";
 
 import {
+  Suspense,
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type FormEvent,
 } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { Document, Page, pdfjs } from "react-pdf";
+import "react-pdf/dist/esm/Page/AnnotationLayer.css";
+import "react-pdf/dist/esm/Page/TextLayer.css";
 import { getSessionWithRecovery, supabase } from "@/lib/supabaseClient";
 import { DesignNav } from "@/app/components/DesignNav";
 import ProfileIcons from "../../profile-icon";
@@ -17,6 +22,8 @@ import "../../dashboard.css";
 import "../../browse.css";
 import "../../course-detail.css";
 import Image from "next/image";
+
+pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.mjs`;
 
 
 type CourseOption = {
@@ -38,6 +45,7 @@ type Note = {
   storage_path: string | null;
   resource_type: string | null;
   previewUrl: string | null;
+  previewIsPdf?: boolean;
   profile_display_name: string | null;
   upvote_count: number;
   downvote_count: number;
@@ -63,9 +71,11 @@ function termYearLabel(term: string | null, year: number | null): string {
   return "—";
 }
 
-export default function CourseDetailPage() {
+function CourseDetailPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const classId = typeof params.classId === "string" ? params.classId : null;
+  const openNoteId = searchParams.get("open");
 
   const [course, setCourse] = useState<CourseOption | null>(null);
   const [coursesError, setCoursesError] = useState<string | null>(null);
@@ -98,6 +108,12 @@ export default function CourseDetailPage() {
   const [notesVersion, setNotesVersion] = useState(0);
   const [noteForVotePrompt, setNoteForVotePrompt] = useState<Note | null>(null);
   const [isVotePromptOpen, setIsVotePromptOpen] = useState(false);
+  const [pdfViewUrl, setPdfViewUrl] = useState<string | null>(null);
+  const [pdfPageNumber, setPdfPageNumber] = useState(1);
+  const [numPdfPages, setNumPdfPages] = useState<number | null>(null);
+  const [pdfViewLoading, setPdfViewLoading] = useState(false);
+  const [pdfViewError, setPdfViewError] = useState<string | null>(null);
+  const pdfBlobUrlRef = useRef<string | null>(null);
 
   const refreshToken = useCallback(async () => {
     const { session, error } = await getSessionWithRecovery(supabase);
@@ -295,6 +311,23 @@ export default function CourseDetailPage() {
     });
   }, [notes, downloadedFilter, sortOrder]);
 
+  // Open modal for ?open=noteId (e.g. from profile "My downloads" link).
+  useEffect(() => {
+    if (!openNoteId || notes.length === 0) return;
+    const note = notes.find((n) => n.id === openNoteId);
+    if (note) {
+      if (note.downloaded) setDownloadedFilter("downloaded");
+      setSelectedNote(note);
+      setIsNoteModalOpen(true);
+      setPdfViewError(null);
+      if (typeof window !== "undefined") {
+        const url = new URL(window.location.href);
+        url.searchParams.delete("open");
+        window.history.replaceState({}, "", url.pathname + url.search);
+      }
+    }
+  }, [openNoteId, notes]);
+
   const handleDownload = useCallback(
     async (noteId: string) => {
       if (!accessToken) {
@@ -476,10 +509,77 @@ export default function CourseDetailPage() {
   };
 
   const handleCloseNoteModal = () => {
+    if (pdfBlobUrlRef.current) {
+      URL.revokeObjectURL(pdfBlobUrlRef.current);
+      pdfBlobUrlRef.current = null;
+    }
     setIsNoteModalOpen(false);
     setSelectedNote(null);
     setIsReportOpen(false);
+    setPdfViewUrl(null);
+    setPdfPageNumber(1);
+    setNumPdfPages(null);
+    setPdfViewError(null);
   };
+
+  // When modal opens with a downloaded note, fetch PDF as blob and show in viewer (same as upload preview).
+  useEffect(() => {
+    if (!isNoteModalOpen || !selectedNote || !selectedNote.downloaded || !accessToken) {
+      setPdfViewUrl(null);
+      setPdfViewError(null);
+      return;
+    }
+    if (pdfBlobUrlRef.current) {
+      URL.revokeObjectURL(pdfBlobUrlRef.current);
+      pdfBlobUrlRef.current = null;
+    }
+    let cancelled = false;
+    setPdfViewLoading(true);
+    setPdfViewError(null);
+    setPdfViewUrl(null);
+    setPdfPageNumber(1);
+    setNumPdfPages(null);
+    (async () => {
+      try {
+        let res = await fetch(`/api/notes/${selectedNote.id}/view?stream=1`, {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        if (res.status === 401) {
+          const newToken = await refreshToken();
+          if (newToken)
+            res = await fetch(`/api/notes/${selectedNote.id}/view?stream=1`, {
+              headers: { Authorization: `Bearer ${newToken}` },
+            });
+        }
+        if (cancelled) return;
+        if (!res.ok) {
+          const text = await res.text();
+          let msg = "Could not load note for viewing.";
+          try {
+            const body = JSON.parse(text) as { error?: string };
+            if (body?.error) msg = body.error;
+          } catch {
+            if (text) msg = text.slice(0, 100);
+          }
+          setPdfViewError(msg);
+          setPdfViewLoading(false);
+          return;
+        }
+        const blob = await res.blob();
+        if (cancelled) return;
+        const blobUrl = URL.createObjectURL(blob);
+        pdfBlobUrlRef.current = blobUrl;
+        setPdfViewUrl(blobUrl);
+      } catch {
+        if (!cancelled) setPdfViewError("Failed to load note for viewing.");
+      } finally {
+        if (!cancelled) setPdfViewLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isNoteModalOpen, selectedNote?.id, selectedNote?.downloaded, accessToken, refreshToken]);
 
   const handleReportNote = () => {
     if (!selectedNote) return;
@@ -773,20 +873,117 @@ export default function CourseDetailPage() {
               </button>
             </div>
             <div className="note-modal-content">
-              <div className="note-modal-preview">
-                {selectedNote.previewUrl ? (
-                  <Image
-                    src={selectedNote.previewUrl}
-                    alt="Note preview"
-                    className="note-modal-preview-img"
-                    width={1200}
-                    height={1600}
-                  />
+              <div
+                className={`note-modal-preview ${
+                  selectedNote.downloaded && pdfViewUrl
+                    ? "note-modal-preview--pdf"
+                    : ""
+                }`}
+              >
+                {selectedNote.downloaded ? (
+                  <>
+                    {pdfViewLoading && (
+                      <div className="note-modal-pdf-loading">
+                        Loading note…
+                      </div>
+                    )}
+                    {pdfViewError && (
+                      <div className="note-modal-pdf-error">
+                        {pdfViewError}
+                      </div>
+                    )}
+                    {!pdfViewLoading && !pdfViewError && pdfViewUrl && (
+                      <div className="note-modal-pdf-viewer">
+                        <div className="note-modal-pdf-scroll">
+                          <Document
+                            key={selectedNote.id}
+                            file={pdfViewUrl}
+                            onLoadSuccess={({ numPages }) => {
+                              setNumPdfPages(numPages);
+                              setPdfPageNumber(1);
+                            }}
+                            loading={
+                              <div className="note-modal-pdf-loading">
+                                Loading PDF…
+                              </div>
+                            }
+                            error={
+                              <div className="note-modal-pdf-error">
+                                Failed to load PDF
+                              </div>
+                            }
+                          >
+                            <Page
+                              pageNumber={pdfPageNumber}
+                              width={
+                                Math.min(
+                                  560,
+                                  typeof window !== "undefined"
+                                    ? Math.min(window.innerWidth - 80, 560)
+                                    : 560
+                                )
+                              }
+                              renderAnnotationLayer={false}
+                              renderTextLayer={true}
+                            />
+                          </Document>
+                        </div>
+                        <div className="note-modal-pdf-nav">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setPdfPageNumber((p) => Math.max(1, p - 1))
+                            }
+                            disabled={pdfPageNumber <= 1}
+                            className="note-modal-pdf-nav-btn"
+                            aria-label="Previous page"
+                          >
+                            Previous
+                          </button>
+                          <span className="note-modal-pdf-page-info">
+                            Page {pdfPageNumber} of {numPdfPages ?? "…"}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setPdfPageNumber((p) =>
+                                Math.min(numPdfPages ?? 1, p + 1)
+                              )
+                            }
+                            disabled={
+                              numPdfPages == null ||
+                              pdfPageNumber >= numPdfPages
+                            }
+                            className="note-modal-pdf-nav-btn"
+                            aria-label="Next page"
+                          >
+                            Next
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : selectedNote.previewUrl ? (
+                  selectedNote.previewIsPdf ? (
+                    <iframe
+                      src={selectedNote.previewUrl}
+                      title="Note preview (blurred until downloaded)"
+                      className="note-modal-preview-iframe"
+                    />
+                  ) : (
+                    <Image
+                      src={selectedNote.previewUrl}
+                      alt="Note preview (blurred until downloaded)"
+                      className="note-modal-preview-img"
+                      width={1200}
+                      height={1600}
+                    />
+                  )
                 ) : (
                   <div className="note-modal-no-preview">
-                    No preview available
+                    No preview available. Download to view.
                   </div>
-                )}  
+                )}
               </div>
               <div className="note-modal-details">
                 <p>
@@ -1069,5 +1266,13 @@ export default function CourseDetailPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function CourseDetailPageWithSearchParams() {
+  return (
+    <Suspense fallback={<p className="course-detail-loading">Loading…</p>}>
+      <CourseDetailPage />
+    </Suspense>
   );
 }
