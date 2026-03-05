@@ -11,25 +11,6 @@ import "./dashboard.css";
 import "./browse.css";
 import ProfileIcons from "./profile-icon";
 
-type CatalogTerm = {
-  id: string;
-  label: string;
-  term: string;
-  year: number;
-};
-
-/** Fallback when /api/catalog/terms is empty (e.g. catalog_terms not seeded). */
-const FALLBACK_CATALOG_TERMS: CatalogTerm[] = [
-  { id: "fallback-1", label: "Fall 2026", term: "Fall", year: 2026 },
-  { id: "fallback-2", label: "Winter 2027", term: "Winter", year: 2027 },
-  { id: "fallback-3", label: "Spring 2027", term: "Spring", year: 2027 },
-  { id: "fallback-4", label: "Summer 2027", term: "Summer", year: 2027 },
-  { id: "fallback-5", label: "Fall 2027", term: "Fall", year: 2027 },
-  { id: "fallback-6", label: "Winter 2028", term: "Winter", year: 2028 },
-  { id: "fallback-7", label: "Spring 2028", term: "Spring", year: 2028 },
-  { id: "fallback-8", label: "Summer 2028", term: "Summer", year: 2028 },
-];
-
 type CourseOption = {
   id: string;
   name: string;
@@ -75,7 +56,6 @@ const emptyDepartmentRequest: DepartmentRequestForm = {
 export default function DashboardPage() {
   const [courses, setCourses] = useState<CourseOption[]>([]);
   const [selectedDepartment, setSelectedDepartment] = useState<string | null>(null);
-  const [selectedTermYear, setSelectedTermYear] = useState<string | null>(null);
   const [browseSearch, setBrowseSearch] = useState("");
   const [departmentFilterSearch, setDepartmentFilterSearch] = useState("");
   const [accessToken, setAccessToken] = useState<string | null>(null);
@@ -83,7 +63,6 @@ export default function DashboardPage() {
   const [coursesError, setCoursesError] = useState<string | null>(null);
   const [coursesLoading, setCoursesLoading] = useState(false);
   const [coursesLoadingMore, setCoursesLoadingMore] = useState(false);
-  const [catalogTerms, setCatalogTerms] = useState<CatalogTerm[]>(FALLBACK_CATALOG_TERMS);
   const [departments] = useState<string[]>(() => [...CALPOLY_DEPARTMENT_CODES]);
   const [credits, setCredits] = useState<number | null>(null);
   const [freeDownloads, setFreeDownloads] = useState<number | null>(null);
@@ -124,8 +103,6 @@ export default function DashboardPage() {
   const [departmentRequestMessage, setDepartmentRequestMessage] = useState<
     string | null
   >(null);
-  const [catalogSectionOpen, setCatalogSectionOpen] = useState(false);
-
   const refreshToken = useCallback(async () => {
     const { session, error } = await getSessionWithRecovery(supabase);
     if (error) return null;
@@ -374,28 +351,6 @@ export default function DashboardPage() {
       clearSearchDebounce();
     };
   }, [browseSearch, selectedDepartment, accessToken, refreshToken, fetchCoursesBySearch]);
-
-  useEffect(() => {
-    if (!tokenLoaded || !accessToken) return;
-    let active = true;
-    const fetchCatalog = async () => {
-      try {
-        const res = await fetch("/api/catalog/terms", {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        });
-        if (!active) return;
-        if (res.ok) {
-          const data = (await res.json()) as { terms?: CatalogTerm[] };
-          const terms = data.terms ?? [];
-          if (terms.length > 0) setCatalogTerms(terms);
-        }
-      } catch {
-        // Keep initial FALLBACK_CATALOG_TERMS
-      }
-    };
-    fetchCatalog();
-    return () => { active = false; };
-  }, [accessToken, tokenLoaded]);
 
   const fetchCredits = useCallback(
     async (token: string | null) => {
@@ -688,10 +643,9 @@ export default function DashboardPage() {
 
   const clearFilters = () => {
     setSelectedDepartment(null);
-    setSelectedTermYear(null);
   };
 
-  const hasActiveFilters = selectedDepartment != null || selectedTermYear != null;
+  const hasActiveFilters = selectedDepartment != null;
 
   return (
     <div className="browse-page">
@@ -794,37 +748,6 @@ export default function DashboardPage() {
                 <span className="browse-empty">No departments match</span>
               )}
             </div>
-          </div>
-          <div className="browse-filter-section browse-catalog-section">
-            <button
-              type="button"
-              className="browse-catalog-toggle"
-              onClick={() => setCatalogSectionOpen((o) => !o)}
-              aria-expanded={catalogSectionOpen}
-              aria-controls="browse-catalog-terms"
-            >
-              <span className="browse-filter-heading">2026-2028 Catalog</span>
-              <span className="browse-catalog-chevron" aria-hidden>
-                {catalogSectionOpen ? "▼" : "▶"}
-              </span>
-            </button>
-            {catalogSectionOpen && (
-              <div id="browse-catalog-terms" className="browse-filter-options">
-                {catalogTerms.map((t) => (
-                  <button
-                    key={t.id}
-                    type="button"
-                    className={`browse-filter-option ${selectedTermYear === t.label ? "active" : ""}`}
-                    onClick={() => setSelectedTermYear(selectedTermYear === t.label ? null : t.label)}
-                  >
-                    {t.label}
-                  </button>
-                ))}
-                {catalogTerms.length === 0 && (
-                  <span className="browse-empty">No terms</span>
-                )}
-              </div>
-            )}
           </div>
           <div className="browse-filter-section">
             <div className="browse-filter-options">
