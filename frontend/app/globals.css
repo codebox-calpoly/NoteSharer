@@ -382,6 +382,23 @@ select {
   background: rgba(248, 113, 113, 0.1) !important;
 }
 
+[data-theme="dark"] .note-modal-star-btn {
+  background: transparent !important;
+  border-color: rgba(250, 204, 21, 0.45);
+  color: #facc15 !important;
+}
+
+[data-theme="dark"] .note-modal-star-btn:hover {
+  color: #fde68a !important;
+  background: rgba(250, 204, 21, 0.18) !important;
+}
+
+[data-theme="dark"] .note-modal-star-btn.is-active {
+  color: #fef08a !important;
+  background: rgba(250, 204, 21, 0.26) !important;
+  border-color: rgba(250, 204, 21, 0.72);
+}
+
 [data-theme="dark"] .course-detail-note-title,
 [data-theme="dark"] .course-detail-note-by,
 [data-theme="dark"] .profile-page__note-card {
@@ -1566,6 +1583,13 @@ body {
   flex-shrink: 0;
 }
 
+.note-modal-actions-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
 
 .note-modal-report-btn {
   border-radius: 8px;
@@ -1583,4 +1607,32 @@ body {
 .note-modal-report-btn:hover {
   color: #b91c1c;
   background: rgba(185, 28, 28, 0.06);
+}
+
+.note-modal-star-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  border: 1px solid rgba(245, 158, 11, 0.42);
+  background: transparent;
+  color: #f59e0b;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.note-modal-star-btn:hover {
+  color: #d97706;
+  background: rgba(245, 158, 11, 0.16);
+}
+
+.note-modal-star-btn.is-active {
+  color: #ca8a04;
+  background: rgba(250, 204, 21, 0.18);
+  border-color: rgba(245, 158, 11, 0.65);
 }

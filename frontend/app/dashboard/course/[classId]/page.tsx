@@ -52,6 +52,7 @@ type Note = {
   my_vote: number | null;
   download_cost: number;
   downloaded: boolean;
+  favorited: boolean;
 };
 
 const RESOURCE_TYPE_FILTER_OPTIONS: { value: string | null; label: string }[] = [
@@ -100,6 +101,7 @@ function CourseDetailPage() {
   const [downloadError, setDownloadError] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
+  const [favoriteSavingId, setFavoriteSavingId] = useState<string | null>(null);
   const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [reportReason, setReportReason] = useState("");
@@ -688,6 +690,55 @@ function CourseDetailPage() {
     setIsReportOpen(true);
   };
 
+  const handleToggleStar = useCallback(async () => {
+    if (!selectedNote || !accessToken || favoriteSavingId === selectedNote.id) return;
+    const noteId = selectedNote.id;
+    const prevFavorited = Boolean(selectedNote.favorited);
+    const nextFavorited = !Boolean(selectedNote.favorited);
+
+    // Optimistic UI: flip star immediately for snappy feedback.
+    setNotes((prev) =>
+      prev.map((note) =>
+        note.id === noteId ? { ...note, favorited: nextFavorited } : note
+      )
+    );
+    setSelectedNote((prev) =>
+      prev && prev.id === noteId ? { ...prev, favorited: nextFavorited } : prev
+    );
+
+    setFavoriteSavingId(noteId);
+    try {
+      let res = await fetch(`/api/notes/${noteId}/favorite`, {
+        method: nextFavorited ? "POST" : "DELETE",
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      if (res.status === 401) {
+        const newToken = await refreshToken();
+        if (newToken) {
+          res = await fetch(`/api/notes/${noteId}/favorite`, {
+            method: nextFavorited ? "POST" : "DELETE",
+            headers: { Authorization: `Bearer ${newToken}` },
+          });
+        }
+      }
+      if (!res.ok) {
+        throw new Error("Failed to save favorite.");
+      }
+    } catch {
+      // Revert optimistic update if server call fails.
+      setNotes((prev) =>
+        prev.map((note) =>
+          note.id === noteId ? { ...note, favorited: prevFavorited } : note
+        )
+      );
+      setSelectedNote((prev) =>
+        prev && prev.id === noteId ? { ...prev, favorited: prevFavorited } : prev
+      );
+    } finally {
+      setFavoriteSavingId(null);
+    }
+  }, [selectedNote, accessToken, favoriteSavingId, refreshToken]);
+
   const handleCloseReport = () => {
     setIsReportOpen(false);
     setReportReason("");
@@ -733,6 +784,10 @@ function CourseDetailPage() {
   const handleLoadMore = () => {
     if (hasMore && !loadingNotes) setPage((p) => p + 1);
   };
+
+  const selectedNoteIsStarred = Boolean(selectedNote?.favorited);
+  const selectedNoteFavoriteSaving =
+    selectedNote != null && favoriteSavingId === selectedNote.id;
 
   if (!classId) {
     return (
@@ -1229,13 +1284,26 @@ function CourseDetailPage() {
                   <span className="note-modal-vote-count">Downvote</span>
                 </button>
               </div>
-              <button
-                type="button"
-                className="note-modal-report-btn"
-                onClick={handleReportNote}
-              >
-                Report
-              </button>
+              <div className="note-modal-actions-secondary">
+                <button
+                  type="button"
+                  className="note-modal-report-btn"
+                  onClick={handleReportNote}
+                >
+                  Report
+                </button>
+                <button
+                  type="button"
+                  className={`note-modal-star-btn ${selectedNoteIsStarred ? "is-active" : ""}`}
+                  onClick={handleToggleStar}
+                  aria-pressed={selectedNoteIsStarred}
+                  disabled={selectedNoteFavoriteSaving}
+                  title={selectedNoteIsStarred ? "Remove star" : "Star note"}
+                  aria-label={selectedNoteIsStarred ? "Unstar note" : "Star note"}
+                >
+                  {selectedNoteIsStarred ? "★" : "☆"}
+                </button>
+              </div>
             </div>
           </div>
         </div>

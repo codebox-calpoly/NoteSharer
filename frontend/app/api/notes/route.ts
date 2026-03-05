@@ -71,6 +71,7 @@ export async function GET(req: Request) {
   const searchQuery = searchParams.get("search");
   const mine = searchParams.get("mine") === "1";
   const downloaded = searchParams.get("downloaded") === "1";
+  const favorited = searchParams.get("favorited") === "1";
   const resourceTypeParam = searchParams.get("resource_type");
   const resourceType =
     resourceTypeParam && RESOURCE_TYPE_FILTERS.has(resourceTypeParam)
@@ -83,6 +84,8 @@ export async function GET(req: Request) {
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
+  const adminClient = createSupabaseClient(supabaseUrl, supabaseServiceRoleKey);
+
   // When "downloaded=1", fetch resource_ids from resource_downloads first, then query resources.
   let downloadedResourceIds: string[] = [];
   if (downloaded) {
@@ -92,6 +95,25 @@ export async function GET(req: Request) {
       .eq("profile_id", user.id);
     downloadedResourceIds = (downloadsData ?? []).map((d: { resource_id: string }) => d.resource_id);
     if (downloadedResourceIds.length === 0) {
+      return NextResponse.json(
+        { notes: [], page, pageSize, total: 0, hasMore: false },
+        { status: 200, headers: { "Cache-Control": "no-store" } },
+      );
+    }
+  }
+
+  // When "favorited=1", fetch resource_ids from resource_favorites first, then query resources.
+  let favoritedResourceIds: string[] = [];
+  if (favorited) {
+    const { data: favoritesData, error: favoritesError } = await adminClient
+      .from("resource_favorites")
+      .select("resource_id")
+      .eq("profile_id", user.id);
+    if (favoritesError) {
+      return NextResponse.json({ error: favoritesError.message }, { status: 500 });
+    }
+    favoritedResourceIds = (favoritesData ?? []).map((d: { resource_id: string }) => d.resource_id);
+    if (favoritedResourceIds.length === 0) {
       return NextResponse.json(
         { notes: [], page, pageSize, total: 0, hasMore: false },
         { status: 200, headers: { "Cache-Control": "no-store" } },
@@ -122,6 +144,9 @@ export async function GET(req: Request) {
   }
   if (downloaded) {
     query = query.in("id", downloadedResourceIds);
+  }
+  if (favorited) {
+    query = query.in("id", favoritedResourceIds);
   }
   if (resourceType) {
     query = query.eq("resource_type", resourceType);
@@ -190,7 +215,6 @@ export async function GET(req: Request) {
   const currentUserId = user.id;
   const downloadedIds = new Set<string>();
   if (ids.length > 0) {
-    const adminClient = createSupabaseClient(supabaseUrl, supabaseServiceRoleKey);
     const { data: downloadsData } = await adminClient
       .from("resource_downloads")
       .select("resource_id")
@@ -198,6 +222,18 @@ export async function GET(req: Request) {
       .in("resource_id", ids);
     (downloadsData ?? []).forEach((d: { resource_id: string }) => {
       downloadedIds.add(d.resource_id);
+    });
+  }
+
+  const favoritedIds = new Set<string>();
+  if (ids.length > 0) {
+    const { data: favoritesData } = await adminClient
+      .from("resource_favorites")
+      .select("resource_id")
+      .eq("profile_id", currentUserId)
+      .in("resource_id", ids);
+    (favoritesData ?? []).forEach((d: { resource_id: string }) => {
+      favoritedIds.add(d.resource_id);
     });
   }
 
@@ -226,6 +262,7 @@ export async function GET(req: Request) {
       my_vote: myVote,
       download_cost: row.download_cost ?? 0,
       downloaded: downloadedIds.has(row.id),
+      favorited: favoritedIds.has(row.id),
       previewUrl,
       previewIsPdf,
     };
