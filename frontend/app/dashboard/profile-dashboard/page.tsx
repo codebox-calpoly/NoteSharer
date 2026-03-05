@@ -516,7 +516,9 @@ export default function Page() {
                 <ThemeToggle />
               </div>
               <p className="profile-page__appearance-hint">
+                <span suppressHydrationWarning>
                 {theme === "dark" ? "Dark mode" : "Light mode"}
+                </span>
               </p>
             </div>
           </aside>

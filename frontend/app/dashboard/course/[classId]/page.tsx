@@ -690,11 +690,14 @@ function CourseDetailPage() {
     setIsReportOpen(true);
   };
 
-  const handleToggleStar = useCallback(async () => {
-    if (!selectedNote || !accessToken || favoriteSavingId === selectedNote.id) return;
-    const noteId = selectedNote.id;
-    const prevFavorited = Boolean(selectedNote.favorited);
-    const nextFavorited = !Boolean(selectedNote.favorited);
+  const handleToggleStar = useCallback(async (noteId: string) => {
+    if (!accessToken || favoriteSavingId === noteId) return;
+    const targetNote =
+      notes.find((note) => note.id === noteId) ??
+      (selectedNote?.id === noteId ? selectedNote : null);
+    if (!targetNote) return;
+    const prevFavorited = Boolean(targetNote.favorited);
+    const nextFavorited = !Boolean(targetNote.favorited);
 
     // Optimistic UI: flip star immediately for snappy feedback.
     setNotes((prev) =>
@@ -737,7 +740,7 @@ function CourseDetailPage() {
     } finally {
       setFavoriteSavingId(null);
     }
-  }, [selectedNote, accessToken, favoriteSavingId, refreshToken]);
+  }, [notes, selectedNote, accessToken, favoriteSavingId, refreshToken]);
 
   const handleCloseReport = () => {
     setIsReportOpen(false);
@@ -983,13 +986,35 @@ function CourseDetailPage() {
 
           <div className="course-detail-note-grid">
             {filteredNotes.map((note) => (
-              <button
+              <div
                 key={note.id}
-                type="button"
                 className="course-detail-note-card"
                 onClick={() => handleOpenNoteModal(note)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(event) => {
+                  if (event.key !== "Enter" && event.key !== " ") return;
+                  event.preventDefault();
+                  handleOpenNoteModal(note);
+                }}
               >
-                <h3 className="course-detail-note-title">{note.title}</h3>
+                <div className="course-detail-note-header">
+                  <h3 className="course-detail-note-title">{note.title}</h3>
+                  <button
+                    type="button"
+                    className={`course-detail-note-star ${note.favorited ? "is-active" : ""}`}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      void handleToggleStar(note.id);
+                    }}
+                    aria-pressed={note.favorited}
+                    disabled={favoriteSavingId === note.id || !accessToken}
+                    title={note.favorited ? "Remove star" : "Star note"}
+                    aria-label={note.favorited ? "Unstar note" : "Star note"}
+                  >
+                    {note.favorited ? "★" : "☆"}
+                  </button>
+                </div>
                 <p className="course-detail-note-by">
                   by {note.profile_display_name ?? "Anonymous"}
                 </p>
@@ -1006,7 +1031,7 @@ function CourseDetailPage() {
                     {note.downloaded ? "🔓" : "🔒"} {note.downloaded ? "Owned" : `−${note.download_cost} credits`}
                   </span>
                 </div>
-              </button>
+              </div>
             ))}
           </div>
 
@@ -1295,7 +1320,9 @@ function CourseDetailPage() {
                 <button
                   type="button"
                   className={`note-modal-star-btn ${selectedNoteIsStarred ? "is-active" : ""}`}
-                  onClick={handleToggleStar}
+                  onClick={() => {
+                    void handleToggleStar(selectedNote.id);
+                  }}
                   aria-pressed={selectedNoteIsStarred}
                   disabled={selectedNoteFavoriteSaving}
                   title={selectedNoteIsStarred ? "Remove star" : "Star note"}

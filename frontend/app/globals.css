@@ -399,10 +399,44 @@ select {
   border-color: rgba(250, 204, 21, 0.72);
 }
 
+.theme-toggle-icon-dark {
+  display: none;
+}
+
+[data-theme="dark"] .theme-toggle-icon-light {
+  display: none;
+}
+
+[data-theme="dark"] .theme-toggle-icon-dark {
+  display: block;
+}
+
 [data-theme="dark"] .course-detail-note-title,
 [data-theme="dark"] .course-detail-note-by,
 [data-theme="dark"] .profile-page__note-card {
   color: #e5e5e5 !important;
+}
+
+[data-theme="dark"] .course-detail-note-star {
+  background: #1f2937;
+  border-color: rgba(250, 204, 21, 0.45);
+  color: #facc15;
+}
+
+[data-theme="dark"] .course-detail-note-star:hover:not(:disabled) {
+  background: rgba(250, 204, 21, 0.18);
+  border-color: rgba(250, 204, 21, 0.72);
+  color: #fef08a;
+}
+
+[data-theme="dark"] .course-detail-note-star.is-active {
+  background: rgba(250, 204, 21, 0.24);
+  border-color: rgba(250, 204, 21, 0.72);
+  color: #fef08a;
+}
+
+[data-theme="dark"] .course-detail-note-star:disabled {
+  opacity: 0.55;
 }
 
 /* Landing / poly in dark */
