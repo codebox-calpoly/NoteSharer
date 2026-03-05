@@ -392,10 +392,21 @@ export default function UploadPage() {
   const matchingClasses = useMemo(() => {
     const q = classNumberInput.trim().toUpperCase().replace(/\s+/g, " ");
     if (!q) return [];
-    return displayClasses.filter((c) => {
+    const filtered = displayClasses.filter((c) => {
       const code = (c.code ?? "").trim().toUpperCase();
       return code.includes(q) || code.startsWith(q);
     });
+    // Deduplicate by course code (e.g. AERO 2200) so we show one option per course, not per term.
+    const byCode = new Map<string, ClassOption>();
+    for (const c of filtered) {
+      const code = (c.code ?? c.name ?? "").trim().toUpperCase().replace(/\s+/g, " ");
+      if (!code) continue;
+      const existing = byCode.get(code);
+      if (!existing || (c.note_count ?? 0) > (existing.note_count ?? 0)) {
+        byCode.set(code, c);
+      }
+    }
+    return Array.from(byCode.values());
   }, [displayClasses, classNumberInput]);
 
   const matchClassFromInput = useCallback((): string | null => {
@@ -422,14 +433,25 @@ export default function UploadPage() {
       setClassNotFoundError("No class found for that number. Check the code or request a new course.");
       return null;
     }
-    if (matches.length > 1) {
+    // Deduplicate by course code (same course in multiple terms = one choice); pick the one with most notes.
+    const byCode = new Map<string, ClassOption>();
+    for (const c of matches) {
+      const code = (c.code ?? c.name ?? "").trim().toUpperCase().replace(/\s+/g, " ");
+      if (!code) continue;
+      const existing = byCode.get(code);
+      if (!existing || (c.note_count ?? 0) > (existing.note_count ?? 0)) {
+        byCode.set(code, c);
+      }
+    }
+    const uniqueMatches = Array.from(byCode.values());
+    if (uniqueMatches.length > 1) {
       setClassId("");
       setClassNotFoundError("Multiple classes match — enter full code (e.g. CSC 101).");
       return null;
     }
-    setClassId(matches[0].id);
+    setClassId(uniqueMatches[0].id);
     setClassNotFoundError(null);
-    return matches[0].id;
+    return uniqueMatches[0].id;
   }, [classNumberInput, displayClasses, classesLoading]);
 
   useEffect(() => {
