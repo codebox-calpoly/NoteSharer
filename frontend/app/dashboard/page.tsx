@@ -4,6 +4,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { getSessionWithRecovery, supabase } from "@/lib/supabaseClient";
+import {
+  filterAndSortCoursesBySearchOrder,
+  normalizeCourseSearchQuery,
+  sortCoursesBySearchOrder,
+} from "@/lib/course-search";
 import { CALPOLY_DEPARTMENT_CODES } from "./calpoly-catalog";
 import { getCourseSubline } from "./course-name-utils";
 import { DesignNav } from "@/app/components/DesignNav";
@@ -157,7 +162,7 @@ export default function DashboardPage() {
 
   const fetchCoursesBySearch = useCallback(
     async (token: string, search: string): Promise<{ ok: true; classes: CourseOption[] } | { ok: false; error: string }> => {
-      const normalized = search.trim().toUpperCase().replace(/\s+/g, " ");
+      const normalized = normalizeCourseSearchQuery(search);
       if (!normalized) return { ok: true, classes: [] };
       const params = new URLSearchParams();
       params.set("search", normalized);
@@ -259,7 +264,7 @@ export default function DashboardPage() {
     clearSearchDebounce();
     searchDebounceRef.current = window.setTimeout(() => {
       searchDebounceRef.current = null;
-      const normalized = q.toUpperCase().replace(/\s+/g, " ");
+      const normalized = normalizeCourseSearchQuery(q);
       if (!normalized) {
         setSearchResults(null);
         setSearchLoading(false);
@@ -508,28 +513,23 @@ export default function DashboardPage() {
 
   /** Courses from DB, filtered by department and search. One card per unique course code (deduplicated; note_count summed across terms). */
   const allDisplayCourses = useMemo((): CourseOption[] => {
-    const q = browseSearch.trim().toLowerCase();
+    const normalizedQuery = normalizeCourseSearchQuery(browseSearch);
     let list: CourseOption[];
     if (isSearchMode && searchResults != null) {
-      list = q
-        ? searchResults.filter((c) => (c.code ?? "").toLowerCase().startsWith(q))
-        : searchResults;
+      list = normalizedQuery
+        ? filterAndSortCoursesBySearchOrder(searchResults, normalizedQuery)
+        : sortCoursesBySearchOrder(searchResults, normalizedQuery);
     } else {
       list = [...courses];
       if (selectedDepartment) {
         list = list.filter((c) => c.department === selectedDepartment);
       }
-      if (q) {
-        list = list.filter((c) => (c.code ?? "").toLowerCase().startsWith(q));
-      }
+      list = normalizedQuery
+        ? filterAndSortCoursesBySearchOrder(list, normalizedQuery)
+        : sortCoursesBySearchOrder(list, normalizedQuery);
     }
-    const sorted = list.sort((a, b) => {
-      const codeA = (a.code ?? a.name).toLowerCase();
-      const codeB = (b.code ?? b.name).toLowerCase();
-      return codeA.localeCompare(codeB);
-    });
     const seen = new Map<string, CourseOption>();
-    for (const c of sorted) {
+    for (const c of list) {
       const key = c.code ?? `${c.department ?? ""} ${c.id}`.trim();
       const existing = seen.get(key);
       if (existing) {
@@ -705,7 +705,7 @@ export default function DashboardPage() {
               <input
                 type="search"
                 className="browse-main-search"
-                placeholder="Search by code (e.g. C, CSC, MATH)"
+                placeholder="Search by code or title (e.g. CSC, data structures)"
                 value={browseSearch}
                 onChange={(e) => setBrowseSearch(e.target.value)}
                 aria-label="Search courses"

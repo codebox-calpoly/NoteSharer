@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { createClient } from "@/utils/supabaseServerClient";
+import { normalizeCourseSearchQuery } from "@/lib/course-search";
+import { rankAndLimitCourseRows } from "./search-helpers";
 
 type CourseRow = {
   id: string;
@@ -24,6 +26,7 @@ type ClassResponse = {
 const PAGE_SIZE = 1000;
 const RESOURCE_PAGE_SIZE = 1000;
 const RPC_BATCH_SIZE = 500;
+const TITLE_SEARCH_CANDIDATE_LIMIT = 2000;
 
 type RpcRow = { course_id: string; note_count: number };
 
@@ -144,7 +147,7 @@ export async function GET(request: Request) {
   const departmentParam = departmentParamRaw ? departmentParamRaw.toUpperCase() : null;
   const searchParamRaw = searchParams.get("search")?.trim() || searchParams.get("q")?.trim() || null;
   const searchParam = searchParamRaw
-    ? searchParamRaw.toUpperCase().replace(/\s+/g, " ").slice(0, 80)
+    ? normalizeCourseSearchQuery(searchParamRaw).slice(0, 80)
     : null;
   const paginated = limitParam != null && limitParam !== "";
   const limit = paginated ? Math.min(Math.max(1, parseInt(limitParam, 10) || PAGE_SIZE), 1000) : PAGE_SIZE;
@@ -182,30 +185,45 @@ export async function GET(request: Request) {
   if (searchParam && searchParam.length >= 1) {
     const hasSpace = searchParam.includes(" ");
     const deptPart = hasSpace ? searchParam.split(" ")[0] ?? "" : searchParam;
-    let query = supabase
+    let codeQuery = supabase
       .from("courses")
       .select("id, title, department, course_number, term, year")
       .order("department", { ascending: true })
       .order("course_number", { ascending: true })
       .limit(hasSpace ? 2000 : searchLimit);
     if (hasSpace && deptPart.length > 0) {
-      query = query.eq("department", deptPart);
+      codeQuery = codeQuery.eq("department", deptPart);
     } else {
-      query = query.ilike("department", `${deptPart}%`);
+      codeQuery = codeQuery.ilike("department", `${deptPart}%`);
     }
-    const { data: searchRows, error: searchError } = await query;
-    if (searchError) {
-      return NextResponse.json({ error: searchError.message }, { status: 500 });
+
+    const [codeResult, titleResult] = await Promise.all([
+      codeQuery,
+      supabase
+        .from("courses")
+        .select("id, title, department, course_number, term, year")
+        .order("title", { ascending: true })
+        .ilike("title", `%${searchParam}%`)
+        .limit(TITLE_SEARCH_CANDIDATE_LIMIT),
+    ]);
+
+    if (codeResult.error) {
+      return NextResponse.json({ error: codeResult.error.message }, { status: 500 });
     }
-    let rows = (searchRows ?? []) as CourseRow[];
-    if (hasSpace) {
-      const codePrefix = searchParam;
-      rows = rows.filter((r) => {
-        const code = `${r.department ?? ""} ${(r.course_number ?? "").toString().trim()}`.trim();
-        return code.startsWith(codePrefix) || code.replace(/\s+/g, " ").startsWith(codePrefix);
-      });
-      rows = rows.slice(0, searchLimit);
+    if (titleResult.error) {
+      return NextResponse.json({ error: titleResult.error.message }, { status: 500 });
     }
+
+    const deduped = new Map<string, CourseRow>();
+    ((codeResult.data ?? []) as CourseRow[]).forEach((row) => {
+      deduped.set(row.id, row);
+    });
+    ((titleResult.data ?? []) as CourseRow[]).forEach((row) => {
+      deduped.set(row.id, row);
+    });
+
+    const rows = rankAndLimitCourseRows(Array.from(deduped.values()), searchParam, searchLimit);
+
     const courseIds = rows.map((c) => c.id);
     let countMap: Map<string, number>;
     try {
