@@ -55,8 +55,11 @@ export default function Page() {
   const [activeTab, setActiveTab] = useState<"uploads" | "downloads" | "favorites">("uploads");
   const [uploads, setUploads] = useState<ProfileNote[]>([]);
   const [downloads, setDownloads] = useState<ProfileNote[]>([]);
+  const [favorites, setFavorites] = useState<ProfileNote[]>([]);
   const [loadingUploads, setLoadingUploads] = useState(false);
   const [loadingDownloads, setLoadingDownloads] = useState(false);
+  const [loadingFavorites, setLoadingFavorites] = useState(false);
+  const [favoritesLoaded, setFavoritesLoaded] = useState(false);
   const [notesError, setNotesError] = useState<string | null>(null);
   const [profileStats, setProfileStats] = useState<ProfileStats | null>(null);
   const [leaderboardRank, setLeaderboardRank] = useState<number | null>(null);
@@ -183,6 +186,31 @@ export default function Page() {
     }
   }, [accessToken]);
 
+  const fetchFavorites = useCallback(async () => {
+    if (!accessToken) return;
+    setLoadingFavorites(true);
+    setNotesError(null);
+    try {
+      const res = await fetch("/api/notes?favorited=1&page_size=50", {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      if (!res.ok) {
+        const payload = (await res.json().catch(() => ({}))) as { error?: string };
+        setNotesError(payload.error ?? "Failed to load favorites");
+        setFavorites([]);
+        return;
+      }
+      const data = (await res.json()) as { notes?: ProfileNote[] };
+      setFavorites(data.notes ?? []);
+      setFavoritesLoaded(true);
+    } catch {
+      setNotesError("Failed to load favorites");
+      setFavorites([]);
+    } finally {
+      setLoadingFavorites(false);
+    }
+  }, [accessToken]);
+
   useEffect(() => {
     if (!tokenLoaded || !accessToken) return;
     void fetchUploads();
@@ -192,6 +220,11 @@ export default function Page() {
     if (!tokenLoaded || !accessToken) return;
     void fetchDownloads();
   }, [tokenLoaded, accessToken, fetchDownloads]);
+
+  useEffect(() => {
+    if (!tokenLoaded || !accessToken || activeTab !== "favorites" || favoritesLoaded) return;
+    void fetchFavorites();
+  }, [tokenLoaded, accessToken, activeTab, favoritesLoaded, fetchFavorites]);
 
   const fetchProfileStats = useCallback(async () => {
     if (!accessToken) return;
@@ -394,7 +427,40 @@ export default function Page() {
                   </>
                 )}
                 {activeTab === "favorites" && (
-                  <p className="profile-page__empty">No favorites yet. Favorites coming soon.</p>
+                  <>
+                    {loadingFavorites && <p className="profile-page__loading">Loading your favorites…</p>}
+                    {!loadingFavorites && favorites.length === 0 && (
+                      <p className="profile-page__empty">No favorites yet. Star notes to save them here.</p>
+                    )}
+                    {!loadingFavorites && favorites.length > 0 && (
+                      <ul className="profile-page__note-cards" aria-label="My favorites">
+                        {favorites.map((note) => (
+                          <li key={note.id}>
+                            <Link
+                              href={
+                                note.class_id
+                                  ? `/dashboard/course/${note.class_id}?open=${note.id}`
+                                  : "/dashboard"
+                              }
+                              className="course-detail-note-card profile-page__note-card"
+                            >
+                              <h3 className="course-detail-note-title">{note.title}</h3>
+                              <p className="course-detail-note-by">
+                                by {note.profile_display_name ?? "Anonymous"}
+                              </p>
+                              <div className="course-detail-note-meta">
+                                <div className="course-detail-note-votes">
+                                  <span className="course-detail-note-vote-up">↑ {note.upvote_count}</span>
+                                  <span className="course-detail-note-vote-down">↓ {note.downvote_count}</span>
+                                </div>
+                                <span className="course-detail-note-credits">★ Favorite</span>
+                              </div>
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </>
                 )}
               </div>
             </section>
@@ -450,7 +516,9 @@ export default function Page() {
                 <ThemeToggle />
               </div>
               <p className="profile-page__appearance-hint">
+                <span suppressHydrationWarning>
                 {theme === "dark" ? "Dark mode" : "Light mode"}
+                </span>
               </p>
             </div>
           </aside>
