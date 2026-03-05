@@ -80,6 +80,7 @@ export async function GET(req: Request) {
   const page = Number(searchParams.get("page") ?? "1");
   const pageSize = Number(searchParams.get("page_size") ?? "16");
   const sort = searchParams.get("sort") === "oldest" ? "oldest" : "newest";
+  const noteId = searchParams.get("id");
 
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
@@ -164,6 +165,9 @@ export async function GET(req: Request) {
 
   if (classId && classId !== "all") {
     query = query.eq("course_id", classId);
+  }
+  if (noteId) {
+    query = query.eq("id", noteId);
   }
 
   // Over-fetch one row to compute hasMore without expensive exact counts.
