@@ -344,8 +344,10 @@ function CourseDetailPage() {
   }, [notes, downloadedFilter, sortOrder]);
 
   // Open modal for ?open=noteId (e.g. from profile "My downloads" link).
+  const [fetchingOpenNote, setFetchingOpenNote] = useState(false);
+
   useEffect(() => {
-    if (!openNoteId || notes.length === 0) return;
+    if (!openNoteId || !accessToken || !tokenLoaded) return;
     const note = notes.find((n) => n.id === openNoteId);
     if (note) {
       if (note.downloaded) setDownloadedFilter("downloaded");
@@ -357,8 +359,43 @@ function CourseDetailPage() {
         url.searchParams.delete("open");
         window.history.replaceState({}, "", url.pathname + url.search);
       }
+    } else if (!fetchingOpenNote && !notes.find((n) => n.id === openNoteId)) {
+      setFetchingOpenNote(true);
+      (async () => {
+        try {
+          let res = await fetch(`/api/notes?id=${openNoteId}`, {
+            headers: { Authorization: `Bearer ${accessToken}` },
+          });
+          if (res.status === 401) {
+            const newToken = await refreshToken();
+            if (newToken) {
+              res = await fetch(`/api/notes?id=${openNoteId}`, {
+                headers: { Authorization: `Bearer ${newToken}` },
+              });
+            }
+          }
+          if (res.ok) {
+            const data = await res.json() as { notes?: Note[] };
+            const fetchedList = data.notes ?? [];
+            if (fetchedList.length > 0) {
+              setNotes(prev => {
+                if (prev.find((n) => n.id === fetchedList[0].id)) return prev;
+                return [fetchedList[0], ...prev];
+              });
+            }
+          }
+        } catch {
+          // ignore
+        } finally {
+          if (typeof window !== "undefined") {
+            const url = new URL(window.location.href);
+            url.searchParams.delete("open");
+            window.history.replaceState({}, "", url.pathname + url.search);
+          }
+        }
+      })();
     }
-  }, [openNoteId, notes]);
+  }, [openNoteId, notes, accessToken, tokenLoaded, fetchingOpenNote, refreshToken]);
 
   const handleDownload = useCallback(
     async (noteId: string) => {
