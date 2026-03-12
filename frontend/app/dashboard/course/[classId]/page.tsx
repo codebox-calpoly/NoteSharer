@@ -64,13 +64,6 @@ const RESOURCE_TYPE_FILTER_OPTIONS: { value: string | null; label: string }[] = 
 
 type ReportStatus = "idle" | "submitting" | "success" | "error";
 
-function termYearLabel(term: string | null, year: number | null): string {
-  if (term && year != null) return `${term} ${year}`;
-  if (term) return term;
-  if (year != null) return String(year);
-  return "—";
-}
-
 function CourseDetailPage() {
   const params = useParams();
   const searchParams = useSearchParams();
@@ -880,11 +873,6 @@ function CourseDetailPage() {
         <>
           <header className="course-detail-header">
             <div className="course-detail-header-info">
-              <div className="course-detail-header-top">
-                <span className="course-detail-term-badge">
-                  {course ? termYearLabel(course.term, course.year) : "Loading course…"}
-                </span>
-              </div>
               <h1 className="course-detail-title">{course ? (course.code ?? course.name) : "Loading course…"}</h1>
               {(() => {
                 if (!course) return null;
