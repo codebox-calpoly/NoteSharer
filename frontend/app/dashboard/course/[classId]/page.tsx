@@ -15,8 +15,6 @@ import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import "react-pdf/dist/esm/Page/TextLayer.css";
 import { getSessionWithRecovery, supabase } from "@/lib/supabaseClient";
-import { DesignNav } from "@/app/components/DesignNav";
-import ProfileIcons from "../../profile-icon";
 import { getCourseSubline } from "../../course-name-utils";
 import "../../dashboard.css";
 import "../../browse.css";
@@ -62,7 +60,32 @@ const RESOURCE_TYPE_FILTER_OPTIONS: { value: string | null; label: string }[] = 
   { value: "class_overview", label: "Class Overview" },
 ];
 
+const RESOURCE_TYPE_LABELS: Record<string, string> = {
+  lecture_notes: "Lecture Notes",
+  study_guide: "Study Guide",
+  class_overview: "Class Overview",
+};
+
 type ReportStatus = "idle" | "submitting" | "success" | "error";
+
+function formatResourceType(value: string | null) {
+  if (!value) return "Note";
+  return RESOURCE_TYPE_LABELS[value] ?? "Note";
+}
+
+function formatUploadDate(value: string) {
+  return new Date(value).toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function getScoreToneClass(score: number) {
+  if (score > 0) return "course-detail-note-score--positive";
+  if (score < 0) return "course-detail-note-score--negative";
+  return "course-detail-note-score--neutral";
+}
 
 function CourseDetailPage() {
   const params = useParams();
@@ -78,9 +101,7 @@ function CourseDetailPage() {
   const [loadingNotes, setLoadingNotes] = useState(false);
   const [notesError, setNotesError] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
-  const [downloadedFilter, setDownloadedFilter] = useState<
-    "downloaded" | "not_downloaded"
-  >("not_downloaded");
+  const [ownedOnly, setOwnedOnly] = useState(false);
   const [resourceTypeFilter, setResourceTypeFilter] = useState<string | null>(
     null,
   );
@@ -89,8 +110,6 @@ function CourseDetailPage() {
   const noteSearchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [tokenLoaded, setTokenLoaded] = useState(false);
-  const [credits, setCredits] = useState<number | null>(null);
-  const [freeDownloads, setFreeDownloads] = useState<number | null>(null);
   const [downloadError, setDownloadError] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
@@ -179,58 +198,6 @@ function CourseDetailPage() {
       active = false;
     };
   }, [accessToken, tokenLoaded, classId, refreshToken]);
-
-  const fetchCredits = useCallback(
-    async (token: string | null) => {
-      if (!token) return null;
-      try {
-        let res = await fetch("/api/credits", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (res.status === 401) {
-          const newToken = await refreshToken();
-          if (newToken)
-            res = await fetch("/api/credits", {
-              headers: { Authorization: `Bearer ${newToken}` },
-            });
-        }
-        if (!res.ok) return null;
-        const data = (await res.json()) as {
-          credits?: number;
-          freeDownloads?: number;
-        };
-        return {
-          credits: Number.isFinite(data?.credits) ? Number(data.credits) : 0,
-          freeDownloads: Number.isFinite(data?.freeDownloads)
-            ? Number(data.freeDownloads)
-            : 0,
-        };
-      } catch {
-        return null;
-      }
-    },
-    [refreshToken],
-  );
-
-  useEffect(() => {
-    if (!tokenLoaded) return;
-    let active = true;
-    const load = async () => {
-      const payload = await fetchCredits(accessToken);
-      if (!active) return;
-      if (!payload) {
-        setCredits(null);
-        setFreeDownloads(null);
-        return;
-      }
-      setCredits(payload.credits);
-      setFreeDownloads(payload.freeDownloads);
-    };
-    load();
-    return () => {
-      active = false;
-    };
-  }, [accessToken, tokenLoaded, fetchCredits]);
 
   useEffect(() => {
     if (!tokenLoaded || !classId) return;
@@ -326,15 +293,13 @@ function CourseDetailPage() {
   }, [noteSearchInput]);
 
   const filteredNotes = useMemo(() => {
-    const list = notes.filter((n) =>
-      downloadedFilter === "downloaded" ? n.downloaded : !n.downloaded,
-    );
+    const list = notes.filter((n) => (ownedOnly ? n.downloaded : true));
     return [...list].sort((a, b) => {
       const ta = new Date(a.created_at).getTime();
       const tb = new Date(b.created_at).getTime();
       return sortOrder === "newest" ? tb - ta : ta - tb;
     });
-  }, [notes, downloadedFilter, sortOrder]);
+  }, [notes, ownedOnly, sortOrder]);
 
   // Open modal for ?open=noteId (e.g. from profile "My downloads" link).
   const [fetchingOpenNote, setFetchingOpenNote] = useState(false);
@@ -343,7 +308,7 @@ function CourseDetailPage() {
     if (!openNoteId || !accessToken || !tokenLoaded) return;
     const note = notes.find((n) => n.id === openNoteId);
     if (note) {
-      if (note.downloaded) setDownloadedFilter("downloaded");
+      if (note.downloaded) setOwnedOnly(true);
       setSelectedNote(note);
       setIsNoteModalOpen(true);
       setPdfViewError(null);
@@ -438,11 +403,6 @@ function CourseDetailPage() {
         link.click();
         link.remove();
         window.URL.revokeObjectURL(url);
-        const payload = await fetchCredits(accessToken);
-        if (payload) {
-          setCredits(payload.credits);
-          setFreeDownloads(payload.freeDownloads);
-        }
         setNotes((prev) => {
           const updated = prev.map((n) =>
             n.id === noteId ? { ...n, downloaded: true } : n,
@@ -464,12 +424,7 @@ function CourseDetailPage() {
         setDownloadingId(null);
       }
     },
-    [
-      accessToken,
-      downloadingId,
-      refreshToken,
-      fetchCredits,
-    ],
+    [accessToken, downloadingId, refreshToken],
   );
 
   const handleVote = useCallback(
@@ -549,11 +504,6 @@ function CourseDetailPage() {
             score: (prev.score ?? 0) + scoreDelta,
           };
         });
-        const payload = await fetchCredits(accessToken);
-        if (payload) {
-          setCredits(payload.credits);
-          setFreeDownloads(payload.freeDownloads);
-        }
         setNotesVersion((v) => v + 1);
       } catch {
         setVoteError("Failed to vote. Try again.");
@@ -561,7 +511,7 @@ function CourseDetailPage() {
         setVotingId(null);
       }
     },
-    [accessToken, votingId, refreshToken, fetchCredits],
+    [accessToken, votingId, refreshToken],
   );
 
   const handleOpenNoteModal = (note: Note) => {
@@ -647,7 +597,7 @@ function CourseDetailPage() {
     return () => {
       cancelled = true;
     };
-  }, [isNoteModalOpen, selectedNote?.id, selectedNote?.downloaded, accessToken, refreshToken]);
+  }, [isNoteModalOpen, selectedNote, selectedNote?.id, selectedNote?.downloaded, accessToken, refreshToken]);
 
   // For non-downloaded notes: fetch preview with auth so it actually loads (img/iframe don't send cookies).
   useEffect(() => {
@@ -705,6 +655,7 @@ function CourseDetailPage() {
     };
   }, [
     isNoteModalOpen,
+    selectedNote,
     selectedNote?.id,
     selectedNote?.downloaded,
     selectedNote?.previewUrl,
@@ -834,18 +785,6 @@ function CourseDetailPage() {
   if (coursesError && !course) {
     return (
       <div className="course-detail-page">
-        <DesignNav
-          active="browse"
-          rightSlot={
-            <>
-              <span className="browse-credits-pill">Credits: {credits ?? "—"}</span>
-              <span className="browse-credits-pill">
-                Free downloads: {freeDownloads ?? "—"}
-              </span>
-              <ProfileIcons />
-            </>
-          }
-        />
         <div className="course-detail-body">
           <p className="course-detail-error">{coursesError}</p>
           <Link href="/dashboard">Back to Browse</Link>
@@ -856,19 +795,6 @@ function CourseDetailPage() {
 
   return (
     <div className="course-detail-page">
-      <DesignNav
-        active="browse"
-        rightSlot={
-          <>
-            <span className="browse-credits-pill">Credits: {credits ?? "—"}</span>
-            <span className="browse-credits-pill">
-              Free downloads: {freeDownloads ?? "—"}
-            </span>
-            <ProfileIcons />
-          </>
-        }
-      />
-
       <div className="course-detail-body">
         <>
           <header className="course-detail-header">
@@ -898,7 +824,7 @@ function CourseDetailPage() {
               <input
                 id="note-search"
                 type="search"
-                placeholder="Keywords in title, description, or content…"
+                placeholder="Keywords in title or description…"
                 value={noteSearchInput}
                 onChange={(e) => setNoteSearchInput(e.target.value)}
                 onKeyDown={(e) => {
@@ -931,25 +857,10 @@ function CourseDetailPage() {
               <span className="course-detail-filter-label">Filter:</span>
               <button
                 type="button"
-                className={`course-detail-filter-btn ${downloadedFilter === "downloaded" ? "active" : ""}`}
-                onClick={() => {
-                  setDownloadedFilter("downloaded");
-                  setPage(1);
-                  setHasMore(false);
-                }}
+                className={`course-detail-filter-btn ${ownedOnly ? "active" : ""}`}
+                onClick={() => setOwnedOnly((value) => !value)}
               >
-                Downloaded notes
-              </button>
-              <button
-                type="button"
-                className={`course-detail-filter-btn ${downloadedFilter === "not_downloaded" ? "active" : ""}`}
-                onClick={() => {
-                  setDownloadedFilter("not_downloaded");
-                  setPage(1);
-                  setHasMore(false);
-                }}
-              >
-                New notes
+                {ownedOnly ? "Owned only" : "Owned"}
               </button>
             </div>
             <div className="course-detail-filter-group">
@@ -1034,26 +945,32 @@ function CourseDetailPage() {
                     }}
                     aria-pressed={note.favorited}
                     disabled={favoriteSavingId === note.id || !accessToken}
-                    title={note.favorited ? "Remove star" : "Star note"}
-                    aria-label={note.favorited ? "Unstar note" : "Star note"}
+                    title={note.favorited ? "Remove bookmark" : "Save bookmark"}
+                    aria-label={note.favorited ? "Remove bookmark" : "Save bookmark"}
                   >
-                    {note.favorited ? "★" : "☆"}
+                    <svg viewBox="0 0 24 24" aria-hidden="true" className="course-detail-note-bookmark-icon">
+                      <path
+                        d="M7 4.75A1.75 1.75 0 0 1 8.75 3h6.5A1.75 1.75 0 0 1 17 4.75V21l-5-3.15L7 21V4.75Z"
+                        fill={note.favorited ? "currentColor" : "none"}
+                        stroke="currentColor"
+                        strokeWidth="1.7"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
                   </button>
                 </div>
-                <p className="course-detail-note-by">
-                  by {note.profile_display_name ?? "Anonymous"}
-                </p>
+                <div className="course-detail-note-secondary">
+                  <span className="course-detail-note-type">{formatResourceType(note.resource_type)}</span>
+                  <span className="course-detail-note-date">{formatUploadDate(note.created_at)}</span>
+                </div>
                 <div className="course-detail-note-meta">
-                  <div className="course-detail-note-votes">
-                    <span className="course-detail-note-vote-up">
-                      ↑ {note.upvote_count ?? 0}
-                    </span>
-                    <span className="course-detail-note-vote-down">
-                      ↓ {note.downvote_count ?? 0}
-                    </span>
-                  </div>
+                  <span
+                    className={`course-detail-note-score ${getScoreToneClass(note.score ?? 0)}`}
+                  >
+                    Score: {note.score ?? 0}
+                  </span>
                   <span className="course-detail-note-credits">
-                    {note.downloaded ? "🔓" : "🔒"} {note.downloaded ? "Owned" : `−${note.download_cost} credits`}
+                    {note.downloaded ? "Owned" : `Download: ${note.download_cost} credits`}
                   </span>
                 </div>
               </div>
@@ -1250,34 +1167,17 @@ function CourseDetailPage() {
                   <strong>Download:</strong>{" "}
                   {selectedNote.downloaded
                     ? "You have this (re-download free)"
-                    : `−${selectedNote.download_cost} credits`}
+                    : `Download: ${selectedNote.download_cost} credits`}
                 </p>
-                <p className="note-modal-score-hint" title="Net score">
-                  Score: {selectedNote.score ?? 0}{" "}
-                  <span className="note-modal-score-desc">(up − down)</span>
+                <p
+                  className={`note-modal-score-hint ${getScoreToneClass(selectedNote.score ?? 0)}`}
+                  title="Net score"
+                >
+                  Score: {selectedNote.score ?? 0}
                 </p>
-                <div className="note-modal-vote-row note-modal-vote-row-static">
-                  <span
-                    className={`note-modal-vote-arrow note-modal-vote-up note-modal-vote-static ${selectedNote.my_vote === 1 ? "note-modal-vote-active" : ""}`}
-                    title="Upvotes"
-                    aria-hidden
-                  >
-                    <span className="note-modal-vote-arrow-icon">↑</span>
-                    <span className="note-modal-vote-count">
-                      {selectedNote.upvote_count ?? 0}
-                    </span>
-                  </span>
-                  <span
-                    className={`note-modal-vote-arrow note-modal-vote-down note-modal-vote-static ${selectedNote.my_vote === -1 ? "note-modal-vote-active" : ""}`}
-                    title="Downvotes"
-                    aria-hidden
-                  >
-                    <span className="note-modal-vote-arrow-icon">↓</span>
-                    <span className="note-modal-vote-count">
-                      {selectedNote.downvote_count ?? 0}
-                    </span>
-                  </span>
-                </div>
+                <p>
+                  <strong>Type:</strong> {formatResourceType(selectedNote.resource_type)}
+                </p>
               </div>
             </div>
             <div className="note-modal-actions">
@@ -1289,14 +1189,14 @@ function CourseDetailPage() {
                 title={
                   selectedNote.downloaded
                     ? "Re-download (free)"
-                    : `Download (−${selectedNote.download_cost} credits)`
+                    : `Download (${selectedNote.download_cost} credits)`
                 }
               >
                 {downloadingId === selectedNote.id
                   ? "Preparing…"
                   : selectedNote.downloaded
                     ? "Download again"
-                    : `Download (−${selectedNote.download_cost} credits)`}
+                    : `Download (${selectedNote.download_cost} credits)`}
               </button>
               <div className="note-modal-actions-votes">
                 <button
@@ -1350,10 +1250,10 @@ function CourseDetailPage() {
                   }}
                   aria-pressed={selectedNoteIsStarred}
                   disabled={selectedNoteFavoriteSaving}
-                  title={selectedNoteIsStarred ? "Remove star" : "Star note"}
-                  aria-label={selectedNoteIsStarred ? "Unstar note" : "Star note"}
+                  title={selectedNoteIsStarred ? "Remove bookmark" : "Save bookmark"}
+                  aria-label={selectedNoteIsStarred ? "Remove bookmark" : "Save bookmark"}
                 >
-                  {selectedNoteIsStarred ? "★" : "☆"}
+                  {selectedNoteIsStarred ? "🔖" : "Bookmark"}
                 </button>
               </div>
             </div>

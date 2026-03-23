@@ -37,9 +37,9 @@ function AuthPageContent() {
     <p className="auth-loading">Checking your session…</p>
   ) : (
     <div className="auth-card">
-      <h1 className="auth-title">Sign in</h1>
+      <h1 className="auth-title">Sign in or register</h1>
       <p className="auth-body">
-        Enter your Cal Poly email to receive a one-time code.
+        Enter your Cal Poly email to receive a one-time code. New users will automatically create an account after verification.
       </p>
       <form
         className="auth-form"
@@ -136,6 +136,9 @@ function AuthPageContent() {
             >
               Use a different email
             </button>
+            <p className="auth-body">
+              Use this if you entered the wrong email address the first time.
+            </p>
           </>
         ) : null}
         <button

@@ -78,30 +78,165 @@
   animation: fade-up 1s var(--animation-delay, 0s) ease forwards;
 }
 
+.app-shell-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid var(--poly-border-strong);
+  background: var(--poly-warning-soft);
+  color: var(--poly-text-primary);
+  font-size: 0.95rem;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: var(--poly-shadow-soft);
+}
+
+.app-shell-profile-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: 1px solid var(--poly-border-strong);
+  background: var(--poly-sage);
+  color: #fff;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: var(--poly-shadow-soft);
+}
+
+.course-enrollment-picker {
+  display: grid;
+  gap: 10px;
+}
+
+.course-enrollment-picker__label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--poly-text-primary);
+}
+
+.course-enrollment-picker__input {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid var(--poly-border-strong);
+  background: var(--poly-surface-raised);
+  color: var(--poly-text-primary);
+}
+
+.course-enrollment-picker__hint,
+.course-enrollment-picker__empty,
+.course-enrollment-picker__status {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--poly-text-secondary);
+}
+
+.course-enrollment-picker__error {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--poly-danger);
+}
+
+.course-enrollment-picker__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.course-enrollment-picker__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--poly-sage) 28%, transparent);
+  background: var(--poly-success-soft);
+  color: var(--poly-text-primary);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.course-enrollment-picker__results {
+  display: grid;
+  gap: 8px;
+}
+
+.course-enrollment-picker__result {
+  display: grid;
+  gap: 2px;
+  text-align: left;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--poly-border);
+  background: var(--poly-surface-raised);
+  color: var(--poly-text-primary);
+}
+
+.course-enrollment-picker__result.is-selected {
+  opacity: 0.55;
+}
+
+.course-enrollment-picker__result-code {
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.course-enrollment-picker__result-name {
+  font-size: 0.88rem;
+  color: var(--poly-text-secondary);
+}
+
 :root {
  --theme-transition: 0.4s ease;
- --background: #ffffff;
- --foreground: #171717;
- /* Poly Pages – landing & sign-in only */
- --poly-primary: #BF4408;
- --poly-primary-hover: #E65103;
- --poly-accent: #F9C784;
- --poly-bg-page: #FAF9F7;
- --poly-border: rgba(122, 155, 118, 0.15);
- --poly-border-subtle: rgba(122, 155, 118, 0.075);
- --poly-sage: #6DBE8B;
- --poly-sage-soft: rgba(122, 155, 118, 0.1);
- --poly-neutral-dark: #2E2E2E;
- --poly-neutral-muted: #495565;
- --poly-radius-card: 8px;
- --poly-radius-input: 6px;
- --poly-radius-button: 24px;
+ --poly-primary: #bf4408;
+ --poly-primary-hover: #e65103;
+ --poly-accent: #f9c784;
+ --poly-sage: #6dbe8b;
+
+ --poly-page-bg: #faf7f2;
+ --poly-page-bg-accent: #f3ede4;
+ --poly-surface: rgba(255, 255, 255, 0.9);
+ --poly-surface-raised: #ffffff;
+ --poly-surface-strong: rgba(255, 255, 255, 0.98);
+ --poly-surface-muted: #f5efe7;
+ --poly-surface-overlay: rgba(22, 22, 22, 0.45);
+ --poly-text-primary: #2e2e2e;
+ --poly-text-secondary: #5b6573;
+ --poly-text-tertiary: #7a8594;
+ --poly-border: rgba(84, 96, 109, 0.12);
+ --poly-border-strong: rgba(84, 96, 109, 0.18);
+ --poly-border-subtle: rgba(84, 96, 109, 0.07);
+ --poly-sage-soft: rgba(109, 190, 139, 0.12);
+ --poly-success: #2f855a;
+ --poly-success-soft: rgba(109, 190, 139, 0.16);
+ --poly-danger: #b34b3f;
+ --poly-danger-soft: rgba(179, 75, 63, 0.12);
+ --poly-warning: #d97706;
+ --poly-warning-soft: rgba(249, 199, 132, 0.2);
+ --poly-shadow-soft: 0 10px 30px rgba(33, 43, 54, 0.08);
+ --poly-shadow-strong: 0 22px 48px rgba(33, 43, 54, 0.16);
+ --poly-focus-ring: 0 0 0 3px rgba(109, 190, 139, 0.2);
+ --poly-bg-page: var(--poly-page-bg);
+ --poly-neutral-dark: var(--poly-text-primary);
+ --poly-neutral-muted: var(--poly-text-secondary);
+ --background: var(--poly-page-bg);
+ --foreground: var(--poly-text-primary);
+ --poly-radius-card: 14px;
+ --poly-radius-input: 12px;
+ --poly-radius-button: 999px;
  --poly-space-unit: 8px;
  --poly-space-lg: 24px;
  --poly-space-xl: 32px;
  --poly-space-3xl: 48px;
  --poly-space-4xl: 64px;
- /* Landing design (Anima) */
  --variable-collection-warm-apricot: rgba(249, 199, 132, 1);
 }
 
@@ -140,15 +275,35 @@ select {
 
 /* Dark theme – applied when data-theme="dark" on <html> */
 [data-theme="dark"] {
-  --background: #0f0f0f;
-  --foreground: #e5e5e5;
-  --poly-bg-page: #1a1a1a;
-  --poly-neutral-dark: #e5e5e5;
-  --poly-neutral-muted: #a3a3a3;
-  --poly-border: rgba(255, 255, 255, 0.12);
+  --poly-page-bg: #171715;
+  --poly-page-bg-accent: #1f201d;
+  --poly-surface: rgba(33, 33, 31, 0.88);
+  --poly-surface-raised: #242422;
+  --poly-surface-strong: rgba(38, 38, 36, 0.96);
+  --poly-surface-muted: #1d1d1a;
+  --poly-surface-overlay: rgba(0, 0, 0, 0.64);
+  --poly-text-primary: #f5f2ee;
+  --poly-text-secondary: #c9d1dc;
+  --poly-text-tertiary: #9eabb8;
+  --poly-border: rgba(255, 255, 255, 0.1);
+  --poly-border-strong: rgba(255, 255, 255, 0.16);
   --poly-border-subtle: rgba(255, 255, 255, 0.06);
   --poly-sage-soft: rgba(109, 190, 139, 0.2);
-  --variable-collection-warm-apricot: rgba(249, 199, 132, 0.9);
+  --poly-success: #7fd8a1;
+  --poly-success-soft: rgba(109, 190, 139, 0.2);
+  --poly-danger: #ee9f95;
+  --poly-danger-soft: rgba(179, 75, 63, 0.22);
+  --poly-warning: #f2b562;
+  --poly-warning-soft: rgba(249, 199, 132, 0.16);
+  --poly-shadow-soft: 0 14px 34px rgba(0, 0, 0, 0.24);
+  --poly-shadow-strong: 0 24px 56px rgba(0, 0, 0, 0.36);
+  --poly-focus-ring: 0 0 0 3px rgba(109, 190, 139, 0.24);
+  --poly-bg-page: var(--poly-page-bg);
+  --poly-neutral-dark: var(--poly-text-primary);
+  --poly-neutral-muted: var(--poly-text-secondary);
+  --background: var(--poly-page-bg);
+  --foreground: var(--poly-text-primary);
+  --variable-collection-warm-apricot: rgba(249, 199, 132, 0.94);
 }
 
 [data-theme="dark"] body {
@@ -982,16 +1137,6 @@ select {
 .poly-footer-nav a:hover {
   color: var(--poly-neutral-dark);
 }
-
-
-@media (prefers-color-scheme: dark) {
- :root {
-   --background: #0a0a0a;
-   --foreground: #ededed;
- }
-}
-
-
 body {
  background: var(--background);
  color: var(--foreground);
@@ -1027,16 +1172,13 @@ body {
    width: 158px;
  }
 }
+[data-theme="dark"] .auth-button {
+ background-color: #ffffff;
+ color: #0b0b0b;
+}
 
-
-@media (prefers-color-scheme: dark) {
- .auth-button {
-   background-color: #ffffff;
-   color: #0b0b0b;
- }
-  .auth-button:hover {
-   background-color: #e5e5e5;
- }
+[data-theme="dark"] .auth-button:hover {
+ background-color: #e5e5e5;
 }
 
 .course-request-row {

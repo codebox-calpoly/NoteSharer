@@ -49,6 +49,9 @@ export default function Home() {
                 Poly Pages
               </h1>
             </div>
+            <span className="rounded-full bg-[rgba(109,190,139,0.12)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.08em] text-[var(--poly-neutral-dark)]">
+              Cal Poly SLO students
+            </span>
           </div>
 
           <nav className="hidden md:flex items-center gap-8">
@@ -80,10 +83,10 @@ export default function Home() {
             <Link
               href="/auth"
             className="hidden md:flex relative w-[95.05px] h-10 rounded-[10px] border border-solid border-black shadow-[0px_4px_4px_#00000040] cursor-pointer transition-all duration-200 hover:shadow-[0px_6px_6px_#00000040] hover:-translate-y-0.5 active:translate-y-0 active:shadow-[0px_2px_2px_#00000040] items-center justify-center bg-[var(--variable-collection-warm-apricot)]"
-            aria-label="Log In"
+              aria-label="Sign in or register"
           >
             <span className="font-semibold text-[#2c1b1b] text-base text-center tracking-[0] leading-6 whitespace-nowrap">
-              Log In
+              Sign In / Register
             </span>
           </Link>
           </div>
@@ -145,10 +148,10 @@ export default function Home() {
             <Link
               href="/auth"
               className="relative w-full h-10 rounded-[10px] border border-solid border-black shadow-[0px_4px_4px_#00000040] cursor-pointer transition-all duration-200 active:translate-y-px active:shadow-[0px_2px_2px_#00000040] mt-2 flex items-center justify-center bg-[var(--variable-collection-warm-apricot)]"
-              aria-label="Log In"
+              aria-label="Sign in or register"
             >
               <span className="font-semibold text-[#2c1b1b] text-base text-center tracking-[0] leading-6 whitespace-nowrap">
-                Log In
+                Sign In / Register
               </span>
             </Link>
           </nav>
@@ -179,9 +182,8 @@ export default function Home() {
             }`}
           >
             <p className="max-w-3xl mx-auto font-normal text-[#666666] text-base md:text-xl text-center tracking-[0] leading-relaxed md:leading-[34px] px-4">
-              A peer to peer helping platform that rewards contribution. Upload
-              your notes from class, earn credits, and unlock notes from students
-              all across campus.
+              A note-sharing platform built for Cal Poly SLO students. Upload
+              your notes, earn credits, and unlock help from students across campus.
             </p>
           </div>
 
@@ -193,10 +195,10 @@ export default function Home() {
             <Link
               href="/auth"
               className="relative w-full max-w-[200px] h-[59px] rounded-[14px] border border-solid border-[#080000] shadow-[0px_4px_4px_#00000040] cursor-pointer transition-all duration-200 hover:shadow-[0px_6px_8px_#00000050] hover:-translate-y-0.5 active:translate-y-0 active:shadow-[0px_2px_2px_#00000040] flex items-center justify-center bg-[var(--variable-collection-warm-apricot)]"
-              aria-label="Sign up for the platform"
+              aria-label="Sign in or register for the platform"
             >
               <span className="font-semibold text-black text-lg text-center tracking-[0] leading-[27px] whitespace-nowrap">
-                Sign Up
+                Get Started
               </span>
             </Link>
           </div>

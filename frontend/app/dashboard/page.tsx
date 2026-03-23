@@ -11,10 +11,8 @@ import {
 } from "@/lib/course-search";
 import { CALPOLY_DEPARTMENT_CODES } from "./calpoly-catalog";
 import { getCourseSubline } from "./course-name-utils";
-import { DesignNav } from "@/app/components/DesignNav";
 import "./dashboard.css";
 import "./browse.css";
-import ProfileIcons from "./profile-icon";
 
 type CourseOption = {
   id: string;
@@ -60,6 +58,7 @@ const emptyDepartmentRequest: DepartmentRequestForm = {
 
 export default function DashboardPage() {
   const [courses, setCourses] = useState<CourseOption[]>([]);
+  const [enrolledCourses, setEnrolledCourses] = useState<CourseOption[]>([]);
   const [selectedDepartment, setSelectedDepartment] = useState<string | null>(null);
   const [browseSearch, setBrowseSearch] = useState("");
   const [departmentFilterSearch, setDepartmentFilterSearch] = useState("");
@@ -69,8 +68,6 @@ export default function DashboardPage() {
   const [coursesLoading, setCoursesLoading] = useState(false);
   const [coursesLoadingMore, setCoursesLoadingMore] = useState(false);
   const [departments] = useState<string[]>(() => [...CALPOLY_DEPARTMENT_CODES]);
-  const [credits, setCredits] = useState<number | null>(null);
-  const [freeDownloads, setFreeDownloads] = useState<number | null>(null);
   /** Number of course cards to render (paginated for performance). */
   const [visibleCourseCount, setVisibleCourseCount] = useState(80);
   /** When no department selected, whether the API has more courses to fetch. */
@@ -79,8 +76,11 @@ export default function DashboardPage() {
   const [isVisible] = useState(true);
   /** When no filter: search-by-query results (cached and debounced). */
   const [searchResults, setSearchResults] = useState<CourseOption[] | null>(null);
+  const [searchEnrolledResults, setSearchEnrolledResults] = useState<CourseOption[] | null>(null);
   const [searchLoading, setSearchLoading] = useState(false);
-  const searchCacheRef = useRef<Map<string, CourseOption[]>>(new Map());
+  const searchCacheRef = useRef<
+    Map<string, { classes: CourseOption[]; enrolledClasses: CourseOption[] }>
+  >(new Map());
   const searchDebounceRef = useRef<number | null>(null);
 
   const [isCourseRequestOpen, setIsCourseRequestOpen] = useState(false);
@@ -134,18 +134,20 @@ export default function DashboardPage() {
       department: string | null,
       limit: number
     ): Promise<
-      | { ok: true; classes: CourseOption[]; hasMore: boolean }
+      | { ok: true; classes: CourseOption[]; enrolledClasses: CourseOption[]; hasMore: boolean }
       | { ok: false; error: string }
     > => {
       const params = new URLSearchParams();
       params.set("limit", String(limit));
       params.set("offset", String(offset));
+      params.set("include_enrolled", "1");
       if (department?.trim()) params.set("department", department.trim());
       const res = await fetch(`/api/classes?${params.toString()}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = (await res.json().catch(() => ({}))) as {
         classes?: CourseOption[];
+        enrolledClasses?: CourseOption[];
         hasMore?: boolean;
         error?: string;
       };
@@ -154,6 +156,7 @@ export default function DashboardPage() {
       return {
         ok: true,
         classes: data.classes ?? [],
+        enrolledClasses: data.enrolledClasses ?? [],
         hasMore: data.hasMore ?? false,
       };
     },
@@ -161,22 +164,31 @@ export default function DashboardPage() {
   );
 
   const fetchCoursesBySearch = useCallback(
-    async (token: string, search: string): Promise<{ ok: true; classes: CourseOption[] } | { ok: false; error: string }> => {
+    async (token: string, search: string): Promise<
+      | { ok: true; classes: CourseOption[]; enrolledClasses: CourseOption[] }
+      | { ok: false; error: string }
+    > => {
       const normalized = normalizeCourseSearchQuery(search);
-      if (!normalized) return { ok: true, classes: [] };
+      if (!normalized) return { ok: true, classes: [], enrolledClasses: [] };
       const params = new URLSearchParams();
       params.set("search", normalized);
       params.set("limit", "500");
+      params.set("include_enrolled", "1");
       const res = await fetch(`/api/classes?${params.toString()}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = (await res.json().catch(() => ({}))) as {
         classes?: CourseOption[];
+        enrolledClasses?: CourseOption[];
         error?: string;
       };
       if (res.status === 401) return { ok: false, error: "Not authenticated" };
       if (!res.ok) return { ok: false, error: data.error ?? res.statusText ?? "Failed to search" };
-      return { ok: true, classes: data.classes ?? [] };
+      return {
+        ok: true,
+        classes: data.classes ?? [],
+        enrolledClasses: data.enrolledClasses ?? [],
+      };
     },
     []
   );
@@ -211,6 +223,7 @@ export default function DashboardPage() {
           return;
         }
         setCourses(res.classes);
+        setEnrolledCourses(res.enrolledClasses);
         setCoursesError(null);
         setCoursesLoading(false);
         if (selectedDepartment) {
@@ -248,6 +261,7 @@ export default function DashboardPage() {
       searchDebounceRef.current = window.setTimeout(() => {
         searchDebounceRef.current = null;
         setSearchResults(null);
+        setSearchEnrolledResults(null);
         setSearchLoading(false);
       }, 0);
     };
@@ -264,35 +278,45 @@ export default function DashboardPage() {
     clearSearchDebounce();
     searchDebounceRef.current = window.setTimeout(() => {
       searchDebounceRef.current = null;
-      const normalized = normalizeCourseSearchQuery(q);
-      if (!normalized) {
-        setSearchResults(null);
-        setSearchLoading(false);
-        return;
-      }
-      const cached = searchCacheRef.current.get(normalized);
-      if (cached != null) {
-        setSearchResults(cached);
-        setSearchLoading(false);
-        return;
-      }
+        const normalized = normalizeCourseSearchQuery(q);
+        if (!normalized) {
+          setSearchResults(null);
+          setSearchEnrolledResults(null);
+          setSearchLoading(false);
+          return;
+        }
+        const cached = searchCacheRef.current.get(normalized);
+        if (cached != null) {
+          setSearchResults(cached.classes);
+          setSearchEnrolledResults(cached.enrolledClasses);
+          setSearchLoading(false);
+          return;
+        }
       if (!accessToken) return;
       setSearchLoading(true);
-      fetchCoursesBySearch(accessToken, normalized)
-        .then((res) => {
-          if (res.ok) {
-            searchCacheRef.current.set(normalized, res.classes);
-            setSearchResults(res.classes);
-            setSearchLoading(false);
-            return;
-          }
+        fetchCoursesBySearch(accessToken, normalized)
+          .then((res) => {
+            if (res.ok) {
+              searchCacheRef.current.set(normalized, {
+                classes: res.classes,
+                enrolledClasses: res.enrolledClasses,
+              });
+              setSearchResults(res.classes);
+              setSearchEnrolledResults(res.enrolledClasses);
+              setSearchLoading(false);
+              return;
+            }
           if (res.error === "Not authenticated") {
             refreshToken().then((newToken) => {
               if (newToken) {
                 fetchCoursesBySearch(newToken, normalized).then((r) => {
                   if (r.ok) {
-                    searchCacheRef.current.set(normalized, r.classes);
+                    searchCacheRef.current.set(normalized, {
+                      classes: r.classes,
+                      enrolledClasses: r.enrolledClasses,
+                    });
                     setSearchResults(r.classes);
+                    setSearchEnrolledResults(r.enrolledClasses);
                   }
                   setSearchLoading(false);
                 });
@@ -301,10 +325,12 @@ export default function DashboardPage() {
             return;
           }
           setSearchResults([]);
+          setSearchEnrolledResults([]);
           setSearchLoading(false);
         })
         .catch(() => {
           setSearchResults([]);
+          setSearchEnrolledResults([]);
           setSearchLoading(false);
         });
     }, SEARCH_DEBOUNCE_MS);
@@ -312,48 +338,6 @@ export default function DashboardPage() {
       clearSearchDebounce();
     };
   }, [browseSearch, selectedDepartment, accessToken, refreshToken, fetchCoursesBySearch]);
-
-  const fetchCredits = useCallback(
-    async (token: string | null) => {
-      if (!token) return null;
-      try {
-        let res = await fetch("/api/credits", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (res.status === 401) {
-          const newToken = await refreshToken();
-          if (newToken) res = await fetch("/api/credits", { headers: { Authorization: `Bearer ${newToken}` } });
-        }
-        if (!res.ok) return null;
-        const data = (await res.json()) as { credits?: number; freeDownloads?: number };
-        return {
-          credits: Number.isFinite(data?.credits) ? Number(data.credits) : 0,
-          freeDownloads: Number.isFinite(data?.freeDownloads) ? Number(data.freeDownloads) : 0,
-        };
-      } catch {
-        return null;
-      }
-    },
-    [refreshToken],
-  );
-
-  useEffect(() => {
-    if (!tokenLoaded) return;
-    let active = true;
-    const load = async () => {
-      const payload = await fetchCredits(accessToken);
-      if (!active) return;
-      if (!payload) {
-        setCredits(null);
-        setFreeDownloads(null);
-        return;
-      }
-      setCredits(payload.credits);
-      setFreeDownloads(payload.freeDownloads);
-    };
-    load();
-    return () => { active = false; };
-  }, [accessToken, tokenLoaded, fetchCredits]);
 
   /** Departments filtered by sidebar search (substring match, updates as you type). */
   const filteredDepartments = useMemo(() => {
@@ -549,6 +533,14 @@ export default function DashboardPage() {
     return () => window.clearTimeout(timer);
   }, [selectedDepartment, browseSearch]);
 
+  const displayedEnrolledCourses = useMemo(() => {
+    const source = isSearchMode ? searchEnrolledResults ?? [] : enrolledCourses;
+    const normalizedQuery = normalizeCourseSearchQuery(browseSearch);
+    return normalizedQuery
+      ? filterAndSortCoursesBySearchOrder(source, normalizedQuery)
+      : sortCoursesBySearchOrder(source, normalizedQuery);
+  }, [browseSearch, enrolledCourses, isSearchMode, searchEnrolledResults]);
+
   const coursesToRender = allDisplayCourses.slice(0, visibleCourseCount);
   const hasMoreToShow = visibleCourseCount < allDisplayCourses.length;
   const hasMoreToFetch = !isSearchMode && !selectedDepartment && (hasMoreFromApi || coursesLoadingMore);
@@ -605,19 +597,6 @@ export default function DashboardPage() {
 
   return (
     <div className="browse-page">
-      <DesignNav
-        active="browse"
-        rightSlot={
-          <>
-            <span className="browse-credits-pill">Credits: {credits ?? "—"}</span>
-            <span className="browse-credits-pill">
-              Free downloads: {freeDownloads ?? "—"}
-            </span>
-            <ProfileIcons />
-          </>
-        }
-      />
-
       <div className="browse-body">
         <aside
           className={`browse-sidebar page-enter ${isVisible ? "page-enter-visible" : "page-enter-hidden"}`}
@@ -723,6 +702,49 @@ export default function DashboardPage() {
               {isSearchMode ? "No courses match your search." : "No courses match your filters."}
             </p>
           )}
+          {!selectedDepartment && displayedEnrolledCourses.length > 0 && (
+            <section className="browse-enrolled-section">
+              <div className="browse-enrolled-header">
+                <h2 className="browse-section-title">Enrolled Courses</h2>
+                <p className="browse-section-copy">
+                  Your current classes appear first for quicker browsing.
+                </p>
+              </div>
+              <div className="browse-course-grid browse-course-grid--enrolled">
+                {displayedEnrolledCourses.map((course, index) => (
+                  <div
+                    key={`enrolled-${course.id}`}
+                    className={`page-enter ${isVisible ? "page-enter-visible" : "page-enter-hidden"}`}
+                    style={{ transitionDelay: `${120 + index * 30}ms` }}
+                  >
+                    <Link
+                      href={`/dashboard/course/${course.id}`}
+                      className="browse-course-card browse-course-card--enrolled"
+                    >
+                      <div className="browse-course-card-top">
+                        <div className="browse-course-card-info">
+                          <p className="browse-course-code">{course.code ?? course.name}</p>
+                          {(() => {
+                            const subline = getCourseSubline(course.code);
+                            return subline ? <p className="browse-course-subline">{subline}</p> : null;
+                          })()}
+                        </div>
+                        <span className="browse-course-badge browse-course-badge--enrolled">
+                          Enrolled
+                        </span>
+                      </div>
+                      <div className="browse-course-meta">
+                        {course.note_count} notes available
+                      </div>
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+          {coursesToRender.length > 0 && !selectedDepartment && displayedEnrolledCourses.length > 0 ? (
+            <div className="browse-enrolled-divider" />
+          ) : null}
           <div className="browse-course-grid">
             {coursesToRender.map((course, index) => (
               <div
@@ -747,14 +769,6 @@ export default function DashboardPage() {
                     )}
                   </div>
                   <div className="browse-course-meta">
-                    <svg className="browse-course-meta-icon" viewBox="0 0 16 16" fill="none" aria-hidden>
-                      <path
-                        d="M8 1v14M1 8h14"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                      />
-                    </svg>
                     {course.note_count} notes available
                   </div>
                 </Link>

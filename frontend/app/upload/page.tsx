@@ -5,8 +5,6 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { getSessionWithRecovery, supabase } from "@/lib/supabaseClient";
-import { DesignNav } from "@/app/components/DesignNav";
-import ProfileIcons from "@/app/dashboard/profile-icon";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import "react-pdf/dist/esm/Page/TextLayer.css";
@@ -510,6 +508,11 @@ export default function UploadPage() {
       setIsUploading(false);
       return;
     }
+    if (!description.trim()) {
+      setSubmitError("Please add a short description for your note.");
+      setIsUploading(false);
+      return;
+    }
     if (!accessToken) {
       setSubmitError("Please sign in again.");
       setIsUploading(false);
@@ -521,7 +524,7 @@ export default function UploadPage() {
     formData.append("class_id", classId);
     formData.append("title", title.trim());
     formData.append("resource_type", resourceType);
-    if (description.trim()) formData.append("description", description.trim());
+    formData.append("description", description.trim());
 
     try {
       const res = await fetch("/api/upload", {
@@ -575,17 +578,6 @@ export default function UploadPage() {
 
   return (
     <main className="upload-page upload-page--design">
-      <DesignNav
-        active="upload"
-        rightSlot={
-          <>
-            {credits != null && (
-              <span className="upload-nav-credits">Credits: {credits}</span>
-            )}
-            <ProfileIcons />
-          </>
-        }
-      />
       <div className="upload-page-inner">
         <div className="upload-layout">
           <section
@@ -620,9 +612,11 @@ export default function UploadPage() {
                       {file ? file.name : "Drag and drop your file here"}
                     </span>
                     <span className="upload-dragzone-browse">
-                      {file ? "Change file" : "or click to browse"}
+                      {file ? "Choose a different PDF" : "or click to browse"}
                     </span>
-                    <span className="upload-dragzone-hint">Supported format: PDF (Max 25MB)</span>
+                    <span className="upload-dragzone-hint">
+                      {file ? "PDF selected and ready to upload" : "Supported format: PDF (Max 25MB)"}
+                    </span>
                   </label>
                 </div>
                 <div className="upload-step-buttons-row">
@@ -833,10 +827,10 @@ export default function UploadPage() {
               <form className="upload-step" onSubmit={handleSubmit}>
                 <h2 className="upload-step-heading">Step 3: Add a description</h2>
                 <p className="upload-step-desc">
-                  This short description will be shown when someone clicks your note on the dashboard.
+                  Add a short summary so other students know what this note covers.
                 </p>
                 <div className="upload-field">
-                  <label className="upload-label">Description (optional)</label>
+                  <label className="upload-label">Description *</label>
                   <textarea
                     className="upload-input upload-textarea"
                     value={description}
@@ -844,6 +838,7 @@ export default function UploadPage() {
                     placeholder="e.g. Covers chapters 1–3, key formulas and examples"
                     rows={4}
                     maxLength={2000}
+                    required
                   />
                   <span className="upload-char-count">{description.length}/2000</span>
                 </div>
@@ -870,7 +865,7 @@ export default function UploadPage() {
                 <div>
                   <h4 className="upload-credits-item-title">Upload Notes</h4>
                   <p className="upload-credits-item-desc">
-                    Earn credits per note after approval: Lecture Notes &amp; Study Guide: 3 credits, Class Overview: 5 credits, Link: 1 credit.
+                    Earn credits after approval. Lecture Notes and Study Guides earn 3 credits, while Class Overviews earn 5.
                   </p>
                 </div>
               </div>
@@ -888,13 +883,13 @@ export default function UploadPage() {
                 <div>
                   <h4 className="upload-credits-item-title">Quality Bonus</h4>
                   <p className="upload-credits-item-desc">
-                    Earn extra credits when your notes are highly rated.
+                    Clear titles and descriptions help other students decide what to download.
                   </p>
                 </div>
               </div>
             </div>
             <p className="upload-sidecard-tip">
-              Upload quality notes to build your credit balance and access more resources!
+              Upload useful notes to keep the catalog valuable for everyone.
             </p>
             <div className="upload-balance-box">
               <span className="upload-balance-label">Your Current Balance</span>

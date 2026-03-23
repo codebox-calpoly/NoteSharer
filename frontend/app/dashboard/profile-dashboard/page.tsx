@@ -5,9 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getSessionWithRecovery, supabase } from "@/lib/supabaseClient";
 import type { User } from "@supabase/supabase-js";
-import { DesignNav } from "@/app/components/DesignNav";
-import { ThemeToggle } from "@/app/components/ThemeToggle";
-import { useTheme } from "@/app/components/ThemeProvider";
+import { CourseEnrollmentPicker, type EnrollmentCourseOption } from "@/app/components/CourseEnrollmentPicker";
 import { displayStatValue, getRankValue, toProfileStats, type ProfileStats } from "./stats";
 import "./profile-dashboard.css";
 import "../course-detail.css";
@@ -19,10 +17,23 @@ type ProfileNote = {
   created_at: string;
   class_id: string | null;
   profile_display_name: string | null;
+  resource_type: string | null;
   upvote_count: number;
   downvote_count: number;
+  score: number;
   download_cost: number;
   downloaded: boolean;
+};
+
+type EnrollmentResponse = {
+  activeCycle: {
+    id: string;
+    name: string;
+    catalogTerm: string | null;
+  } | null;
+  selectedClasses: EnrollmentCourseOption[];
+  selectedCourseIds: string[];
+  enrollmentRequired: boolean;
 };
 
 /** Derive avatar initials from display name (e.g. "Violet Peacock" → "VP", "VioletPeacock" → "Vi"). */
@@ -49,7 +60,6 @@ export default function Page() {
   const [user, setUser] = useState<User | null>(null);
   const [tokenLoaded, setTokenLoaded] = useState(false);
   const [accessToken, setAccessToken] = useState<string | null>(null);
-  const [credits, setCredits] = useState<number | null>(null);
   const [creditsError, setCreditsError] = useState<string | null>(null);
   // new stats
   const [totalUploads, setTotalUploads] = useState<number | null>(null);
@@ -70,6 +80,10 @@ export default function Page() {
   const [statsError, setStatsError] = useState<string | null>(null);
   const [profileDisplayName, setProfileDisplayName] = useState<string | null>(null);
   const [profileHandle, setProfileHandle] = useState<string | null>(null);
+  const [enrollment, setEnrollment] = useState<EnrollmentResponse | null>(null);
+  const [selectedCourses, setSelectedCourses] = useState<EnrollmentCourseOption[]>([]);
+  const [savingEnrollment, setSavingEnrollment] = useState(false);
+  const [enrollmentError, setEnrollmentError] = useState<string | null>(null);
   const [isVisible, setIsVisible] = useState(false);
   const router = useRouter();
 
@@ -111,31 +125,43 @@ export default function Page() {
     };
   }, [user?.id]);
 
+  useEffect(() => {
+    if (!accessToken) return;
+    let cancelled = false;
+    (async () => {
+      const res = await fetch("/api/me/enrollment", {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      if (!res.ok || cancelled) return;
+      const payload = (await res.json()) as EnrollmentResponse;
+      if (cancelled) return;
+      setEnrollment(payload);
+      setSelectedCourses(payload.selectedClasses ?? []);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [accessToken]);
+
   const refreshCredits = useCallback(async () => {
     const { session } = await getSessionWithRecovery(supabase);
-    if (!session?.access_token) {
-      setCredits(null);
-      return;
-    }
+    if (!session?.access_token) return;
     try {
       const res = await fetch("/api/credits", {
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
       if (!res.ok) {
         setCreditsError("Failed to load credits");
-        setCredits(null);
         setTotalUploads(null);
         setTotalUpvotes(null);
         return;
       }
       const data = await res.json();
-      setCredits(Number.isFinite(data?.credits) ? Number(data.credits) : 0);
       setCreditsError(null);
       setTotalUploads(Number.isFinite(data?.uploadCount) ? Number(data.uploadCount) : 0);
       setTotalUpvotes(Number.isFinite(data?.upvoteCount) ? Number(data.upvoteCount) : 0);
     } catch {
       setCreditsError("Failed to load credits");
-      setCredits(null);
       setTotalUploads(null);
       setTotalUpvotes(null);
     }
@@ -205,7 +231,7 @@ export default function Page() {
       });
       if (!res.ok) {
         const payload = (await res.json().catch(() => ({}))) as { error?: string };
-        setNotesError(payload.error ?? "Failed to load favorites");
+        setNotesError(payload.error ?? "Failed to load bookmarks");
         setFavorites([]);
         return;
       }
@@ -213,7 +239,7 @@ export default function Page() {
       setFavorites(data.notes ?? []);
       setFavoritesLoaded(true);
     } catch {
-      setNotesError("Failed to load favorites");
+      setNotesError("Failed to load bookmarks");
       setFavorites([]);
     } finally {
       setLoadingFavorites(false);
@@ -286,23 +312,60 @@ export default function Page() {
     profileDisplayName ?? profileHandle
       ? getInitialsFromDisplayName(profileDisplayName ?? profileHandle ?? "")
       : getDisplayInitial(user);
-  const { theme } = useTheme();
   const displayedStats = profileStats ?? null;
+
+  const saveEnrollment = useCallback(async () => {
+    if (!accessToken) return;
+    setSavingEnrollment(true);
+    setEnrollmentError(null);
+    try {
+      const res = await fetch("/api/me/enrollment", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ courseIds: selectedCourses.map((course) => course.id) }),
+      });
+      if (!res.ok) {
+        const payload = (await res.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(payload?.error ?? "Failed to save enrolled courses.");
+      }
+      const payload = (await res.json()) as EnrollmentResponse;
+      setEnrollment(payload);
+      setSelectedCourses(payload.selectedClasses ?? []);
+    } catch (saveError) {
+      setEnrollmentError(
+        saveError instanceof Error ? saveError.message : "Failed to save enrolled courses.",
+      );
+    } finally {
+      setSavingEnrollment(false);
+    }
+  }, [accessToken, selectedCourses]);
+
+  const formatType = (value: string | null) => {
+    if (value === "lecture_notes") return "Lecture Notes";
+    if (value === "study_guide") return "Study Guide";
+    if (value === "class_overview") return "Class Overview";
+    return "Note";
+  };
+
+  const formatDate = (value: string) =>
+    new Date(value).toLocaleDateString(undefined, {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+
+  const scoreClass = (score: number) =>
+    score > 0
+      ? "course-detail-note-score course-detail-note-score--positive"
+      : score < 0
+        ? "course-detail-note-score course-detail-note-score--negative"
+        : "course-detail-note-score course-detail-note-score--neutral";
 
   return (
     <div className="profile-page">
-      <DesignNav
-        active="profile"
-        rightSlot={
-          <>
-            <span className="profile-page__credits-pill">Credits: {credits ?? "—"}</span>
-            <Link href="/dashboard/profile-dashboard" className="profile-page__profile-btn" aria-label="Profile">
-              {initial}
-            </Link>
-          </>
-        }
-      />
-
       <div className="profile-page__body">
         <div className="profile-page__main">
           <div className="profile-page__content">
@@ -355,7 +418,7 @@ export default function Page() {
                   className={`profile-page__tab ${activeTab === "favorites" ? "active" : ""}`}
                   onClick={() => setActiveTab("favorites")}
                 >
-                  Favorites
+                  Bookmarks
                 </button>
               </div>
               <div
@@ -380,16 +443,14 @@ export default function Page() {
                               className="course-detail-note-card profile-page__note-card"
                             >
                               <h3 className="course-detail-note-title">{note.title}</h3>
-                              <p className="course-detail-note-by">
-                                by {note.profile_display_name ?? "You"}
-                              </p>
+                              <div className="course-detail-note-secondary">
+                                <span className="course-detail-note-type">{formatType(note.resource_type)}</span>
+                                <span className="course-detail-note-date">{formatDate(note.created_at)}</span>
+                              </div>
                               <div className="course-detail-note-meta">
-                                <div className="course-detail-note-votes">
-                                  <span className="course-detail-note-vote-up">↑ {note.upvote_count}</span>
-                                  <span className="course-detail-note-vote-down">↓ {note.downvote_count}</span>
-                                </div>
+                                <span className={scoreClass(note.score ?? 0)}>Score: {note.score ?? 0}</span>
                                 <span className="course-detail-note-credits">
-                                  {note.download_cost} credits
+                                  Download: {note.download_cost} credits
                                 </span>
                               </div>
                             </Link>
@@ -418,14 +479,12 @@ export default function Page() {
                               className="course-detail-note-card profile-page__note-card"
                             >
                               <h3 className="course-detail-note-title">{note.title}</h3>
-                              <p className="course-detail-note-by">
-                                by {note.profile_display_name ?? "Anonymous"}
-                              </p>
+                              <div className="course-detail-note-secondary">
+                                <span className="course-detail-note-type">{formatType(note.resource_type)}</span>
+                                <span className="course-detail-note-date">{formatDate(note.created_at)}</span>
+                              </div>
                               <div className="course-detail-note-meta">
-                                <div className="course-detail-note-votes">
-                                  <span className="course-detail-note-vote-up">↑ {note.upvote_count}</span>
-                                  <span className="course-detail-note-vote-down">↓ {note.downvote_count}</span>
-                                </div>
+                                <span className={scoreClass(note.score ?? 0)}>Score: {note.score ?? 0}</span>
                                 <span className="course-detail-note-credits">🔓 Owned</span>
                               </div>
                             </Link>
@@ -437,12 +496,12 @@ export default function Page() {
                 )}
                 {activeTab === "favorites" && (
                   <>
-                    {loadingFavorites && <p className="profile-page__loading">Loading your favorites…</p>}
+                    {loadingFavorites && <p className="profile-page__loading">Loading your bookmarks…</p>}
                     {!loadingFavorites && favorites.length === 0 && (
-                      <p className="profile-page__empty">No favorites yet. Star notes to save them here.</p>
+                      <p className="profile-page__empty">No bookmarks yet. Save notes to keep them here.</p>
                     )}
                     {!loadingFavorites && favorites.length > 0 && (
-                      <ul className="profile-page__note-cards" aria-label="My favorites">
+                      <ul className="profile-page__note-cards" aria-label="My bookmarks">
                         {favorites.map((note) => (
                           <li key={note.id}>
                             <Link
@@ -454,15 +513,13 @@ export default function Page() {
                               className="course-detail-note-card profile-page__note-card"
                             >
                               <h3 className="course-detail-note-title">{note.title}</h3>
-                              <p className="course-detail-note-by">
-                                by {note.profile_display_name ?? "Anonymous"}
-                              </p>
+                              <div className="course-detail-note-secondary">
+                                <span className="course-detail-note-type">{formatType(note.resource_type)}</span>
+                                <span className="course-detail-note-date">{formatDate(note.created_at)}</span>
+                              </div>
                               <div className="course-detail-note-meta">
-                                <div className="course-detail-note-votes">
-                                  <span className="course-detail-note-vote-up">↑ {note.upvote_count}</span>
-                                  <span className="course-detail-note-vote-down">↓ {note.downvote_count}</span>
-                                </div>
-                                <span className="course-detail-note-credits">★ Favorite</span>
+                                <span className={scoreClass(note.score ?? 0)}>Score: {note.score ?? 0}</span>
+                                <span className="course-detail-note-credits">Bookmark</span>
                               </div>
                             </Link>
                           </li>
@@ -518,17 +575,32 @@ export default function Page() {
                 <p className="profile-page__error-inline" role="alert">{statsError}</p>
               )}
             </div>
-            <div className="profile-page__stats-card profile-page__appearance">
-              <h2 className="profile-page__stats-title">Appearance</h2>
-              <div className="profile-page__stat-row profile-page__stat-row--appearance">
-                <span className="profile-page__stat-label">Theme</span>
-                <ThemeToggle />
-              </div>
-              <p className="profile-page__appearance-hint">
-                <span suppressHydrationWarning>
-                {theme === "dark" ? "Dark mode" : "Light mode"}
-                </span>
+            <div className="profile-page__stats-card">
+              <h2 className="profile-page__stats-title">Current Classes</h2>
+              <p className="profile-page__bio">
+                {enrollment?.activeCycle?.name
+                  ? `Update your enrolled courses for ${enrollment.activeCycle.name}.`
+                  : "Update your current enrolled courses."}
               </p>
+              <CourseEnrollmentPicker
+                accessToken={accessToken}
+                selectedCourses={selectedCourses}
+                onChange={setSelectedCourses}
+                disabled={savingEnrollment}
+              />
+              <div className="profile-page__actions-inline">
+                <button
+                  type="button"
+                  className="profile-page__save-enrollment"
+                  onClick={() => void saveEnrollment()}
+                  disabled={savingEnrollment}
+                >
+                  {savingEnrollment ? "Saving..." : "Save courses"}
+                </button>
+              </div>
+              {enrollmentError ? (
+                <p className="profile-page__error-inline" role="alert">{enrollmentError}</p>
+              ) : null}
             </div>
           </aside>
         </div>

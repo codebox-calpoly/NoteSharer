@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
+import { createServiceRoleClient, getEnrollmentStateForUser } from "@/lib/enrollment";
 import { createClient } from "@/utils/supabaseServerClient";
 import { normalizeCourseSearchQuery } from "@/lib/course-search";
 import { rankAndLimitCourseRows } from "./search-helpers";
@@ -29,6 +30,10 @@ const RPC_BATCH_SIZE = 500;
 const TITLE_SEARCH_CANDIDATE_LIMIT = 2000;
 
 type RpcRow = { course_id: string; note_count: number };
+
+type EnrolledClassesPayload = {
+  enrolledClasses?: ClassResponse[];
+};
 
 /** Get note counts via DB RPC (accurate, no row limit). Falls back to paginated fetch if RPC fails. */
 async function getNoteCountMap(
@@ -113,6 +118,51 @@ function buildClasses(rows: CourseRow[], countMap: Map<string, number>): ClassRe
   });
 }
 
+async function getEnrolledClassesPayload(
+  userId: string,
+  predicate?: (value: ClassResponse) => boolean,
+): Promise<EnrolledClassesPayload> {
+  let enrollment;
+  try {
+    const adminClient = createServiceRoleClient();
+    enrollment = await getEnrollmentStateForUser(adminClient, userId);
+  } catch {
+    return {};
+  }
+  if (enrollment.selectedClasses.length === 0) {
+    return {};
+  }
+
+  const enrolledClasses = enrollment.selectedClasses
+    .map((course) => ({
+      ...course,
+      note_count: 0,
+    }))
+    .filter((course) => (predicate ? predicate(course) : true));
+
+  if (enrolledClasses.length === 0) {
+    return {};
+  }
+
+  const enrolledIds = enrolledClasses.map((course) => course.id);
+  let countMap = new Map<string, number>();
+  try {
+    const adminClient = createServiceRoleClient();
+    countMap = await getNoteCountMap(adminClient, enrolledIds);
+  } catch {
+    countMap = new Map();
+  }
+
+  return {
+    enrolledClasses: enrolledClasses
+      .map((course) => ({
+        ...course,
+        note_count: countMap.get(course.id) ?? 0,
+      }))
+      .sort((a, b) => (a.code ?? a.name).localeCompare(b.code ?? b.name)),
+  };
+}
+
 export async function GET(request: Request) {
   const headerStore = await headers();
   const authHeader = headerStore.get("authorization");
@@ -149,6 +199,7 @@ export async function GET(request: Request) {
   const searchParam = searchParamRaw
     ? normalizeCourseSearchQuery(searchParamRaw).slice(0, 80)
     : null;
+  const includeEnrolled = searchParams.get("include_enrolled") === "1";
   const paginated = limitParam != null && limitParam !== "";
   const limit = paginated ? Math.min(Math.max(1, parseInt(limitParam, 10) || PAGE_SIZE), 1000) : PAGE_SIZE;
   const offset = paginated ? Math.max(0, parseInt(offsetParam ?? "0", 10)) : 0;
@@ -170,9 +221,13 @@ export async function GET(request: Request) {
     }
 
     const classes = buildClasses([course as CourseRow], new Map<string, number>());
+    const enrolledPayload =
+      includeEnrolled && user
+        ? await getEnrolledClassesPayload(user.id, (value) => value.id === course.id)
+        : {};
 
     return NextResponse.json(
-      { classes, hasMore: false },
+      { classes, hasMore: false, ...enrolledPayload },
       {
         status: 200,
         headers: {
@@ -231,9 +286,18 @@ export async function GET(request: Request) {
     } catch {
       countMap = new Map();
     }
-    const classes = buildClasses(rows, countMap);
+    let classes = buildClasses(rows, countMap);
+    let enrolledPayload: EnrolledClassesPayload = {};
+    if (includeEnrolled && user) {
+      enrolledPayload = await getEnrolledClassesPayload(user.id, (value) => {
+        const haystack = `${value.code ?? ""} ${value.name}`.trim().toLowerCase();
+        return haystack.includes(searchParam.toLowerCase());
+      });
+      const enrolledIds = new Set((enrolledPayload.enrolledClasses ?? []).map((course) => course.id));
+      classes = classes.filter((course) => !enrolledIds.has(course.id));
+    }
     return NextResponse.json(
-      { classes, hasMore: false },
+      { classes, hasMore: false, ...enrolledPayload },
       {
         status: 200,
         headers: {
@@ -264,11 +328,17 @@ export async function GET(request: Request) {
       countMap = new Map();
     }
 
-    const classes = buildClasses(rows, countMap);
+    let classes = buildClasses(rows, countMap);
+    let enrolledPayload: EnrolledClassesPayload = {};
+    if (includeEnrolled && user && !departmentParam) {
+      enrolledPayload = await getEnrolledClassesPayload(user.id);
+      const enrolledIds = new Set((enrolledPayload.enrolledClasses ?? []).map((course) => course.id));
+      classes = classes.filter((course) => !enrolledIds.has(course.id));
+    }
     const hasMore = rows.length === limit;
 
     return NextResponse.json(
-      { classes, hasMore },
+      { classes, hasMore, ...enrolledPayload },
       {
         status: 200,
         headers: {
@@ -308,10 +378,16 @@ export async function GET(request: Request) {
     countMap = new Map();
   }
 
-  const classes = buildClasses(rows, countMap);
+  let classes = buildClasses(rows, countMap);
+  let enrolledPayload: EnrolledClassesPayload = {};
+  if (includeEnrolled && user && !departmentParam) {
+    enrolledPayload = await getEnrolledClassesPayload(user.id);
+    const enrolledIds = new Set((enrolledPayload.enrolledClasses ?? []).map((course) => course.id));
+    classes = classes.filter((course) => !enrolledIds.has(course.id));
+  }
 
   return NextResponse.json(
-    { classes },
+    { classes, ...enrolledPayload },
     {
       status: 200,
       headers: {

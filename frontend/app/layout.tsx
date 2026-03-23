@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Inter } from "next/font/google";
+import { AuthenticatedAppChrome } from "@/app/components/AuthenticatedAppChrome";
 import { ThemeProvider } from "@/app/components/ThemeProvider";
 import "./globals.css";
 
@@ -42,7 +43,10 @@ export default function RootLayout({
         suppressHydrationWarning
         className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} antialiased`}
       >
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <AuthenticatedAppChrome />
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );

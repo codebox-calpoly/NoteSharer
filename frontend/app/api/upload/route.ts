@@ -153,7 +153,14 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  if (description != null && description.length > 2000) {
+  if (!description) {
+    return NextResponse.json(
+      { error: "description is required." },
+      { status: 400 },
+    );
+  }
+
+  if (description.length > 2000) {
     return NextResponse.json(
       { error: "description must be at most 2000 characters." },
       { status: 400 },
