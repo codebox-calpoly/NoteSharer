@@ -65,9 +65,9 @@ export async function PUT(req: Request) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  let payload: { courseIds?: string[] } | null = null;
+  let payload: { courseIds?: string[]; allowNoActiveCycle?: boolean } | null = null;
   try {
-    payload = (await req.json()) as { courseIds?: string[] };
+    payload = (await req.json()) as { courseIds?: string[]; allowNoActiveCycle?: boolean };
   } catch {
     return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
   }
@@ -75,15 +75,20 @@ export async function PUT(req: Request) {
   const courseIds = Array.isArray(payload?.courseIds)
     ? Array.from(new Set(payload.courseIds.filter((value): value is string => typeof value === "string" && value.trim().length > 0)))
     : [];
+  const allowNoActiveCycle = payload?.allowNoActiveCycle === true;
 
   try {
     const adminClient = createServiceRoleClient();
     const activeCycle = await getActiveEnrollmentCycle(adminClient);
     if (!activeCycle) {
-      return NextResponse.json(
-        { error: "No active enrollment cycle is configured." },
-        { status: 409 },
-      );
+      if (!allowNoActiveCycle) {
+        return NextResponse.json(
+          { error: "No active enrollment cycle is configured." },
+          { status: 409 },
+        );
+      }
+      const enrollment = await getEnrollmentStateForUser(adminClient, user.id);
+      return NextResponse.json(enrollment, { status: 200 });
     }
 
     if (courseIds.length > 0) {

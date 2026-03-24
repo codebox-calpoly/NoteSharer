@@ -44,14 +44,6 @@
   color: var(--poly-text-secondary);
 }
 
-.onboarding-actions {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-top: 0.5rem;
-  flex-wrap: wrap;
-}
-
 .onboarding-button {
   border: none;
   border-radius: 999px;
@@ -180,10 +172,15 @@
 
 .onboarding-actions {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
   gap: 1rem;
   margin-top: 0.75rem;
+}
+
+.onboarding-primary-action {
+  margin-left: auto;
 }
 
 .onboarding-nickname {

@@ -165,7 +165,10 @@ export default function OnboardingPage() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${accessToken}`,
         },
-        body: JSON.stringify({ courseIds: selectedCourses.map((course) => course.id) }),
+        body: JSON.stringify({
+          courseIds: selectedCourses.map((course) => course.id),
+          allowNoActiveCycle: true,
+        }),
       });
 
       if (!enrollmentRes.ok) {
@@ -296,7 +299,7 @@ export default function OnboardingPage() {
 
           {isCourseStep || courseRefreshMode ? (
             <button
-              className="onboarding-button"
+              className="onboarding-button onboarding-primary-action"
               onClick={complete}
               disabled={saving}
             >
@@ -304,16 +307,16 @@ export default function OnboardingPage() {
             </button>
           ) : (
             <button
-              className="onboarding-button"
+              className="onboarding-button onboarding-primary-action"
               onClick={() => setCurrentStep((step) => step + 1)}
               disabled={saving || (isTermsStep && !acceptedTerms)}
             >
-              Continue
+              Next
             </button>
           )}
-
-          {error ? <p className="onboarding-error">{error}</p> : null}
         </div>
+
+        {error ? <p className="onboarding-error">{error}</p> : null}
       </section>
     </main>
   );
