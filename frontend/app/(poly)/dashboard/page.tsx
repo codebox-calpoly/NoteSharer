@@ -11,7 +11,7 @@ import {
 } from "@/lib/course-search";
 import { CALPOLY_DEPARTMENT_CODES } from "./calpoly-catalog";
 import { getCourseSubline } from "./course-name-utils";
-import { DesignNav } from "@/app/components/DesignNav";
+import { useRegisterNavRight } from "@/app/(poly)/PolyShell";
 import "./dashboard.css";
 import "./browse.css";
 import ProfileIcons from "./profile-icon";
@@ -603,21 +603,22 @@ export default function DashboardPage() {
 
   const hasActiveFilters = selectedDepartment != null;
 
+  const browseNavRight = useMemo(
+    () => (
+      <>
+        <span className="browse-credits-pill">Credits: {credits ?? "—"}</span>
+        <span className="browse-credits-pill">
+          Free downloads: {freeDownloads ?? "—"}
+        </span>
+        <ProfileIcons />
+      </>
+    ),
+    [credits, freeDownloads],
+  );
+  useRegisterNavRight(browseNavRight);
+
   return (
     <div className="browse-page">
-      <DesignNav
-        active="browse"
-        rightSlot={
-          <>
-            <span className="browse-credits-pill">Credits: {credits ?? "—"}</span>
-            <span className="browse-credits-pill">
-              Free downloads: {freeDownloads ?? "—"}
-            </span>
-            <ProfileIcons />
-          </>
-        }
-      />
-
       <div className="browse-body">
         <aside
           className={`browse-sidebar page-enter ${isVisible ? "page-enter-visible" : "page-enter-hidden"}`}

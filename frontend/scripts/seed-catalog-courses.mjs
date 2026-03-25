@@ -34,7 +34,7 @@ const CATALOG_TERMS = [
 ];
 
 function loadCatalog() {
-  const catalogPath = path.join(__dirname, "../app/dashboard/calpoly-catalog.ts");
+  const catalogPath = path.join(__dirname, "../app/(poly)/dashboard/calpoly-catalog.ts");
   const raw = fs.readFileSync(catalogPath, "utf8");
   const startMarker = "export const CALPOLY_PLACEHOLDER_COURSES";
   const start = raw.indexOf(startMarker);
@@ -48,7 +48,7 @@ function loadCatalog() {
   const codesInCatalog = new Set(catalog.map((c) => c.code));
 
   // Merge in any course from calpoly-course-titles.ts that is not in the placeholder catalog (e.g. missing AERO courses).
-  const titlesPath = path.join(__dirname, "../app/dashboard/calpoly-course-titles.ts");
+  const titlesPath = path.join(__dirname, "../app/(poly)/dashboard/calpoly-course-titles.ts");
   if (fs.existsSync(titlesPath)) {
     const titlesRaw = fs.readFileSync(titlesPath, "utf8");
     const re = /"([A-Z0-9]+ [0-9A-Z]+)"\s*:\s*"([^"]+)"/g;
@@ -67,9 +67,15 @@ function loadCatalog() {
   return catalog;
 }
 
+/** Numeric part of catalog code (e.g. "BUS 3384A" -> 3384). Must match DB integer column. */
 function codeToCourseNumber(code) {
   const m = String(code).match(/^\s*[A-Z0-9]+\s+(.+)$/);
-  return m ? m[1].trim() : String(code);
+  const tail = m ? m[1].trim() : String(code).trim();
+  const lead = tail.match(/^[0-9]+/);
+  if (!lead) {
+    throw new Error(`No numeric course number in catalog code: ${code}`);
+  }
+  return parseInt(lead[0], 10);
 }
 
 async function main() {

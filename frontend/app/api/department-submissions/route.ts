@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { Resend } from "resend";
+import { parseNotifyEmailList } from "@/utils/parseNotifyEmailList";
 import { createClient } from "@/utils/supabaseServerClient";
 
 type SubmissionPayload = {
@@ -82,14 +83,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: insertError.message }, { status: 500 });
   }
 
-  const notifyEmail = process.env.COURSE_REQUEST_NOTIFY_EMAIL?.trim();
+  const notifyRaw = process.env.COURSE_REQUEST_NOTIFY_EMAIL?.trim() ?? "";
+  const notifyRecipients = parseNotifyEmailList(notifyRaw);
   const resendApiKey = process.env.RESEND_API_KEY?.trim();
   const fromEmail = process.env.COURSE_REQUEST_NOTIFY_FROM_EMAIL?.trim();
 
-  const hasEmailConfig = Boolean(notifyEmail && resendApiKey && fromEmail);
+  const hasEmailConfig = Boolean(
+    notifyRecipients.length && resendApiKey && fromEmail
+  );
   if (!hasEmailConfig) {
     const missing: string[] = [];
-    if (!notifyEmail) missing.push("COURSE_REQUEST_NOTIFY_EMAIL");
+    if (!notifyRecipients.length) missing.push("COURSE_REQUEST_NOTIFY_EMAIL");
     if (!resendApiKey) missing.push("RESEND_API_KEY");
     if (!fromEmail) missing.push("COURSE_REQUEST_NOTIFY_FROM_EMAIL");
     console.warn(
@@ -98,7 +102,7 @@ export async function POST(request: Request) {
       missing.join(", ")
     );
   } else if (
-    notifyEmail === "your-email@example.com" ||
+    notifyRaw === "your-email@example.com" ||
     resendApiKey === "re_your_api_key_here"
   ) {
     console.warn(
@@ -110,7 +114,7 @@ export async function POST(request: Request) {
       const submitterEmail = user.email ?? "(not shared)";
       await resend.emails.send({
         from: fromEmail!,
-        to: [notifyEmail!],
+        to: notifyRecipients,
         subject: `[Poly Pages] New department request: ${departmentName}`,
         html: [
           "<h2>New department request</h2>",

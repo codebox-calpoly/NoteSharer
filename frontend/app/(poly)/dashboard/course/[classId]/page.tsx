@@ -15,7 +15,7 @@ import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import "react-pdf/dist/esm/Page/TextLayer.css";
 import { getSessionWithRecovery, supabase } from "@/lib/supabaseClient";
-import { DesignNav } from "@/app/components/DesignNav";
+import { useRegisterNavRight } from "@/app/(poly)/PolyShell";
 import ProfileIcons from "../../profile-icon";
 import { getCourseSubline } from "../../course-name-utils";
 import "../../dashboard.css";
@@ -231,6 +231,20 @@ function CourseDetailPage() {
       active = false;
     };
   }, [accessToken, tokenLoaded, fetchCredits]);
+
+  const browseNavRight = useMemo(
+    () => (
+      <>
+        <span className="browse-credits-pill">Credits: {credits ?? "—"}</span>
+        <span className="browse-credits-pill">
+          Free downloads: {freeDownloads ?? "—"}
+        </span>
+        <ProfileIcons />
+      </>
+    ),
+    [credits, freeDownloads],
+  );
+  useRegisterNavRight(browseNavRight);
 
   useEffect(() => {
     if (!tokenLoaded || !classId) return;
@@ -834,18 +848,6 @@ function CourseDetailPage() {
   if (coursesError && !course) {
     return (
       <div className="course-detail-page">
-        <DesignNav
-          active="browse"
-          rightSlot={
-            <>
-              <span className="browse-credits-pill">Credits: {credits ?? "—"}</span>
-              <span className="browse-credits-pill">
-                Free downloads: {freeDownloads ?? "—"}
-              </span>
-              <ProfileIcons />
-            </>
-          }
-        />
         <div className="course-detail-body">
           <p className="course-detail-error">{coursesError}</p>
           <Link href="/dashboard">Back to Browse</Link>
@@ -856,19 +858,6 @@ function CourseDetailPage() {
 
   return (
     <div className="course-detail-page">
-      <DesignNav
-        active="browse"
-        rightSlot={
-          <>
-            <span className="browse-credits-pill">Credits: {credits ?? "—"}</span>
-            <span className="browse-credits-pill">
-              Free downloads: {freeDownloads ?? "—"}
-            </span>
-            <ProfileIcons />
-          </>
-        }
-      />
-
       <div className="course-detail-body">
         <>
           <header className="course-detail-header">

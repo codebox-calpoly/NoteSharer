@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { Resend } from "resend";
+import { parseNotifyEmailList } from "@/utils/parseNotifyEmailList";
 import { createClient } from "@/utils/supabaseServerClient";
 
 type SubmissionPayload = {
   department?: string;
-  course_number?: string;
+  course_number?: string | number;
   title?: string | null;
   term?: string | null;
   year?: number | null;
@@ -51,14 +52,23 @@ export async function POST(request: Request) {
 
   const department =
     typeof payload.department === "string" ? payload.department.trim() : "";
-  const courseNumber =
-    typeof payload.course_number === "string"
-      ? payload.course_number.trim()
-      : "";
 
-  if (!department || !courseNumber) {
+  let courseNumberInt: number;
+  if (
+    typeof payload.course_number === "number" &&
+    Number.isInteger(payload.course_number)
+  ) {
+    courseNumberInt = payload.course_number;
+  } else if (typeof payload.course_number === "string") {
+    const t = payload.course_number.trim();
+    courseNumberInt = /^\d+$/.test(t) ? parseInt(t, 10) : Number.NaN;
+  } else {
+    courseNumberInt = Number.NaN;
+  }
+
+  if (!department || !Number.isFinite(courseNumberInt)) {
     return NextResponse.json(
-      { error: "Department and course number are required." },
+      { error: "Department and a numeric course number are required." },
       { status: 400 }
     );
   }
@@ -85,7 +95,7 @@ export async function POST(request: Request) {
     {
       submitter_id: user.id,
       department,
-      course_number: courseNumber,
+      course_number: courseNumberInt,
       title,
       term,
       year,
@@ -97,13 +107,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: insertError.message }, { status: 500 });
   }
 
-  const notifyEmail = process.env.COURSE_REQUEST_NOTIFY_EMAIL?.trim();
+  const notifyRaw = process.env.COURSE_REQUEST_NOTIFY_EMAIL?.trim() ?? "";
+  const notifyRecipients = parseNotifyEmailList(notifyRaw);
   const resendApiKey = process.env.RESEND_API_KEY?.trim();
   const fromEmail = process.env.COURSE_REQUEST_NOTIFY_FROM_EMAIL?.trim();
 
-  if (!notifyEmail || !resendApiKey || !fromEmail) {
+  if (!notifyRecipients.length || !resendApiKey || !fromEmail) {
     const missing: string[] = [];
-    if (!notifyEmail) missing.push("COURSE_REQUEST_NOTIFY_EMAIL");
+    if (!notifyRecipients.length) missing.push("COURSE_REQUEST_NOTIFY_EMAIL");
     if (!resendApiKey) missing.push("RESEND_API_KEY");
     if (!fromEmail) missing.push("COURSE_REQUEST_NOTIFY_FROM_EMAIL");
     console.warn(
@@ -112,7 +123,7 @@ export async function POST(request: Request) {
       missing.join(", ")
     );
   } else if (
-    notifyEmail === "your-email@example.com" ||
+    notifyRaw === "your-email@example.com" ||
     resendApiKey === "re_your_api_key_here"
   ) {
     console.warn(
@@ -123,17 +134,18 @@ export async function POST(request: Request) {
     try {
       const resend = new Resend(resendApiKey);
       const submitterEmail = user.email ?? "(not shared)";
-      const courseLabel = [department, courseNumber].filter(Boolean).join(" ") || "—";
+      const courseLabel =
+        [department, String(courseNumberInt)].filter(Boolean).join(" ") || "—";
       await resend.emails.send({
         from: fromEmail,
-        to: [notifyEmail],
+        to: notifyRecipients,
         subject: `[Poly Pages] New course request: ${courseLabel}`,
         html: [
           "<h2>New course request</h2>",
           "<p>A user has requested a new course be added to the catalog.</p>",
           "<table style='border-collapse: collapse;'>",
           `<tr><td style='padding:6px 12px 6px 0;'><strong>Department</strong></td><td>${escapeHtml(department)}</td></tr>`,
-          `<tr><td style='padding:6px 12px 6px 0;'><strong>Course number</strong></td><td>${escapeHtml(courseNumber)}</td></tr>`,
+          `<tr><td style='padding:6px 12px 6px 0;'><strong>Course number</strong></td><td>${escapeHtml(String(courseNumberInt))}</td></tr>`,
           title ? `<tr><td style='padding:6px 12px 6px 0;'><strong>Title</strong></td><td>${escapeHtml(title)}</td></tr>` : "",
           term ? `<tr><td style='padding:6px 12px 6px 0;'><strong>Term</strong></td><td>${escapeHtml(term)}</td></tr>` : "",
           year != null ? `<tr><td style='padding:6px 12px 6px 0;'><strong>Year</strong></td><td>${year}</td></tr>` : "",

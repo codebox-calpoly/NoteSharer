@@ -8,7 +8,7 @@ type CourseRow = {
   id: string;
   title: string | null;
   department: string | null;
-  course_number: string | null;
+  course_number: number | null;
   term: string | null;
   year: number | null;
 };
@@ -99,7 +99,12 @@ async function fetchNoteCountMapFallback(
 
 function buildClasses(rows: CourseRow[], countMap: Map<string, number>): ClassResponse[] {
   return rows.map((course) => {
-    const codeParts = [course.department, course.course_number].filter(Boolean).join(" ").trim();
+    const numStr =
+      course.course_number != null ? String(course.course_number) : "";
+    const codeParts = [course.department, numStr]
+      .filter((s) => s !== "")
+      .join(" ")
+      .trim();
     const fallbackName = codeParts || "Untitled course";
     return {
       id: course.id,

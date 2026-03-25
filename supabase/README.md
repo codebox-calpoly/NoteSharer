@@ -39,7 +39,9 @@ After `supabase db push`, the `catalog_terms` table is seeded with the 2026–20
 cd frontend && npm run db:seed-catalog
 ```
 
-This reads `app/dashboard/calpoly-catalog.ts` and upserts one row per (department, course_number, term, year). Ensure `.env.local` has `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` so the script can connect.
+This reads `app/(poly)/dashboard/calpoly-catalog.ts` and upserts one row per (department, course_number, term, year). Ensure `.env.local` has `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` so the script can connect.
+
+**Schema note:** `courses.course_number` and `course_submissions.course_number` are **`integer`**. The catalog seed takes the leading digits from each course code (e.g. `BUS 3384A` → `3384`).
 
 ## 6. Keeping the Schema in Sync
 - When making DB changes locally, create a new migration file with `supabase migration new <name>` and edit the generated SQL.

@@ -1670,3 +1670,54 @@ body {
   background: rgba(250, 204, 21, 0.18);
   border-color: rgba(245, 158, 11, 0.65);
 }
+
+/* In-app mobile disclaimer (Poly shell) */
+.poly-mobile-disclaimer {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .poly-mobile-disclaimer {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin: 0 12px 8px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-size: 0.8125rem;
+    line-height: 1.45;
+    color: var(--poly-neutral-dark, #2e2e2e);
+    background: rgba(109, 190, 139, 0.12);
+    border: 1px solid rgba(109, 190, 139, 0.35);
+  }
+
+  [data-theme="dark"] .poly-mobile-disclaimer {
+    color: #e5e7eb;
+    background: rgba(109, 190, 139, 0.14);
+    border-color: rgba(109, 190, 139, 0.28);
+  }
+
+  .poly-mobile-disclaimer p {
+    margin: 0;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .poly-mobile-disclaimer-dismiss {
+    flex-shrink: 0;
+    padding: 4px 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    background: #fff;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--poly-neutral-dark, #2e2e2e);
+  }
+
+  [data-theme="dark"] .poly-mobile-disclaimer-dismiss {
+    background: #333;
+    color: #e5e7eb;
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+}

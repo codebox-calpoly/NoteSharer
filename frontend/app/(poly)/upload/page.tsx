@@ -5,15 +5,15 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { getSessionWithRecovery, supabase } from "@/lib/supabaseClient";
-import { DesignNav } from "@/app/components/DesignNav";
-import ProfileIcons from "@/app/dashboard/profile-icon";
+import { useRegisterNavRight } from "@/app/(poly)/PolyShell";
+import ProfileIcons from "@/app/(poly)/dashboard/profile-icon";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import "react-pdf/dist/esm/Page/TextLayer.css";
 import {
   CALPOLY_DEPARTMENT_CODES,
   CALPOLY_PLACEHOLDER_COURSES,
-} from "@/app/dashboard/calpoly-catalog";
+} from "@/app/(poly)/dashboard/calpoly-catalog";
 import "./upload.css";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.mjs`;
@@ -547,6 +547,19 @@ export default function UploadPage() {
     }
   };
 
+  const uploadNavRight = useMemo(
+    () => (
+      <>
+        {credits != null && (
+          <span className="upload-nav-credits">Credits: {credits}</span>
+        )}
+        <ProfileIcons />
+      </>
+    ),
+    [credits],
+  );
+  useRegisterNavRight(uploadNavRight);
+
   if (isUploading) {
     return (
       <main className="upload-status-screen">
@@ -575,17 +588,6 @@ export default function UploadPage() {
 
   return (
     <main className="upload-page upload-page--design">
-      <DesignNav
-        active="upload"
-        rightSlot={
-          <>
-            {credits != null && (
-              <span className="upload-nav-credits">Credits: {credits}</span>
-            )}
-            <ProfileIcons />
-          </>
-        }
-      />
       <div className="upload-page-inner">
         <div className="upload-layout">
           <section
@@ -593,28 +595,29 @@ export default function UploadPage() {
             style={{ transitionDelay: "0ms" }}
           >
             <h1 className="upload-main-title">Upload Your Notes</h1>
-            <p className="upload-main-subtitle">Share your knowledge and earn credits</p>
+            <p className="upload-main-subtitle">
+              Add a PDF for moderation; credits are awarded after approval.
+            </p>
 
             {step === 1 && (
               <div className="upload-step">
-                <h2 className="upload-step-heading">Step 1: Upload Files</h2>
+                <h2 className="upload-step-heading">Step 1: Choose PDF</h2>
                 <div
                   className="upload-dragzone"
                   onDrop={handleDrop}
                   onDragOver={handleDragOver}
                 >
-                  <input
-                    id="upload-file-input"
-                    type="file"
-                    accept="application/pdf"
-                    className="upload-dragzone-input"
-                    onChange={(e) => {
-                      const chosen = e.target.files?.[0] ?? null;
-                      if (chosen) handleFileChange(chosen);
-                      e.target.value = "";
-                    }}
-                  />
                   <label htmlFor="upload-file-input" className="upload-dragzone-label">
+                    <input
+                      id="upload-file-input"
+                      type="file"
+                      accept="application/pdf"
+                      className="upload-dragzone-input"
+                      onChange={(e) => {
+                        const chosen = e.target.files?.[0] ?? null;
+                        if (chosen) handleFileChange(chosen);
+                      }}
+                    />
                     <span className="upload-dragzone-icon" aria-hidden>📄</span>
                     <span className="upload-dragzone-text">
                       {file ? file.name : "Drag and drop your file here"}
@@ -622,7 +625,7 @@ export default function UploadPage() {
                     <span className="upload-dragzone-browse">
                       {file ? "Change file" : "or click to browse"}
                     </span>
-                    <span className="upload-dragzone-hint">Supported format: PDF (Max 25MB)</span>
+                    <span className="upload-dragzone-hint">PDF only · max 25MB</span>
                   </label>
                 </div>
                 <div className="upload-step-buttons-row">
@@ -863,38 +866,34 @@ export default function UploadPage() {
           </section>
 
           <aside className="upload-sidecard upload-sidecard--credits" aria-label="Credits info">
-            <h3 className="upload-sidecard-title">How Credits Work</h3>
+            <h3 className="upload-sidecard-title">Credits (after approval)</h3>
             <div className="upload-credits-list">
               <div className="upload-credits-item">
                 <span className="upload-credits-icon upload-credits-icon--upload" aria-hidden>↑</span>
                 <div>
-                  <h4 className="upload-credits-item-title">Upload Notes</h4>
+                  <h4 className="upload-credits-item-title">Upload rewards</h4>
                   <p className="upload-credits-item-desc">
-                    Earn credits per note after approval: Lecture Notes &amp; Study Guide: 3 credits, Class Overview: 5 credits, Link: 1 credit.
+                    Lecture notes &amp; study guides: 3 · Class overview: 5 · Link: 1.
                   </p>
                 </div>
               </div>
               <div className="upload-credits-item">
                 <span className="upload-credits-icon upload-credits-icon--download" aria-hidden>↓</span>
                 <div>
-                  <h4 className="upload-credits-item-title">Download Notes</h4>
-                  <p className="upload-credits-item-desc">
-                    Use 3 credits to download notes from others.
-                  </p>
+                  <h4 className="upload-credits-item-title">Downloads</h4>
+                  <p className="upload-credits-item-desc">3 credits per download from others.</p>
                 </div>
               </div>
               <div className="upload-credits-item">
                 <span className="upload-credits-icon upload-credits-icon--quality" aria-hidden>★</span>
                 <div>
-                  <h4 className="upload-credits-item-title">Quality Bonus</h4>
-                  <p className="upload-credits-item-desc">
-                    Earn extra credits when your notes are highly rated.
-                  </p>
+                  <h4 className="upload-credits-item-title">Ratings</h4>
+                  <p className="upload-credits-item-desc">Strong ratings can add bonus credits.</p>
                 </div>
               </div>
             </div>
             <p className="upload-sidecard-tip">
-              Upload quality notes to build your credit balance and access more resources!
+              Questions? Check Browse for how peers use credits day to day.
             </p>
             <div className="upload-balance-box">
               <span className="upload-balance-label">Your Current Balance</span>

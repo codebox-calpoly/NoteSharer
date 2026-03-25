@@ -428,6 +428,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 24px;
+  align-items: stretch;
 }
 
 .browse-course-card {
@@ -435,6 +436,8 @@
   flex-direction: column;
   gap: 16px;
   padding: 21px 21px 16px;
+  min-height: 0;
+  height: 100%;
   background: #fff;
   border: 1px solid rgba(229, 231, 235, 1);
   border-radius: 8px;
@@ -512,6 +515,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  margin-top: auto;
   padding-top: 12px;
   border-top: 1px solid rgba(242, 244, 246, 1);
   font-size: 14px;

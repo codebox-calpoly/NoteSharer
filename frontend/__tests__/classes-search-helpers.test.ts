@@ -9,7 +9,7 @@ function makeRow(overrides: Partial<SearchableCourseRow>): SearchableCourseRow {
     id: "course-id",
     title: "Untitled",
     department: "CSC",
-    course_number: "100",
+    course_number: 100,
     term: "Fall",
     year: 2026,
     ...overrides,
@@ -19,8 +19,8 @@ function makeRow(overrides: Partial<SearchableCourseRow>): SearchableCourseRow {
 describe("classes search helper", () => {
   it("returns title-only matches", () => {
     const rows = [
-      makeRow({ id: "1", department: "CSC", course_number: "101", title: "Intro to Programming" }),
-      makeRow({ id: "2", department: "MATH", course_number: "141", title: "Data Structures for Scientists" }),
+      makeRow({ id: "1", department: "CSC", course_number: 101, title: "Intro to Programming" }),
+      makeRow({ id: "2", department: "MATH", course_number: 141, title: "Data Structures for Scientists" }),
     ];
 
     const result = rankAndLimitCourseRows(rows, normalizeCourseSearchQuery("structures"), 10);
@@ -29,8 +29,8 @@ describe("classes search helper", () => {
 
   it("ranks code-prefix matches above title-only matches", () => {
     const rows = [
-      makeRow({ id: "title", department: "MATH", course_number: "141", title: "CSC 1 for non-majors" }),
-      makeRow({ id: "code", department: "CSC", course_number: "101", title: "Intro to Programming" }),
+      makeRow({ id: "title", department: "MATH", course_number: 141, title: "CSC 1 for non-majors" }),
+      makeRow({ id: "code", department: "CSC", course_number: 101, title: "Intro to Programming" }),
     ];
 
     const result = rankAndLimitCourseRows(rows, normalizeCourseSearchQuery("csc 1"), 10);
@@ -44,9 +44,9 @@ describe("classes search helper", () => {
 
   it("applies limit after ranking", () => {
     const rows = [
-      makeRow({ id: "title-1", department: "MATH", course_number: "141", title: "CSC 1 for non-majors" }),
-      makeRow({ id: "code", department: "CSC", course_number: "101", title: "Intro to Programming" }),
-      makeRow({ id: "title-2", department: "PHIL", course_number: "101", title: "CSC 1 ethics" }),
+      makeRow({ id: "title-1", department: "MATH", course_number: 141, title: "CSC 1 for non-majors" }),
+      makeRow({ id: "code", department: "CSC", course_number: 101, title: "Intro to Programming" }),
+      makeRow({ id: "title-2", department: "PHIL", course_number: 101, title: "CSC 1 ethics" }),
     ];
 
     const result = rankAndLimitCourseRows(rows, normalizeCourseSearchQuery("csc 1"), 1);

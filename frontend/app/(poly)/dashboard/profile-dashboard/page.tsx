@@ -1,11 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getSessionWithRecovery, supabase } from "@/lib/supabaseClient";
 import type { User } from "@supabase/supabase-js";
-import { DesignNav } from "@/app/components/DesignNav";
+import { useRegisterNavRight } from "@/app/(poly)/PolyShell";
 import { ThemeToggle } from "@/app/components/ThemeToggle";
 import { useTheme } from "@/app/components/ThemeProvider";
 import { displayStatValue, getRankValue, toProfileStats, type ProfileStats } from "./stats";
@@ -289,20 +289,21 @@ export default function Page() {
   const { theme } = useTheme();
   const displayedStats = profileStats ?? null;
 
+  const profileNavRight = useMemo(
+    () => (
+      <>
+        <span className="profile-page__credits-pill">Credits: {credits ?? "—"}</span>
+        <Link href="/dashboard/profile-dashboard" className="profile-page__profile-btn" aria-label="Profile">
+          {initial}
+        </Link>
+      </>
+    ),
+    [credits, initial],
+  );
+  useRegisterNavRight(profileNavRight);
+
   return (
     <div className="profile-page">
-      <DesignNav
-        active="profile"
-        rightSlot={
-          <>
-            <span className="profile-page__credits-pill">Credits: {credits ?? "—"}</span>
-            <Link href="/dashboard/profile-dashboard" className="profile-page__profile-btn" aria-label="Profile">
-              {initial}
-            </Link>
-          </>
-        }
-      />
-
       <div className="profile-page__body">
         <div className="profile-page__main">
           <div className="profile-page__content">

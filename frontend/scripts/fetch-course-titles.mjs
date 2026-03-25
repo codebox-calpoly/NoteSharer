@@ -3,7 +3,7 @@
  * Fetches 2026-2028 Cal Poly catalog department pages and extracts ONLY the
  * bolded line for each course: "CourseName (N units)" (everything after the
  * course number). Discovers department links from the catalog index for full coverage.
- * Writes app/dashboard/calpoly-course-titles.ts.
+ * Writes app/(poly)/dashboard/calpoly-course-titles.ts.
  * Run: node scripts/fetch-course-titles.mjs
  */
 
@@ -132,9 +132,9 @@ async function run() {
   const path = await import("path");
   const { fileURLToPath } = await import("url");
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
-  const outPath = path.join(__dirname, "../app/dashboard/calpoly-course-titles.ts");
+  const outPath = path.join(__dirname, "../app/(poly)/dashboard/calpoly-course-titles.ts");
   fs.writeFileSync(outPath, lines.join("\n"), "utf8");
-  console.error(`\nWrote ${codes.length} course titles to app/dashboard/calpoly-course-titles.ts`);
+  console.error(`\nWrote ${codes.length} course titles to app/(poly)/dashboard/calpoly-course-titles.ts`);
 }
 
 run().catch((err) => {

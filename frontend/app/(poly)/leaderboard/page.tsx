@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { DesignNav } from "@/app/components/DesignNav";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRegisterNavRight } from "@/app/(poly)/PolyShell";
 import { getSessionWithRecovery, supabase } from "@/lib/supabaseClient";
 
 type LeaderboardEntry = {
@@ -89,9 +89,11 @@ export default function LeaderboardPage() {
   const listStartIndex = hasPodium ? 3 : 0;
   const creditLabel = period === "all_time" ? "credits" : "earned";
 
+  const emptyNavRight = useMemo(() => null, []);
+  useRegisterNavRight(emptyNavRight);
+
   return (
     <div className="flex flex-col min-h-screen page-bg" style={{ fontFamily: "var(--font-inter), Inter, Helvetica, sans-serif" }}>
-      <DesignNav active="leaderboard" />
       <main className="flex-1 px-4 md:px-8 py-8 md:py-12">
         <div className="max-w-4xl mx-auto">
           <div

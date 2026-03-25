@@ -179,9 +179,8 @@ export default function Home() {
             }`}
           >
             <p className="max-w-3xl mx-auto font-normal text-[#666666] text-base md:text-xl text-center tracking-[0] leading-relaxed md:leading-[34px] px-4">
-              A peer to peer helping platform that rewards contribution. Upload
-              your notes from class, earn credits, and unlock notes from students
-              all across campus.
+              A peer-to-peer platform for the Cal Poly community: upload notes,
+              earn credits, and unlock materials from classmates.
             </p>
           </div>
 
@@ -238,11 +237,13 @@ export default function Home() {
                 Poly Pages
               </h2>
             </div>
-            <div className="relative h-[21px]">
-              <p className="font-normal text-[#999999] text-sm tracking-[0] leading-[21px] whitespace-nowrap">
-                CodeBox TM
-              </p>
-            </div>
+            <p className="font-normal text-[#999999] text-sm tracking-[0] leading-relaxed max-w-md">
+              Independent student project · Not affiliated with Cal Poly
+              administration
+            </p>
+            <p className="font-normal text-[#999999] text-xs tracking-[0] mt-1">
+              CodeBox TM
+            </p>
           </div>
           <nav
             className="flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-8"
@@ -319,11 +320,11 @@ function HowItWorksSection() {
         </h2>
       </header>
       <div className="relative w-full max-w-6xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 items-stretch">
           {steps.map((step, index) => (
             <article
               key={index}
-              className={`flex flex-col items-center transition-all duration-700 ${
+              className={`flex flex-col items-center h-full transition-all duration-700 ${
                 isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
               }`}
               style={{ transitionDelay: `${(index + 1) * 150}ms` }}
@@ -336,7 +337,7 @@ function HowItWorksSection() {
               <h3 className="font-semibold text-[#2e2e2e] text-xl md:text-2xl text-center tracking-[0] leading-8 mb-3 px-4">
                 {step.title}
               </h3>
-              <p className="font-normal text-[#666666] text-base text-center tracking-[0] leading-[25.6px] px-4 max-w-[280px]">
+              <p className="font-normal text-[#666666] text-base text-center tracking-[0] leading-[25.6px] px-4 max-w-[280px] mt-auto">
                 {step.description}
               </p>
             </article>
@@ -407,11 +408,11 @@ function WhyChooseUsSection() {
         </h2>
       </header>
       <div className="relative w-full max-w-6xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 items-stretch">
           {features.map((feature, index) => (
             <article
               key={index}
-              className={`flex flex-col bg-white rounded-2xl shadow-[0px_4px_20px_#00000014] p-8 md:p-10 transition-all duration-700 hover:shadow-[0px_8px_30px_#00000020] hover:-translate-y-1 ${
+              className={`flex flex-col h-full bg-white rounded-2xl shadow-[0px_4px_20px_#00000014] p-8 md:p-10 transition-all duration-700 hover:shadow-[0px_8px_30px_#00000020] hover:-translate-y-1 ${
                 isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
               }`}
               style={{ transitionDelay: `${(index + 1) * 100}ms` }}
@@ -424,7 +425,7 @@ function WhyChooseUsSection() {
               <h3 className="font-semibold text-[#2e2e2e] text-xl md:text-2xl tracking-[0] leading-8 mb-4">
                 {feature.title}
               </h3>
-              <p className="font-normal text-[#666666] text-base tracking-[0] leading-[27.2px]">
+              <p className="font-normal text-[#666666] text-base tracking-[0] leading-[27.2px] flex-1">
                 {feature.description}
               </p>
             </article>

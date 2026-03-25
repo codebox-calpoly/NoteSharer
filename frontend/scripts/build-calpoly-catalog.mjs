@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Fetches Cal Poly department catalog pages, parses course listings, and writes
- * frontend/app/dashboard/calpoly-catalog.ts with real courses (plus TEST COURSE).
+ * frontend/app/(poly)/dashboard/calpoly-catalog.ts with real courses (plus TEST COURSE).
  * Run: node scripts/build-calpoly-catalog.mjs
  */
 
@@ -102,10 +102,10 @@ async function run() {
     "",
   ];
 
-  const outPath = new URL("../app/dashboard/calpoly-catalog.ts", import.meta.url);
+  const outPath = new URL("../app/(poly)/dashboard/calpoly-catalog.ts", import.meta.url);
   const fs = await import("fs");
   fs.writeFileSync(outPath, lines.join("\n"), "utf8");
-  console.error(`\nWrote ${allCourses.length} courses to app/dashboard/calpoly-catalog.ts`);
+  console.error(`\nWrote ${allCourses.length} courses to app/(poly)/dashboard/calpoly-catalog.ts`);
 }
 
 run().catch((err) => {
