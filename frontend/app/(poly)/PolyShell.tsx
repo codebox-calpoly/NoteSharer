@@ -9,8 +9,14 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import { DesignNav } from "@/app/components/DesignNav";
+
+const MobileDisclaimerBanner = dynamic(
+  () => import("./MobileDisclaimerBanner"),
+  { ssr: false },
+);
 
 type ShellCtx = { setNavRightSlot: (n: ReactNode) => void };
 
@@ -36,47 +42,6 @@ function navActiveFromPath(
   if (pathname.startsWith("/dashboard/profile-dashboard")) return "profile";
   if (pathname.startsWith("/dashboard")) return "browse";
   return undefined;
-}
-
-function MobileDisclaimerBanner() {
-  const [dismissed, setDismissed] = useState(true);
-  useEffect(() => {
-    try {
-      if (localStorage.getItem("poly-pages-disclaimer-dismissed") === "1") return;
-      setDismissed(false);
-    } catch {
-      setDismissed(false);
-    }
-  }, []);
-  const dismiss = () => {
-    try {
-      localStorage.setItem("poly-pages-disclaimer-dismissed", "1");
-    } catch {
-      /* ignore quota / private mode */
-    }
-    setDismissed(true);
-  };
-  if (dismissed) return null;
-  return (
-    <div
-      className="poly-mobile-disclaimer"
-      role="note"
-      aria-label="Disclaimer"
-    >
-      <p>
-        Poly Pages is an independent student project and is not affiliated with
-        or endorsed by California Polytechnic State University.
-      </p>
-      <button
-        type="button"
-        className="poly-mobile-disclaimer-dismiss"
-        onClick={dismiss}
-        aria-label="Dismiss disclaimer"
-      >
-        Dismiss
-      </button>
-    </div>
-  );
 }
 
 export function PolyShell({ children }: { children: ReactNode }) {
