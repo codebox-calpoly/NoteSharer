@@ -112,6 +112,7 @@ export default function DashboardPage() {
     const loadSession = async () => {
       const { session, error } = await getSessionWithRecovery(supabase);
       if (error) setCoursesError("Not authenticated");
+      else if (!session?.access_token) setCoursesError(null);
       setAccessToken(session?.access_token ?? null);
       setTokenLoaded(true);
     };
@@ -719,9 +720,24 @@ export default function DashboardPage() {
           {isSearchMode && searchLoading && (
             <p className="browse-loading" aria-live="polite">Searching…</p>
           )}
-          {tokenLoaded && !coursesLoading && !(isSearchMode && searchLoading) && allDisplayCourses.length === 0 && !coursesError && (
+          {tokenLoaded && !accessToken && !coursesError && (
             <p className="browse-empty">
-              {isSearchMode ? "No courses match your search." : "No courses match your filters."}
+              <Link href="/auth">Sign in</Link> to browse courses. If your session expired, sign in again—the list loads
+              only for signed-in users.
+            </p>
+          )}
+          {tokenLoaded &&
+            !!accessToken &&
+            !coursesLoading &&
+            !(isSearchMode && searchLoading) &&
+            allDisplayCourses.length === 0 &&
+            !coursesError && (
+            <p className="browse-empty">
+              {isSearchMode
+                ? "No courses match your search."
+                : selectedDepartment
+                  ? "No courses in this department."
+                  : "No courses in the catalog yet."}
             </p>
           )}
           <div className="browse-course-grid">
