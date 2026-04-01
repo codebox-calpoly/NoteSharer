@@ -40,7 +40,7 @@ export function AuthenticatedAppChrome() {
   const [displayName, setDisplayName] = useState<string | null>(null);
   const [handle, setHandle] = useState<string | null>(null);
 
-  const showChrome = useMemo(
+  const isAppShellRoute = useMemo(
     () => APP_PATHS.some((prefix) => pathname.startsWith(prefix)),
     [pathname],
   );
@@ -68,7 +68,7 @@ export function AuthenticatedAppChrome() {
   }, []);
 
   useEffect(() => {
-    if (!showChrome || !session?.access_token) return;
+    if (!isAppShellRoute || !session?.access_token) return;
 
     let cancelled = false;
     const authHeaders = {
@@ -120,32 +120,40 @@ export function AuthenticatedAppChrome() {
     return () => {
       cancelled = true;
     };
-  }, [showChrome, session?.access_token, session?.user.id, pathname, router]);
+  }, [isAppShellRoute, session?.access_token, session?.user.id, pathname, router]);
 
-  if (!showChrome || !session) {
+  if (!isAppShellRoute) {
     return null;
   }
 
-  const initials = buildProfileInitials(displayName, handle);
+  const initials =
+    session != null ? buildProfileInitials(displayName, handle) : "";
+
+  const rightSlot =
+    session != null ? (
+      <>
+        <span className="app-shell-pill">Credits: {credits ?? "\u2014"}</span>
+        {(freeDownloads ?? 0) > 0 ? (
+          <span className="app-shell-pill">Free downloads: {freeDownloads}</span>
+        ) : null}
+        <Link
+          href="/dashboard/profile-dashboard"
+          className="app-shell-profile-link"
+          aria-label="Open profile"
+        >
+          {initials}
+        </Link>
+      </>
+    ) : (
+      <Link
+        href="/auth"
+        className="design-nav-link font-medium text-lg py-2 px-3 rounded-lg text-[#666666] hover:text-[#6dbe8b] [data-theme=dark]:text-gray-300"
+      >
+        Sign in
+      </Link>
+    );
 
   return (
-    <DesignNav
-      active={getActiveNav(pathname)}
-      rightSlot={
-        <>
-          <span className="app-shell-pill">Credits: {credits ?? "\u2014"}</span>
-          {(freeDownloads ?? 0) > 0 ? (
-            <span className="app-shell-pill">Free downloads: {freeDownloads}</span>
-          ) : null}
-          <Link
-            href="/dashboard/profile-dashboard"
-            className="app-shell-profile-link"
-            aria-label="Open profile"
-          >
-            {initials}
-          </Link>
-        </>
-      }
-    />
+    <DesignNav active={getActiveNav(pathname)} rightSlot={rightSlot} />
   );
 }
