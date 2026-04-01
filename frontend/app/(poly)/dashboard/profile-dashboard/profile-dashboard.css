@@ -1,7 +1,7 @@
 /* Profile page – Figma user-profile-page-design layout */
 .profile-page {
   min-height: 100vh;
-  background: var(--poly-bg-page);
+  background: var(--poly-page-bg);
   display: flex;
   flex-direction: column;
   font-family: inherit;
@@ -16,8 +16,8 @@
   display: flex;
   align-items: center;
   padding: 0 var(--poly-space-xl);
-  background: #fff;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  background: var(--poly-surface-raised);
+  border-bottom: 1px solid var(--poly-border);
 }
 
 .profile-page__nav-inner {
@@ -141,6 +141,29 @@
   opacity: 0.9;
 }
 
+.profile-page__actions-inline {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+.profile-page__save-enrollment {
+  height: 40px;
+  padding: 0 18px;
+  border: none;
+  border-radius: 999px;
+  background: var(--poly-sage);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.profile-page__save-enrollment:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
 /* Body layout */
 .profile-page__body {
   flex: 1;
@@ -166,9 +189,9 @@
 
 /* Cards */
 .profile-page__card {
-  background: #fff;
+  background: var(--poly-surface-raised);
   border-radius: 14px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--poly-shadow-soft);
 }
 
 /* Profile card */

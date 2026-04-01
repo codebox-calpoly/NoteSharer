@@ -3,8 +3,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f4f4f5;
-  color: #0b0b0b;
+  background: var(--poly-page-bg);
+  color: var(--poly-text-primary);
   padding: 1.5rem;
 }
 
@@ -13,11 +13,4 @@
   font-size: 1rem;
   font-weight: 600;
   color: inherit;
-}
-
-@media (prefers-color-scheme: dark) {
-  .callback-page {
-    background: #0a0a0a;
-    color: #ededed;
-  }
 }

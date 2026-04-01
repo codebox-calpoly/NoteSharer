@@ -21,6 +21,7 @@ export default function LeaderboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [period, setPeriod] = useState<LeaderboardPeriod>("all_time");
 
   useEffect(() => {
@@ -31,6 +32,7 @@ export default function LeaderboardPage() {
     const loadSession = async () => {
       const { session } = await getSessionWithRecovery(supabase);
       setAccessToken(session?.access_token ?? null);
+      setCurrentUserId(session?.user.id ?? null);
     };
 
     void loadSession();
@@ -88,6 +90,8 @@ export default function LeaderboardPage() {
   const hasPodium = entries.length >= 3;
   const listStartIndex = hasPodium ? 3 : 0;
   const creditLabel = period === "all_time" ? "credits" : "earned";
+  const formatLeaderboardName = (entry: LeaderboardEntry) =>
+    entry.userId === currentUserId ? `${entry.name} (you)` : entry.name;
 
   const emptyNavRight = useMemo(() => null, []);
   useRegisterNavRight(emptyNavRight);
@@ -152,7 +156,9 @@ export default function LeaderboardPage() {
                   </div>
                   <div className="leaderboard-podium-card bg-white rounded-t-xl p-4 md:p-6 text-center shadow-lg w-32 md:w-40 h-32 md:h-40 flex flex-col justify-center">
                     <div className="text-3xl md:text-4xl font-bold text-gray-400 mb-2">2</div>
-                    <p className="font-semibold text-[#2e2e2e] text-sm md:text-base mb-1">{second.name.split(" ")[0]}</p>
+                    <p className="font-semibold text-[#2e2e2e] text-sm md:text-base mb-1">
+                      {formatLeaderboardName(second)}
+                    </p>
                     <p className="text-[#6dbe8b] text-xs md:text-sm font-bold">{second.uploads} uploads</p>
                   </div>
                 </div>
@@ -162,7 +168,9 @@ export default function LeaderboardPage() {
                   </div>
                   <div className="leaderboard-podium-card bg-white rounded-t-xl p-4 md:p-6 text-center shadow-xl w-32 md:w-40 h-40 md:h-48 flex flex-col justify-center">
                     <div className="text-4xl md:text-5xl font-bold text-yellow-500 mb-2">1</div>
-                    <p className="font-semibold text-[#2e2e2e] text-sm md:text-base mb-1">{first.name.split(" ")[0]}</p>
+                    <p className="font-semibold text-[#2e2e2e] text-sm md:text-base mb-1">
+                      {formatLeaderboardName(first)}
+                    </p>
                     <p className="text-[#6dbe8b] text-xs md:text-sm font-bold">{first.uploads} uploads</p>
                   </div>
                 </div>
@@ -172,7 +180,9 @@ export default function LeaderboardPage() {
                   </div>
                   <div className="leaderboard-podium-card bg-white rounded-t-xl p-4 md:p-6 text-center shadow-lg w-32 md:w-40 h-28 md:h-32 flex flex-col justify-center">
                     <div className="text-3xl md:text-4xl font-bold text-orange-500 mb-2">3</div>
-                    <p className="font-semibold text-[#2e2e2e] text-sm md:text-base mb-1">{third.name.split(" ")[0]}</p>
+                    <p className="font-semibold text-[#2e2e2e] text-sm md:text-base mb-1">
+                      {formatLeaderboardName(third)}
+                    </p>
                     <p className="text-[#6dbe8b] text-xs md:text-sm font-bold">{third.uploads} uploads</p>
                   </div>
                 </div>
@@ -196,7 +206,9 @@ export default function LeaderboardPage() {
                       {user.avatar}
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-semibold text-[#2e2e2e] text-base md:text-lg">{user.name}</h3>
+                      <h3 className="font-semibold text-[#2e2e2e] text-base md:text-lg">
+                        {formatLeaderboardName(user)}
+                      </h3>
                       <p className="text-[#666666] text-sm">{user.uploads} uploads</p>
                     </div>
                     <div className="text-right">

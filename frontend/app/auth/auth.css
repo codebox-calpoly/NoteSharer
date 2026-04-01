@@ -4,8 +4,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--poly-bg-page);
-  color: var(--poly-neutral-dark);
+  background: var(--poly-page-bg);
+  color: var(--poly-text-primary);
   padding: var(--poly-space-lg);
 }
 
@@ -13,14 +13,14 @@
   display: flex;
   flex-direction: column;
   gap: var(--poly-space-lg);
-  background: #fff;
-  color: var(--poly-neutral-dark);
-  border: 1px solid var(--poly-border);
+  background: var(--poly-surface-raised);
+  color: var(--poly-text-primary);
+  border: 1px solid var(--poly-border-strong);
   border-radius: var(--poly-radius-card);
   padding: var(--poly-space-3xl);
   max-width: 440px;
   width: 100%;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--poly-shadow-strong);
 }
 
 .auth-title {
@@ -35,7 +35,7 @@
   margin: 0;
   font-size: 18px;
   line-height: 1.5;
-  color: var(--poly-neutral-muted);
+  color: var(--poly-text-secondary);
 }
 
 .auth-form {
@@ -53,23 +53,23 @@
 .auth-input {
   width: 100%;
   height: 48px;
-  border: 1px solid var(--poly-border);
+  border: 1px solid var(--poly-border-strong);
   border-radius: var(--poly-radius-input);
   padding: 0 16px;
   font-size: 16px;
-  background: #fff;
-  color: var(--poly-neutral-dark);
+  background: var(--poly-surface);
+  color: var(--poly-text-primary);
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .auth-input:focus {
   outline: none;
   border-color: var(--poly-primary);
-  box-shadow: 0 0 0 3px rgba(191, 68, 8, 0.12);
+  box-shadow: var(--poly-focus-ring);
 }
 
 .auth-input::placeholder {
-  color: var(--poly-neutral-muted);
+  color: var(--poly-text-tertiary);
 }
 
 .auth-button-primary {
@@ -96,8 +96,8 @@
 
 .auth-button-secondary {
   background: transparent;
-  border: 1px solid var(--poly-border);
-  color: var(--poly-neutral-muted);
+  border: 1px solid var(--poly-border-strong);
+  color: var(--poly-text-secondary);
   font-size: 14px;
   padding: 8px 16px;
   border-radius: var(--poly-radius-button);
@@ -107,7 +107,7 @@
 
 .auth-button-secondary:hover {
   background: var(--poly-sage-soft);
-  color: var(--poly-neutral-dark);
+  color: var(--poly-text-primary);
 }
 
 .auth-success,
@@ -117,62 +117,25 @@
 }
 
 .auth-success {
-  color: #15803d;
+  color: var(--poly-success);
 }
 
 .auth-error {
-  color: #b91c1c;
+  color: var(--poly-danger);
 }
 
 .auth-loading {
   margin: 0;
   font-size: 16px;
   font-weight: 600;
-  color: var(--poly-neutral-muted);
-}
-
-/* Dark mode: sign-in card stays a solid light panel so text stays readable.
-   Global --poly-neutral-* become light gray in dark theme; we override so
-   the card always uses dark text on light background (no washed-out look). */
-[data-theme="dark"] .auth-page {
-  background: var(--poly-bg-page);
+  color: var(--poly-text-secondary);
 }
 
 [data-theme="dark"] .auth-card {
-  background: #ffffff;
-  border-color: rgba(0, 0, 0, 0.1);
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
-}
-
-[data-theme="dark"] .auth-title,
-[data-theme="dark"] .auth-label {
-  color: #1a1a1a;
-}
-
-[data-theme="dark"] .auth-body {
-  color: #495565;
-}
-
-[data-theme="dark"] .auth-input {
-  background: #ffffff;
-  color: #1a1a1a;
-  border-color: rgba(0, 0, 0, 0.15);
-}
-
-[data-theme="dark"] .auth-input::placeholder {
-  color: #737373;
-}
-
-[data-theme="dark"] .auth-loading {
-  color: #495565;
-}
-
-[data-theme="dark"] .auth-button-secondary {
-  color: #495565;
-  border-color: rgba(0, 0, 0, 0.15);
+  background: var(--poly-surface-raised);
+  border-color: var(--poly-border-strong);
 }
 
 [data-theme="dark"] .auth-button-secondary:hover {
-  background: rgba(0, 0, 0, 0.06);
-  color: #1a1a1a;
+  background: var(--poly-surface-muted);
 }

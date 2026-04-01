@@ -510,6 +510,11 @@ export default function UploadPage() {
       setIsUploading(false);
       return;
     }
+    if (!description.trim()) {
+      setSubmitError("Please add a short description for your note.");
+      setIsUploading(false);
+      return;
+    }
     if (!accessToken) {
       setSubmitError("Please sign in again.");
       setIsUploading(false);
@@ -521,7 +526,7 @@ export default function UploadPage() {
     formData.append("class_id", classId);
     formData.append("title", title.trim());
     formData.append("resource_type", resourceType);
-    if (description.trim()) formData.append("description", description.trim());
+    formData.append("description", description.trim());
 
     try {
       const res = await fetch("/api/upload", {
@@ -623,9 +628,11 @@ export default function UploadPage() {
                       {file ? file.name : "Drag and drop your file here"}
                     </span>
                     <span className="upload-dragzone-browse">
-                      {file ? "Change file" : "or click to browse"}
+                      {file ? "Choose a different PDF" : "or click to browse"}
                     </span>
-                    <span className="upload-dragzone-hint">PDF only · max 25MB</span>
+                    <span className="upload-dragzone-hint">
+                      {file ? "PDF selected and ready to upload" : "Supported format: PDF (Max 25MB)"}
+                    </span>
                   </label>
                 </div>
                 <div className="upload-step-buttons-row">
@@ -836,10 +843,10 @@ export default function UploadPage() {
               <form className="upload-step" onSubmit={handleSubmit}>
                 <h2 className="upload-step-heading">Step 3: Add a description</h2>
                 <p className="upload-step-desc">
-                  This short description will be shown when someone clicks your note on the dashboard.
+                  Add a short summary so other students know what this note covers.
                 </p>
                 <div className="upload-field">
-                  <label className="upload-label">Description (optional)</label>
+                  <label className="upload-label">Description *</label>
                   <textarea
                     className="upload-input upload-textarea"
                     value={description}
@@ -847,6 +854,7 @@ export default function UploadPage() {
                     placeholder="e.g. Covers chapters 1–3, key formulas and examples"
                     rows={4}
                     maxLength={2000}
+                    required
                   />
                   <span className="upload-char-count">{description.length}/2000</span>
                 </div>
@@ -873,7 +881,7 @@ export default function UploadPage() {
                 <div>
                   <h4 className="upload-credits-item-title">Upload rewards</h4>
                   <p className="upload-credits-item-desc">
-                    Lecture notes &amp; study guides: 3 · Class overview: 5 · Link: 1.
+                    Earn credits after approval. Lecture Notes and Study Guides earn 3 credits, while Class Overviews earn 5.
                   </p>
                 </div>
               </div>
@@ -887,13 +895,15 @@ export default function UploadPage() {
               <div className="upload-credits-item">
                 <span className="upload-credits-icon upload-credits-icon--quality" aria-hidden>★</span>
                 <div>
-                  <h4 className="upload-credits-item-title">Ratings</h4>
-                  <p className="upload-credits-item-desc">Strong ratings can add bonus credits.</p>
+                  <h4 className="upload-credits-item-title">Quality Bonus</h4>
+                  <p className="upload-credits-item-desc">
+                    Clear titles and descriptions help other students decide what to download.
+                  </p>
                 </div>
               </div>
             </div>
             <p className="upload-sidecard-tip">
-              Questions? Check Browse for how peers use credits day to day.
+              Upload useful notes to keep the catalog valuable for everyone.
             </p>
             <div className="upload-balance-box">
               <span className="upload-balance-label">Your Current Balance</span>

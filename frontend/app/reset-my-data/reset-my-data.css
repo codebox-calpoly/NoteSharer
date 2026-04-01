@@ -6,32 +6,34 @@
   justify-content: center;
   padding: 2rem;
   text-align: center;
+  background: var(--poly-page-bg);
+  color: var(--poly-text-primary);
 }
 
 .reset-page h1 {
   font-size: 1.5rem;
-  color: #4ade80;
+  color: var(--poly-success);
   margin-bottom: 1rem;
 }
 
 .reset-page p {
   margin-bottom: 1rem;
-  color: #e5e7eb;
+  color: var(--poly-text-secondary);
 }
 
 .reset-success {
-  color: #9be2b2;
+  color: var(--poly-success);
 }
 
 .reset-error {
-  color: #f2a0a0;
+  color: var(--poly-danger);
 }
 
 .reset-page a {
-  color: #4ade80;
+  color: var(--poly-sage);
   text-decoration: underline;
 }
 
 .reset-page a:hover {
-  color: #86efac;
+  color: var(--poly-success);
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getSessionWithRecovery, supabase } from "@/lib/supabaseClient";
 import { generateUniqueNickname } from "@/lib/nicknames";
@@ -18,7 +18,7 @@ const createProfileWithDefaults = async (
   email: string | null
 ) => {
   const baseHandle = makeHandleBase(email, userId);
-  let lastError: { message: string; code?: string } | null = null;
+  let lastError: Error | null = null;
 
   for (let attempt = 0; attempt < 3; attempt += 1) {
     const suffix =
@@ -49,9 +49,24 @@ const createProfileWithDefaults = async (
       return data;
     }
 
-    lastError = { message: error.message, code: error.code };
+    lastError = new Error(`Failed to create profile: ${error.message}`);
+    lastError.name = `SupabaseError${error.code ? `:${error.code}` : ""}`;
 
-    // If it's a unique violation (handle/email), retry with a new suffix.
+    // Concurrent redirects can race and create the row twice in development.
+    // If the profile now exists for this user, continue with the existing row.
+    if (error.code === "23505") {
+      const { data: existingProfile, error: existingProfileError } = await supabase
+        .from("profiles")
+        .select("onboarding_complete")
+        .eq("id", userId)
+        .maybeSingle();
+
+      if (!existingProfileError && existingProfile) {
+        return existingProfile;
+      }
+    }
+
+    // If it's a unique violation on handle/email, retry with a new suffix.
     if (error.code !== "23505") {
       break;
     }
@@ -63,8 +78,14 @@ const createProfileWithDefaults = async (
 export default function AuthCallbackPage() {
   const router = useRouter();
   const [status, setStatus] = useState("Checking your session...");
+  const hasStartedRef = useRef(false);
 
   useEffect(() => {
+    if (hasStartedRef.current) {
+      return;
+    }
+    hasStartedRef.current = true;
+
     const handleRedirect = async () => {
       const pauseBeforeRedirect = async () => {
         await new Promise((resolve) => {

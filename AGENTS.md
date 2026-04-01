@@ -4,6 +4,7 @@
 - `frontend/` — Next.js 16 app (App Router). Key files: `app/page.tsx`, `app/layout.tsx`, `app/globals.css`. Shared configs: `eslint.config.mjs`, `tsconfig.json`, `next.config.ts`.
 - `supabase/` — database migrations and CLI setup (see `supabase/README.md`); apply schema via Supabase CLI.
 - `docs/` — contributor and process docs. Root files (`PRD.md`, `Note_Sharer_Tech_Stack.md`, `project-charter.md`) capture product intent.
+- UI system source of truth: `docs/ui-system.md`. Follow its terminology and component rules before introducing new UI or copy changes.
 - Keep new UI/features in `frontend/app/<feature>`; colocate helpers with components. Place future tests beside modules or under `frontend/__tests__`.
 
 ## Build, Test, and Development Commands
