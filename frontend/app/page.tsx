@@ -82,13 +82,13 @@ export default function Home() {
             <ThemeToggle />
             <Link
               href="/auth"
-            className="hidden md:flex relative w-[95.05px] h-10 rounded-[10px] border border-solid border-black shadow-[0px_4px_4px_#00000040] cursor-pointer transition-all duration-200 hover:shadow-[0px_6px_6px_#00000040] hover:-translate-y-0.5 active:translate-y-0 active:shadow-[0px_2px_2px_#00000040] items-center justify-center bg-[var(--variable-collection-warm-apricot)]"
+              className="hidden md:flex relative h-10 px-4 rounded-[10px] border border-solid border-black shadow-[0px_4px_4px_#00000040] cursor-pointer transition-all duration-200 hover:shadow-[0px_6px_6px_#00000040] hover:-translate-y-0.5 active:translate-y-0 active:shadow-[0px_2px_2px_#00000040] items-center justify-center bg-[var(--variable-collection-warm-apricot)] whitespace-nowrap"
               aria-label="Sign in or register"
-          >
-            <span className="font-semibold text-[#2c1b1b] text-base text-center tracking-[0] leading-6 whitespace-nowrap">
-              Sign In / Register
-            </span>
-          </Link>
+            >
+              <span className="font-semibold text-[#2c1b1b] text-sm text-center tracking-[0] leading-6">
+                Sign In / Register
+              </span>
+            </Link>
           </div>
 
           <button
@@ -311,7 +311,7 @@ function HowItWorksSection() {
     <section
       ref={sectionRef}
       id="how-it-works"
-      className="flex flex-col w-full items-start gap-12 md:gap-16 pt-16 md:pt-24 pb-12 md:pb-16 px-4 md:px-8 bg-white"
+      className="flex flex-col w-full items-center gap-12 md:gap-16 pt-16 md:pt-24 pb-12 md:pb-16 px-4 md:px-8 bg-white"
     >
       <header className="relative w-full">
         <h2
@@ -399,7 +399,7 @@ function WhyChooseUsSection() {
     <section
       ref={sectionRef}
       id="why-poly-pages"
-      className="flex flex-col w-full items-start gap-12 md:gap-16 px-4 md:px-8 py-16 md:py-24"
+      className="flex flex-col w-full items-center gap-12 md:gap-16 px-4 md:px-8 py-16 md:py-24"
     >
       <header className="relative w-full">
         <h2
