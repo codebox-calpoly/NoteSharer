@@ -463,7 +463,7 @@ export default function Page() {
                         {uploads.map((note) => (
                           <li key={note.id}>
                             <Link
-                              href={note.class_id ? `/dashboard/course/${note.class_id}` : "/dashboard"}
+                              href={note.class_id ? `/dashboard/course/${note.class_id}?open=${note.id}` : "/dashboard"}
                               className="course-detail-note-card profile-page__note-card"
                             >
                               <h3 className="course-detail-note-title">{note.title}</h3>
