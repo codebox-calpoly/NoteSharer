@@ -53,7 +53,14 @@ export function CourseEnrollmentPicker({
         }
         const payload = (await res.json()) as { classes?: EnrollmentCourseOption[] };
         if (!cancelled) {
-          setResults(payload.classes ?? []);
+          const raw = payload.classes ?? [];
+          // Deduplicate by course code so the same course across multiple terms shows once.
+          const seen = new Map<string, EnrollmentCourseOption>();
+          for (const c of raw) {
+            const key = c.code ?? `${c.department ?? ""} ${c.id}`.trim();
+            if (!seen.has(key)) seen.set(key, c);
+          }
+          setResults(Array.from(seen.values()));
         }
       } catch (searchError) {
         if (!cancelled) {
