@@ -204,19 +204,14 @@ export default function Home() {
           </div>
 
           <div
-            className={`flex flex-col md:flex-row items-center justify-center gap-8 md:gap-12 lg:gap-16 transition-all duration-1000 delay-600 ${
+            className={`flex justify-center transition-all duration-1000 delay-600 ${
               heroVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
             }`}
           >
             <img
-              className="w-full max-w-[346px] h-auto"
+              className="w-full max-w-[600px] h-auto"
               alt="Laptop displaying notes interface"
               src={`${ANIMA_IMG}/mask-group@2x.png`}
-            />
-            <img
-              className="w-full max-w-[154px] h-auto rounded-2xl shadow-lg"
-              alt="Mobile phone displaying notes interface"
-              src="/app-mockup.png"
             />
           </div>
         </div>
