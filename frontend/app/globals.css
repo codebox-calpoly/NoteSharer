@@ -697,9 +697,9 @@ select {
   overflow: hidden;
   border-radius: 10px;
 }
-/* Landing logo: same gray rounded box and black logo in both themes (stays static on theme switch) */
+/* Landing logo: transparent SVG, no background box needed */
 .landing-header .logo-box {
-  background: #d4d4d4;
+  background: transparent;
 }
 .landing-header .logo-box img {
   filter: none;
@@ -712,13 +712,12 @@ select {
 [data-theme="dark"] header:not(.landing-header) .logo-box img {
   filter: brightness(0) invert(1) opacity(0.92);
 }
-/* Landing logo in dark mode: match dark nav style */
+/* Landing logo in dark mode: transparent SVG needs no special treatment */
 [data-theme="dark"] .landing-header .logo-box {
   background: transparent;
 }
 [data-theme="dark"] .landing-header .logo-box img {
   filter: none !important;
-  mix-blend-mode: screen;
 }
 
 /* Course detail: no pure white – use dark gray cards/tabs/filters with contrast */

@@ -41,7 +41,7 @@ export default function Home() {
               <img
                 className="relative w-[54px] h-[54px] landing-logo"
                 alt="Poly Pages Logo"
-                src={`${ANIMA_IMG}/container-8.svg`}
+                src="/Transparent Note Sharer(1).svg"
               />
             </span>
             <div className="relative h-8">
