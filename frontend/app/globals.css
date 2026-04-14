@@ -714,10 +714,11 @@ select {
 }
 /* Landing logo in dark mode: match dark nav style */
 [data-theme="dark"] .landing-header .logo-box {
-  background: #262626;
+  background: transparent;
 }
 [data-theme="dark"] .landing-header .logo-box img {
-  filter: brightness(0) invert(1) opacity(0.92) !important;
+  filter: none !important;
+  mix-blend-mode: screen;
 }
 
 /* Course detail: no pure white – use dark gray cards/tabs/filters with contrast */
