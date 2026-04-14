@@ -214,9 +214,9 @@ export default function Home() {
               src={`${ANIMA_IMG}/mask-group@2x.png`}
             />
             <img
-              className="w-full max-w-[154px] h-auto"
+              className="w-full max-w-[154px] h-auto rounded-2xl shadow-lg"
               alt="Mobile phone displaying notes interface"
-              src={`${ANIMA_IMG}/mask-group-1@2x.png`}
+              src="/app-mockup.png"
             />
           </div>
         </div>
