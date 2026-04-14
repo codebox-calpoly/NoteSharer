@@ -248,16 +248,10 @@ export default function Home() {
               CodeBox TM
             </p>
           </div>
-          <nav
+            <nav
             className="flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-8"
             aria-label="Footer navigation"
           >
-            <a
-              href="#about"
-              className="font-medium text-[#666666] text-base tracking-[0] leading-6 whitespace-nowrap hover:text-[#6dbe8b] transition-colors duration-200"
-            >
-              About
-            </a>
             <a
               href="/terms-and-conditions"
               className="font-medium text-[#666666] text-base tracking-[0] leading-6 whitespace-nowrap hover:text-[#6dbe8b] transition-colors duration-200"

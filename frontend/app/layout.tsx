@@ -23,6 +23,11 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Poly Pages",
   description: "Peer note sharing for the Cal Poly community.",
+  icons: {
+    icon: "https://c.animaapp.com/vYVdVbUl/img/container-8.svg",
+    shortcut: "https://c.animaapp.com/vYVdVbUl/img/container-8.svg",
+    apple: "https://c.animaapp.com/vYVdVbUl/img/container-8.svg",
+  },
 };
 
 export const viewport: Viewport = {
