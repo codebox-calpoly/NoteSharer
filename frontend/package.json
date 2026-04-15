@@ -9,11 +9,13 @@
     "lint": "eslint",
     "test": "jest",
     "format": "prettier --write .",
+    "db:seed-departments": "node scripts/seed-departments.mjs",
     "db:seed-catalog": "node scripts/seed-catalog-courses.mjs",
     "fetch-course-titles": "node scripts/fetch-course-titles.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.83.0",
+    "fuse.js": "^7.1.0",
     "next": "16.0.10",
     "pdf2pic": "^3.2.0",
     "pdfjs-dist": "4.8.69",

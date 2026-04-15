@@ -1,8 +1,17 @@
-export type CourseSearchMatchType = "code_prefix" | "title_contains" | "none";
+export type CourseSearchMatchType =
+  | "code_prefix"
+  | "department_alias"
+  | "title_contains"
+  | "none";
 
 export type CourseSearchable = {
   code: string | null;
   name: string | null;
+  department?: string | null;
+};
+
+export type CourseSearchOptions = {
+  matchedDepartmentCodes?: ReadonlySet<string>;
 };
 
 function normalizeSpaces(value: string): string {
@@ -20,13 +29,22 @@ export function normalizeCourseSearchQuery(query: string): string {
 
 export function getCourseSearchMatchType(
   course: CourseSearchable,
-  normalizedQuery: string
+  normalizedQuery: string,
+  options: CourseSearchOptions = {}
 ): CourseSearchMatchType {
   if (!normalizedQuery) return "none";
 
   const normalizedCode = normalizeField(course.code);
   if (normalizedCode && normalizedCode.startsWith(normalizedQuery)) {
     return "code_prefix";
+  }
+
+  if (
+    course.department &&
+    options.matchedDepartmentCodes &&
+    options.matchedDepartmentCodes.has(course.department)
+  ) {
+    return "department_alias";
   }
 
   const normalizedName = normalizeField(course.name);
@@ -39,27 +57,33 @@ export function getCourseSearchMatchType(
 
 export function getCourseSearchRank(
   course: CourseSearchable,
-  normalizedQuery: string
-): 0 | 1 | 2 {
-  const type = getCourseSearchMatchType(course, normalizedQuery);
+  normalizedQuery: string,
+  options: CourseSearchOptions = {}
+): 0 | 1 | 2 | 3 {
+  const type = getCourseSearchMatchType(course, normalizedQuery, options);
   if (type === "code_prefix") return 0;
-  if (type === "title_contains") return 1;
-  return 2;
+  if (type === "department_alias") return 1;
+  if (type === "title_contains") return 2;
+  return 3;
 }
 
 export function isCourseSearchMatch(
   course: CourseSearchable,
-  normalizedQuery: string
+  normalizedQuery: string,
+  options: CourseSearchOptions = {}
 ): boolean {
-  return getCourseSearchRank(course, normalizedQuery) < 2;
+  return getCourseSearchRank(course, normalizedQuery, options) < 3;
 }
 
 export function compareCourseSearchOrder(
   a: CourseSearchable,
   b: CourseSearchable,
-  normalizedQuery: string
+  normalizedQuery: string,
+  options: CourseSearchOptions = {}
 ): number {
-  const rankDiff = getCourseSearchRank(a, normalizedQuery) - getCourseSearchRank(b, normalizedQuery);
+  const rankDiff =
+    getCourseSearchRank(a, normalizedQuery, options) -
+    getCourseSearchRank(b, normalizedQuery, options);
   if (rankDiff !== 0) return rankDiff;
 
   const aKey = normalizeField(a.code) || normalizeField(a.name);
@@ -69,17 +93,20 @@ export function compareCourseSearchOrder(
 
 export function sortCoursesBySearchOrder<T extends CourseSearchable>(
   courses: T[],
-  normalizedQuery: string
+  normalizedQuery: string,
+  options: CourseSearchOptions = {}
 ): T[] {
-  return [...courses].sort((a, b) => compareCourseSearchOrder(a, b, normalizedQuery));
+  return [...courses].sort((a, b) => compareCourseSearchOrder(a, b, normalizedQuery, options));
 }
 
 export function filterAndSortCoursesBySearchOrder<T extends CourseSearchable>(
   courses: T[],
-  normalizedQuery: string
+  normalizedQuery: string,
+  options: CourseSearchOptions = {}
 ): T[] {
   return sortCoursesBySearchOrder(
-    courses.filter((course) => isCourseSearchMatch(course, normalizedQuery)),
-    normalizedQuery
+    courses.filter((course) => isCourseSearchMatch(course, normalizedQuery, options)),
+    normalizedQuery,
+    options
   );
 }

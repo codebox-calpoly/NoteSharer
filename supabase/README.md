@@ -32,14 +32,15 @@ supabase db push
 
 This runs the SQL in `supabase/migrations` against the linked project. Review the SQL beforehand if you already have data—running migrations on a live database may require downtime or backfills.
 
-## 5. Catalog Data (Courses & Terms)
-After `supabase db push`, the `catalog_terms` table is seeded with the 2026–2028 catalog terms (Fall 2026 through Summer 2028). To populate the `courses` table with all Cal Poly catalog courses for those terms, run from the **frontend** directory:
+## 5. Catalog Data (Departments, Courses & Terms)
+After `supabase db push`, the `catalog_terms` table is seeded with the 2026–2028 catalog terms (Fall 2026 through Summer 2028). Seed the department lookup table first, then populate the `courses` table. Run from the **frontend** directory:
 
 ```bash
+cd frontend && npm run db:seed-departments
 cd frontend && npm run db:seed-catalog
 ```
 
-This reads `app/(poly)/dashboard/calpoly-catalog.ts` and upserts one row per (department, course_number, term, year). Ensure `.env.local` has `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` so the script can connect.
+`npm run db:seed-departments` reads `lib/calpoly-departments.ts` and upserts one row per department code into `departments` with official names and aliases used by search. `npm run db:seed-catalog` reads `app/(poly)/dashboard/calpoly-catalog.ts` and upserts one row per (department, course_number, term, year). Ensure `.env.local` has `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` so the scripts can connect.
 
 **Schema note:** `courses.course_number` and `course_submissions.course_number` are **`integer`**. The catalog seed takes the leading digits from each course code (e.g. `BUS 3384A` → `3384`).
 

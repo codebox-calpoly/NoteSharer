@@ -3,13 +3,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
+import { CALPOLY_DEPARTMENTS, type DepartmentRecord } from "@/lib/calpoly-departments";
+import { getMatchingDepartments } from "@/lib/department-search";
 import { getSessionWithRecovery, supabase } from "@/lib/supabaseClient";
 import {
   filterAndSortCoursesBySearchOrder,
   normalizeCourseSearchQuery,
   sortCoursesBySearchOrder,
 } from "@/lib/course-search";
-import { CALPOLY_DEPARTMENT_CODES } from "./calpoly-catalog";
 import { getCourseSubline } from "./course-name-utils";
 import { useRegisterNavRight } from "@/app/(poly)/PolyShell";
 import ProfileIcons from "./profile-icon";
@@ -71,7 +72,7 @@ export default function DashboardPage() {
   const [freeDownloads, setFreeDownloads] = useState<number | null>(null);
   const [coursesLoading, setCoursesLoading] = useState(false);
   const [coursesLoadingMore, setCoursesLoadingMore] = useState(false);
-  const [departments] = useState<string[]>(() => [...CALPOLY_DEPARTMENT_CODES]);
+  const [departments, setDepartments] = useState<DepartmentRecord[]>(() => [...CALPOLY_DEPARTMENTS]);
   /** Number of course cards to render (paginated for performance). */
   const [visibleCourseCount, setVisibleCourseCount] = useState(80);
   /** When no department selected, whether the API has more courses to fetch. */
@@ -127,6 +128,26 @@ export default function DashboardPage() {
       setAccessToken(session?.access_token ?? null);
     });
     return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    const loadDepartments = async () => {
+      try {
+        const res = await fetch("/api/departments");
+        const payload = (await res.json().catch(() => ({}))) as {
+          departments?: DepartmentRecord[];
+        };
+        if (!active || !res.ok || !Array.isArray(payload.departments)) return;
+        setDepartments(payload.departments);
+      } catch {
+        // Fall back to the bundled list when the departments table is not seeded yet.
+      }
+    };
+    void loadDepartments();
+    return () => {
+      active = false;
+    };
   }, []);
 
   const INITIAL_PAGE_SIZE = 200;
@@ -390,9 +411,9 @@ export default function DashboardPage() {
 
   /** Departments filtered by sidebar search (substring match, updates as you type). */
   const filteredDepartments = useMemo(() => {
-    const q = departmentFilterSearch.trim().toLowerCase();
+    const q = departmentFilterSearch.trim();
     if (!q) return departments;
-    return departments.filter((d) => d.toLowerCase().includes(q));
+    return getMatchingDepartments(departments, q);
   }, [departments, departmentFilterSearch]);
 
   const openCourseRequest = () => {
@@ -549,9 +570,7 @@ export default function DashboardPage() {
     const normalizedQuery = normalizeCourseSearchQuery(browseSearch);
     let list: CourseOption[];
     if (isSearchMode && searchResults != null) {
-      list = normalizedQuery
-        ? filterAndSortCoursesBySearchOrder(searchResults, normalizedQuery)
-        : sortCoursesBySearchOrder(searchResults, normalizedQuery);
+      list = [...searchResults];
     } else {
       list = [...courses];
       if (selectedDepartment) {
@@ -585,6 +604,7 @@ export default function DashboardPage() {
   const displayedEnrolledCourses = useMemo(() => {
     const source = isSearchMode ? searchEnrolledResults ?? [] : enrolledCourses;
     const normalizedQuery = normalizeCourseSearchQuery(browseSearch);
+    if (isSearchMode) return [...source];
     return normalizedQuery
       ? filterAndSortCoursesBySearchOrder(source, normalizedQuery)
       : sortCoursesBySearchOrder(source, normalizedQuery);
@@ -692,12 +712,13 @@ export default function DashboardPage() {
             <div className="browse-filter-options">
               {filteredDepartments.map((dept) => (
                 <button
-                  key={dept}
+                  key={dept.code}
                   type="button"
-                  className={`browse-filter-option ${selectedDepartment === dept ? "active" : ""}`}
-                  onClick={() => setSelectedDepartment(selectedDepartment === dept ? null : dept)}
+                  className={`browse-filter-option ${selectedDepartment === dept.code ? "active" : ""}`}
+                  onClick={() => setSelectedDepartment(selectedDepartment === dept.code ? null : dept.code)}
+                  title={dept.name}
                 >
-                  {dept}
+                  {dept.code}
                 </button>
               ))}
               {filteredDepartments.length === 0 && (

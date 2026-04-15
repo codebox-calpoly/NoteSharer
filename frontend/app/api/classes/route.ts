@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { createServiceRoleClient, getEnrollmentStateForUser } from "@/lib/enrollment";
+import { CALPOLY_DEPARTMENTS, type DepartmentRecord } from "@/lib/calpoly-departments";
+import { getMatchingDepartmentCodes } from "@/lib/department-search";
+import {
+  isCourseSearchMatch,
+  normalizeCourseSearchQuery,
+} from "@/lib/course-search";
 import { createClient } from "@/utils/supabaseServerClient";
-import { normalizeCourseSearchQuery } from "@/lib/course-search";
 import { rankAndLimitCourseRows } from "./search-helpers";
 
 type CourseRow = {
@@ -34,6 +39,26 @@ type RpcRow = { course_id: string; note_count: number };
 type EnrolledClassesPayload = {
   enrolledClasses?: ClassResponse[];
 };
+
+async function getDepartmentsForSearch(
+  supabase: Awaited<ReturnType<typeof createClient>>
+): Promise<DepartmentRecord[]> {
+  const { data, error } = await supabase
+    .from("departments")
+    .select("code, name, aliases")
+    .eq("is_active", true)
+    .order("code", { ascending: true });
+
+  if (error || !data || data.length === 0) {
+    return [...CALPOLY_DEPARTMENTS];
+  }
+
+  return data.map((department) => ({
+    code: department.code,
+    name: department.name,
+    aliases: Array.isArray(department.aliases) ? department.aliases : [],
+  }));
+}
 
 /** Get note counts via DB RPC (accurate, no row limit). Falls back to paginated fetch if RPC fails. */
 async function getNoteCountMap(
@@ -245,6 +270,9 @@ export async function GET(request: Request) {
   if (searchParam && searchParam.length >= 1) {
     const hasSpace = searchParam.includes(" ");
     const deptPart = hasSpace ? searchParam.split(" ")[0] ?? "" : searchParam;
+    const departments = await getDepartmentsForSearch(supabase);
+    const aliasDepartmentCodes = getMatchingDepartmentCodes(departments, searchParam);
+    const matchedDepartmentCodeSet = new Set(aliasDepartmentCodes);
     let codeQuery = supabase
       .from("courses")
       .select("id, title, department, course_number, term, year")
@@ -257,8 +285,17 @@ export async function GET(request: Request) {
       codeQuery = codeQuery.ilike("department", `${deptPart}%`);
     }
 
-    const [codeResult, titleResult] = await Promise.all([
+    const [codeResult, aliasResult, titleResult] = await Promise.all([
       codeQuery,
+      aliasDepartmentCodes.length > 0
+        ? supabase
+            .from("courses")
+            .select("id, title, department, course_number, term, year")
+            .order("department", { ascending: true })
+            .order("course_number", { ascending: true })
+            .in("department", aliasDepartmentCodes)
+            .limit(2000)
+        : Promise.resolve({ data: [] as CourseRow[], error: null }),
       supabase
         .from("courses")
         .select("id, title, department, course_number, term, year")
@@ -270,6 +307,9 @@ export async function GET(request: Request) {
     if (codeResult.error) {
       return NextResponse.json({ error: codeResult.error.message }, { status: 500 });
     }
+    if (aliasResult.error) {
+      return NextResponse.json({ error: aliasResult.error.message }, { status: 500 });
+    }
     if (titleResult.error) {
       return NextResponse.json({ error: titleResult.error.message }, { status: 500 });
     }
@@ -278,11 +318,19 @@ export async function GET(request: Request) {
     ((codeResult.data ?? []) as CourseRow[]).forEach((row) => {
       deduped.set(row.id, row);
     });
+    ((aliasResult.data ?? []) as CourseRow[]).forEach((row) => {
+      deduped.set(row.id, row);
+    });
     ((titleResult.data ?? []) as CourseRow[]).forEach((row) => {
       deduped.set(row.id, row);
     });
 
-    const rows = rankAndLimitCourseRows(Array.from(deduped.values()), searchParam, searchLimit);
+    const rows = rankAndLimitCourseRows(
+      Array.from(deduped.values()),
+      searchParam,
+      searchLimit,
+      matchedDepartmentCodeSet
+    );
 
     const courseIds = rows.map((c) => c.id);
     let countMap: Map<string, number>;
@@ -295,8 +343,15 @@ export async function GET(request: Request) {
     let enrolledPayload: EnrolledClassesPayload = {};
     if (includeEnrolled && user) {
       enrolledPayload = await getEnrolledClassesPayload(user.id, (value) => {
-        const haystack = `${value.code ?? ""} ${value.name}`.trim().toLowerCase();
-        return haystack.includes(searchParam.toLowerCase());
+        return isCourseSearchMatch(
+          {
+            code: value.code,
+            name: value.name,
+            department: value.department,
+          },
+          searchParam,
+          { matchedDepartmentCodes: matchedDepartmentCodeSet }
+        );
       });
       const enrolledIds = new Set((enrolledPayload.enrolledClasses ?? []).map((course) => course.id));
       classes = classes.filter((course) => !enrolledIds.has(course.id));

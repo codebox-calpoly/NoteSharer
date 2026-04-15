@@ -4,16 +4,14 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
+import { CALPOLY_DEPARTMENTS, type DepartmentRecord } from "@/lib/calpoly-departments";
 import { getSessionWithRecovery, supabase } from "@/lib/supabaseClient";
 import { useRegisterNavRight } from "@/app/(poly)/PolyShell";
 import ProfileIcons from "@/app/(poly)/dashboard/profile-icon";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import "react-pdf/dist/esm/Page/TextLayer.css";
-import {
-  CALPOLY_DEPARTMENT_CODES,
-  CALPOLY_PLACEHOLDER_COURSES,
-} from "@/app/(poly)/dashboard/calpoly-catalog";
+import { CALPOLY_PLACEHOLDER_COURSES } from "@/app/(poly)/dashboard/calpoly-catalog";
 import "./upload.css";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.mjs`;
@@ -74,6 +72,7 @@ export default function UploadPage() {
   const [classNotFoundError, setClassNotFoundError] = useState<string | null>(null);
   const [isClassListOpen, setIsClassListOpen] = useState(false);
   const [department, setDepartment] = useState<string>("");
+  const [departments, setDepartments] = useState<DepartmentRecord[]>(() => [...CALPOLY_DEPARTMENTS]);
   const [classesError, setClassesError] = useState<string | null>(null);
   const [classesLoading, setClassesLoading] = useState(false);
 
@@ -123,6 +122,26 @@ export default function UploadPage() {
       }
     })();
   }, [router]);
+
+  useEffect(() => {
+    let active = true;
+    const loadDepartments = async () => {
+      try {
+        const res = await fetch("/api/departments");
+        const payload = (await res.json().catch(() => ({}))) as {
+          departments?: DepartmentRecord[];
+        };
+        if (!active || !res.ok || !Array.isArray(payload.departments)) return;
+        setDepartments(payload.departments);
+      } catch {
+        // Fall back to the bundled list when the departments table is not seeded yet.
+      }
+    };
+    void loadDepartments();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     const loadSession = async () => {
@@ -670,8 +689,10 @@ export default function UploadPage() {
                       required
                     >
                       <option value="">Select department</option>
-                      {CALPOLY_DEPARTMENT_CODES.map((d) => (
-                        <option key={d} value={d}>{d}</option>
+                      {departments.map((d) => (
+                        <option key={d.code} value={d.code}>
+                          {d.code} - {d.name}
+                        </option>
                       ))}
                     </select>
                     <p className="upload-request-course-label" style={{ marginTop: "6px" }}>

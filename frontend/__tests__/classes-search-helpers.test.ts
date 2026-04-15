@@ -1,4 +1,6 @@
 import { normalizeCourseSearchQuery } from "@/lib/course-search";
+import { CALPOLY_DEPARTMENTS } from "@/lib/calpoly-departments";
+import { getMatchingDepartmentCodes } from "@/lib/department-search";
 import {
   rankAndLimitCourseRows,
   type SearchableCourseRow,
@@ -51,5 +53,46 @@ describe("classes search helper", () => {
 
     const result = rankAndLimitCourseRows(rows, normalizeCourseSearchQuery("csc 1"), 1);
     expect(result.map((r) => r.id)).toEqual(["code"]);
+  });
+
+  it("matches natural-language department names against department codes", () => {
+    const rows = [
+      makeRow({ id: "csc", department: "CSC", course_number: 101, title: "Intro to Programming" }),
+      makeRow({ id: "bus", department: "BUS", course_number: 214, title: "Accounting I" }),
+    ];
+
+    expect(
+      rankAndLimitCourseRows(
+        rows,
+        normalizeCourseSearchQuery("computer science"),
+        10,
+        new Set(getMatchingDepartmentCodes([...CALPOLY_DEPARTMENTS], "computer science")),
+      ).map((r) => r.id),
+    ).toEqual(["csc"]);
+
+    expect(
+      rankAndLimitCourseRows(
+        rows,
+        normalizeCourseSearchQuery("business"),
+        10,
+        new Set(getMatchingDepartmentCodes([...CALPOLY_DEPARTMENTS], "business")),
+      ).map((r) => r.id),
+    ).toEqual(["bus"]);
+  });
+
+  it("matches common misspellings with fuzzy department search", () => {
+    const rows = [
+      makeRow({ id: "csc", department: "CSC", course_number: 101, title: "Intro to Programming" }),
+      makeRow({ id: "bus", department: "BUS", course_number: 214, title: "Accounting I" }),
+    ];
+
+    expect(
+      rankAndLimitCourseRows(
+        rows,
+        normalizeCourseSearchQuery("buisness"),
+        10,
+        new Set(getMatchingDepartmentCodes([...CALPOLY_DEPARTMENTS], "buisness")),
+      ).map((r) => r.id),
+    ).toEqual(["bus"]);
   });
 });

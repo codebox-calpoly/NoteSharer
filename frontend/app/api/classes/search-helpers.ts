@@ -12,7 +12,8 @@ export type SearchableCourseRow = {
 export function rankAndLimitCourseRows(
   rows: SearchableCourseRow[],
   normalizedQuery: string,
-  limit: number
+  limit: number,
+  matchedDepartmentCodes?: ReadonlySet<string>
 ): SearchableCourseRow[] {
   return filterAndSortCoursesBySearchOrder(
     rows.map((row) => ({
@@ -26,8 +27,10 @@ export function rankAndLimitCourseRows(
           .join(" ")
           .trim() || null,
       name: row.title,
+      department: row.department,
     })),
-    normalizedQuery
+    normalizedQuery,
+    { matchedDepartmentCodes }
   )
     .slice(0, limit)
     .map((item) => item.row);
