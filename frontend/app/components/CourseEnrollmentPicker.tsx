@@ -101,7 +101,7 @@ export function CourseEnrollmentPicker({
         disabled={disabled || !accessToken}
       />
       <p className="course-enrollment-picker__hint">
-        Search for human-readable course codes like `CSC 101` and add the classes you are taking.
+        Search for human-readable course codes like `CSC 1001` and add the classes you are taking.
       </p>
       {selectedCourses.length > 0 ? (
         <div className="course-enrollment-picker__chips">
