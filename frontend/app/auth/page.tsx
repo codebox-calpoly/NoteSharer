@@ -125,6 +125,13 @@ function AuthPageContent() {
               onChange={(event) => setOtp(event.target.value)}
             />
             <button
+              type="submit"
+              className="auth-button-primary"
+              disabled={!email || submitting || !otp.trim()}
+            >
+              {submitting ? "Verifying..." : "Verify code"}
+            </button>
+            <button
               type="button"
               className="auth-button-secondary"
               onClick={() => {
@@ -141,19 +148,15 @@ function AuthPageContent() {
             </p>
           </>
         ) : null}
-        <button
-          type="submit"
-          className="auth-button-primary"
-          disabled={!email || submitting || (awaitingOtp && !otp.trim())}
-        >
-          {awaitingOtp
-            ? submitting
-              ? "Verifying..."
-              : "Verify code"
-            : submitting
-              ? "Sending..."
-              : "Send code"}
-        </button>
+        {!awaitingOtp ? (
+          <button
+            type="submit"
+            className="auth-button-primary"
+            disabled={!email || submitting}
+          >
+            {submitting ? "Sending..." : "Send code"}
+          </button>
+        ) : null}
         {message ? <p className="auth-success">{message}</p> : null}
         {error ? <p className="auth-error">{error}</p> : null}
       </form>
