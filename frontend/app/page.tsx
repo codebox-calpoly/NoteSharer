@@ -5,6 +5,7 @@ import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ThemeToggle } from "@/app/components/ThemeToggle";
+import { useTheme } from "@/app/components/ThemeProvider";
 import { getSessionWithRecovery, supabase } from "@/lib/supabaseClient";
 
 const ANIMA_IMG = "https://c.animaapp.com/vYVdVbUl/img";
@@ -13,6 +14,8 @@ export default function Home() {
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [heroVisible] = useState(true);
+  const { theme } = useTheme();
+  const isDarkMode = theme === "dark";
 
   useEffect(() => {
     getSessionWithRecovery(supabase).then(({ session }) => {
@@ -204,15 +207,28 @@ export default function Home() {
           </div>
 
           <div
-            className={`flex justify-center transition-all duration-1000 delay-600 ${
+            className={`flex justify-start items-end pl-24 transition-all duration-1000 delay-600 ${
               heroVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
             }`}
           >
             <img
-              className="w-full max-w-[600px] h-auto"
+              className="max-w-[480px] h-auto shrink-0"
+              style={{ marginRight: "140px" }}
               alt="Laptop displaying notes interface"
               src={`${ANIMA_IMG}/mask-group@2x.png`}
             />
+            <div className="relative rounded-3xl overflow-hidden" style={{ maxHeight: "340px", lineHeight: 0 }}>
+              <img
+                className="phone-mockup-light h-auto max-h-[340px] w-auto object-contain block"
+                alt="Mobile app mockup"
+                src="/IMG_7903(1).jpeg"
+              />
+              <img
+                className="phone-mockup-dark h-auto max-h-[340px] w-auto object-contain absolute inset-0"
+                alt="Mobile app mockup dark"
+                src="/IMG_7904(1).jpeg"
+              />
+            </div>
           </div>
         </div>
       </section>

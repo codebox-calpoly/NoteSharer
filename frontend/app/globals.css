@@ -273,6 +273,16 @@ select {
   transition: background-color var(--theme-transition), color var(--theme-transition), border-color var(--theme-transition), box-shadow var(--theme-transition);
 }
 
+/* Phone mockup light/dark swap — driven by data-theme to match background transition exactly */
+.phone-mockup-light,
+.phone-mockup-dark {
+  transition: opacity var(--theme-transition);
+}
+.phone-mockup-light { opacity: 1 !important; }
+.phone-mockup-dark  { opacity: 0 !important; }
+[data-theme="dark"] .phone-mockup-light { opacity: 0 !important; }
+[data-theme="dark"] .phone-mockup-dark  { opacity: 1 !important; }
+
 /* Dark theme – applied when data-theme="dark" on <html> */
 [data-theme="dark"] {
   --poly-page-bg: #171715;
