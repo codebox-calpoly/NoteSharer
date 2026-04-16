@@ -23,17 +23,21 @@ function PageTransitionWrapper({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (prevPathRef.current !== pathname) {
-      setVisible(false);
       prevPathRef.current = pathname;
-      const t = requestAnimationFrame(() => {
-        requestAnimationFrame(() => setVisible(true));
+      const t1 = requestAnimationFrame(() => {
+        setVisible(false);
+        const t2 = requestAnimationFrame(() => {
+          requestAnimationFrame(() => setVisible(true));
+        });
+        return () => cancelAnimationFrame(t2);
       });
-      return () => cancelAnimationFrame(t);
+      return () => cancelAnimationFrame(t1);
     }
   }, [pathname]);
 
   useEffect(() => {
-    setVisible(true);
+    const t = requestAnimationFrame(() => setVisible(true));
+    return () => cancelAnimationFrame(t);
   }, []);
 
   return (
