@@ -972,6 +972,11 @@ select {
   background-color: var(--poly-bg-page);
 }
 
+/* Phone mockup light/dark transition */
+.phone-mockup {
+  transition: opacity 0.3s ease;
+}
+
 /* Landing page – Poly layout */
 .poly-page {
   min-height: 100vh;
