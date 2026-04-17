@@ -1430,6 +1430,7 @@ body {
   justify-content: center;
   padding: 1.5rem;
   z-index: 100;
+  overflow-y: auto;
 }
 
 .note-modal {
