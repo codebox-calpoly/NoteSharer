@@ -15,6 +15,11 @@ export default function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [heroVisible] = useState(true);
   const { theme } = useTheme();
+  const [mountedTheme, setMountedTheme] = useState<string | null>(null);
+
+  useEffect(() => {
+    setMountedTheme(theme);
+  }, [theme]);
 
   useEffect(() => {
     getSessionWithRecovery(supabase).then(({ session }) => {
@@ -218,12 +223,12 @@ export default function Home() {
             />
             <div className="relative rounded-3xl overflow-hidden" style={{ maxHeight: "340px", lineHeight: 0 }}>
               <img
-                className={`phone-mockup h-auto max-h-[340px] w-auto object-contain block ${theme === "dark" ? "opacity-0" : "opacity-100"}`}
+                className={`phone-mockup h-auto max-h-[340px] w-auto object-contain block ${mountedTheme === "dark" ? "opacity-0" : "opacity-100"}`}
                 alt="Mobile app mockup"
                 src="/IMG_7903.jpeg"
               />
               <img
-                className={`phone-mockup h-auto max-h-[340px] w-auto object-contain absolute inset-0 ${theme === "dark" ? "opacity-100" : "opacity-0"}`}
+                className={`phone-mockup h-auto max-h-[340px] w-auto object-contain absolute inset-0 ${mountedTheme === "dark" ? "opacity-100" : "opacity-0"}`}
                 alt="Mobile app mockup dark"
                 src="/IMG_7904.jpeg"
               />
