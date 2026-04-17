@@ -9,6 +9,7 @@ import {
   useState,
   type FormEvent,
 } from "react";
+import { createPortal } from "react-dom";
 import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Document, Page, pdfjs } from "react-pdf";
@@ -1068,7 +1069,7 @@ function CourseDetailPage() {
       </div>
 
       {/* Note preview modal – download only from modal */}
-      {isNoteModalOpen && selectedNote && (
+      {isNoteModalOpen && selectedNote && typeof document !== "undefined" && createPortal(
         <div
           className="note-modal-overlay"
           role="presentation"
@@ -1337,7 +1338,7 @@ function CourseDetailPage() {
             </div>
           </div>
         </div>
-      )}
+      , document.body)}
 
       {/* Vote prompt after download */}
       {isVotePromptOpen && noteForVotePrompt && (
