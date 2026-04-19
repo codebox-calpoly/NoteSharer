@@ -19,6 +19,7 @@ type ResourceRow = {
   preview_key: string | null;
   download_cost: number;
   resource_type: string | null;
+  professor: string | null;
   profiles: {
     display_name: string | null;
   } | null;
@@ -135,6 +136,7 @@ export async function GET(req: Request) {
         preview_key,
         download_cost,
         resource_type,
+        professor,
         profiles ( display_name )
       `,
     )
@@ -260,6 +262,7 @@ export async function GET(req: Request) {
       storage_path: row.file_key,
       resource_type: row.resource_type ?? null,
       profile_display_name: row.profiles?.display_name ?? null,
+      professor: row.professor ?? null,
       upvote_count: stats.upvotes,
       downvote_count: stats.downvotes,
       score: stats.score,

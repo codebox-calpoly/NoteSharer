@@ -130,6 +130,7 @@ export async function POST(req: NextRequest) {
   const title = (formData.get("title") as string | null)?.trim();
   const resourceType = (formData.get("resource_type") as string | null)?.trim();
   const description = (formData.get("description") as string | null)?.trim() || null;
+  const professor = (formData.get("professor") as string | null)?.trim() || null;
 
   if (!(file instanceof File)) {
     return NextResponse.json({ error: "A PDF file is required." }, { status: 400 });
@@ -283,6 +284,7 @@ export async function POST(req: NextRequest) {
       description: description || null,
       file_key: filePath,
       preview_key: previewKey,
+      ...(professor != null && { professor }),
       ...(status === "active" && { status: "active" }),
       ...(extractedText != null && { extracted_text: extractedText }),
     })

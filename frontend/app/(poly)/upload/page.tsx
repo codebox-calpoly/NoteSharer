@@ -5,6 +5,7 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { CALPOLY_DEPARTMENTS, type DepartmentRecord } from "@/lib/calpoly-departments";
+import { getFacultyByDepartment } from "@/lib/calpoly-faculty";
 import { getSessionWithRecovery, supabase } from "@/lib/supabaseClient";
 import { useRegisterNavRight } from "@/app/(poly)/PolyShell";
 import ProfileIcons from "@/app/(poly)/dashboard/profile-icon";
@@ -87,6 +88,7 @@ export default function UploadPage() {
   const [title, setTitle] = useState("");
   const [resourceType, setResourceType] = useState("");
   const [description, setDescription] = useState("");
+  const [professor, setProfessor] = useState("");
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [credits, setCredits] = useState<number | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -546,6 +548,7 @@ export default function UploadPage() {
     formData.append("title", title.trim());
     formData.append("resource_type", resourceType);
     formData.append("description", description.trim());
+    if (professor.trim()) formData.append("professor", professor.trim());
 
     try {
       const res = await fetch("/api/upload", {
@@ -878,6 +881,23 @@ export default function UploadPage() {
                     required
                   />
                   <span className="upload-char-count">{description.length}/2000</span>
+                </div>
+                <div className="upload-field">
+                  <label className="upload-label">Professor (optional)</label>
+                  <select
+                    className="upload-input"
+                    value={professor}
+                    onChange={(e) => setProfessor(e.target.value)}
+                  >
+                    <option value="">Select professor</option>
+                    {getFacultyByDepartment(department).map((f) => (
+                      <option key={f.name} value={f.name}>{f.name}</option>
+                    ))}
+                    {department && getFacultyByDepartment(department).length === 0 && (
+                      <option disabled>No professors found for this department</option>
+                    )}
+                  </select>
+                  <p className="upload-field-hint">Helps students find notes by professor</p>
                 </div>
                 {submitError && (
                   <p className="upload-alert upload-alert--error" role="alert">{submitError}</p>
