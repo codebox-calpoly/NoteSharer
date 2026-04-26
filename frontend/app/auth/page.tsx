@@ -19,19 +19,83 @@ function AuthPageContent() {
 
   useEffect(() => {
     const checkSession = async () => {
-      const { session, error } = await getSessionWithRecovery(supabase);
-      if (error) {
-        console.error("Failed to fetch session", error);
-      }
+      const { session, error: sessionError } = await getSessionWithRecovery(supabase);
+      if (sessionError) console.error("Failed to fetch session", sessionError);
       if (session) {
         router.replace(redirectTo.startsWith("/") ? redirectTo : "/auth/callback");
         return;
       }
       setChecking(false);
     };
-
     checkSession();
   }, [router, redirectTo]);
+
+  const handleSendOtp = async () => {
+    setMessage("");
+    setError("");
+    setSubmitting(true);
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail.endsWith("@calpoly.edu")) {
+      setError("Please enter your Cal Poly email address");
+      setSubmitting(false);
+      return;
+    }
+    try {
+      const res = await fetch("/api/auth/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: normalizedEmail }),
+      });
+      const data = await res.json() as { ok?: boolean; error?: string };
+      if (!res.ok || !data.ok) {
+        setError(data.error ?? "Unable to send sign-in email.");
+      } else {
+        setAwaitingOtp(true);
+        setMessage("Check your email for the one-time code.");
+      }
+    } catch {
+      setError("Network error. Please try again.");
+    }
+    setSubmitting(false);
+  };
+
+  const handleVerifyOtp = async () => {
+    setMessage("");
+    setError("");
+    setSubmitting(true);
+    const normalizedEmail = email.trim().toLowerCase();
+    const token = otp.trim();
+    if (!token) {
+      setError("Enter the one-time code from your email.");
+      setSubmitting(false);
+      return;
+    }
+    try {
+      const res = await fetch("/api/auth/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: normalizedEmail, code: token }),
+      });
+      const data = await res.json() as {
+        ok?: boolean;
+        error?: string;
+        session?: { access_token: string; refresh_token: string };
+      };
+      if (!res.ok || !data.ok) {
+        setError(data.error ?? "Invalid or expired code.");
+      } else if (data.session) {
+        // Set the session in Supabase client
+        await supabase.auth.setSession({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token,
+        });
+        router.replace(redirectTo.startsWith("/") ? redirectTo : "/auth/callback");
+      }
+    } catch {
+      setError("Network error. Please try again.");
+    }
+    setSubmitting(false);
+  };
 
   const content = checking ? (
     <p className="auth-loading">Checking your session…</p>
@@ -43,50 +107,13 @@ function AuthPageContent() {
       </p>
       <form
         className="auth-form"
-        onSubmit={async (event) => {
+        onSubmit={(event) => {
           event.preventDefault();
-          setMessage("");
-          setError("");
-          setSubmitting(true);
           if (!awaitingOtp) {
-            const normalizedEmail = email.trim().toLowerCase();
-            if (!normalizedEmail.endsWith("@calpoly.edu")) {
-              setError("Please enter your Cal Poly email address");
-              setSubmitting(false);
-              return;
-            }
-            const { error: signInError } = await supabase.auth.signInWithOtp({
-              email: normalizedEmail,
-              options: {
-                shouldCreateUser: true,
-              },
-            });
-            if (signInError) {
-              setError(signInError.message ?? "Unable to send sign-in email.");
-            } else {
-              setAwaitingOtp(true);
-              setMessage("Check your email for the one-time code.");
-            }
+            void handleSendOtp();
           } else {
-            const normalizedEmail = email.trim().toLowerCase();
-            const token = otp.trim();
-            if (!token) {
-              setError("Enter the one-time code from your email.");
-              setSubmitting(false);
-              return;
-            }
-            const { error: verifyError } = await supabase.auth.verifyOtp({
-              email: normalizedEmail,
-              token,
-              type: "email",
-            });
-            if (verifyError) {
-              setError(verifyError.message ?? "Invalid or expired code.");
-            } else {
-              router.replace(redirectTo.startsWith("/") ? redirectTo : "/auth/callback");
-            }
+            void handleVerifyOtp();
           }
-          setSubmitting(false);
         }}
       >
         <label className="auth-label" htmlFor="email">
@@ -105,9 +132,7 @@ function AuthPageContent() {
         />
         {awaitingOtp ? (
           <>
-            <p className="auth-body">
-              Enter the one-time code from your email.
-            </p>
+            <p className="auth-body">Enter the one-time code from your email.</p>
             <label className="auth-label" htmlFor="otp">
               One-time code
             </label>
@@ -119,7 +144,7 @@ function AuthPageContent() {
               pattern="[0-9]*"
               autoComplete="one-time-code"
               required
-              placeholder="Enter the code"
+              placeholder="Enter the 6-digit code"
               className="auth-input"
               value={otp}
               onChange={(event) => setOtp(event.target.value)}
