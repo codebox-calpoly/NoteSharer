@@ -10,270 +10,159 @@ import { getSessionWithRecovery, supabase } from "@/lib/supabaseClient";
 
 const ANIMA_IMG = "https://c.animaapp.com/vYVdVbUl/img";
 
+function useInView(threshold = 0.15) {
+  const ref = useRef<HTMLElement>(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setVisible(true); }, { threshold });
+    obs.observe(el);
+    return () => obs.unobserve(el);
+  }, [threshold]);
+  return { ref, visible };
+}
+
 export default function Home() {
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [heroVisible] = useState(true);
   const { theme } = useTheme();
   const [mountedTheme, setMountedTheme] = useState<string | null>(null);
+  const [heroVisible, setHeroVisible] = useState(false);
 
-  useEffect(() => {
-    setMountedTheme(theme);
-  }, [theme]);
-
+  useEffect(() => { setMountedTheme(theme); }, [theme]);
+  useEffect(() => { const t = setTimeout(() => setHeroVisible(true), 100); return () => clearTimeout(t); }, []);
   useEffect(() => {
     getSessionWithRecovery(supabase).then(({ session }) => {
       if (session) router.replace("/dashboard");
     });
   }, [router]);
 
-  const scrollToSection = (sectionId: string) => {
-    const element = document.getElementById(sectionId);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
-      setMobileMenuOpen(false);
-    }
+  const scrollToSection = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+    setMobileMenuOpen(false);
   };
 
   return (
-    <div
-      className="landing-page flex flex-col items-start relative w-full min-h-screen page-bg"
-      style={{ fontFamily: "var(--font-inter), Inter, Helvetica, sans-serif" }}
-    >
-      {/* Header */}
-      <header className="landing-header flex flex-col w-full items-start pt-0 pb-px px-0 bg-white border-b border-solid border-neutral-200 sticky top-0 z-50">
-        <div className="flex h-[72px] items-center justify-between px-4 md:px-8 py-0 relative w-full">
-          <div className="flex items-center gap-3 relative">
-            <span className="logo-box relative w-[54px] h-[54px]">
-              <img
-                className="relative w-[54px] h-[54px] landing-logo"
-                alt="Poly Pages Logo"
-                src="/Transparent Note Sharer(1).svg"
-              />
+    <div className="lp-root" style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif" }}>
+
+      {/* ── NAV ── */}
+      <header className="lp-nav">
+        <div className="lp-nav-inner">
+          <div className="lp-nav-brand">
+            <span className="lp-logo-wrap">
+              <img src="/Transparent Note Sharer(1).svg" alt="Poly Pages" className="lp-logo-img" />
             </span>
-            <div className="relative h-8">
-              <h1 className="font-bold text-[var(--poly-neutral-dark)] text-xl md:text-2xl tracking-[0] leading-8 whitespace-nowrap">
-                Poly Pages
-              </h1>
-            </div>
-            <span className="rounded-full bg-[rgba(109,190,139,0.12)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.08em] text-[var(--poly-neutral-dark)]">
-              Cal Poly SLO students
-            </span>
+            <span className="lp-brand-name">Poly Pages</span>
+            <span className="lp-badge">Cal Poly SLO</span>
           </div>
 
-          <nav className="hidden md:flex items-center gap-8">
-            <button
-              type="button"
-              onClick={() => scrollToSection("how-it-works")}
-              className="font-medium text-[var(--poly-neutral-muted)] text-base tracking-[0] leading-6 whitespace-nowrap hover:text-[#6dbe8b] transition-colors duration-200"
-            >
-              How It Works
-            </button>
-            <button
-              type="button"
-              onClick={() => scrollToSection("why-poly-pages")}
-              className="font-medium text-[var(--poly-neutral-muted)] text-base tracking-[0] leading-6 whitespace-nowrap hover:text-[#6dbe8b] transition-colors duration-200"
-            >
-              Why Us
-            </button>
-            <button
-              type="button"
-              onClick={() => scrollToSection("features")}
-              className="font-medium text-[var(--poly-neutral-muted)] text-base tracking-[0] leading-6 whitespace-nowrap hover:text-[#6dbe8b] transition-colors duration-200"
-            >
-              Features
-            </button>
+          <nav className="lp-nav-links">
+            {["How It Works", "Why Us", "Features"].map((label) => (
+              <button key={label} type="button" onClick={() => scrollToSection(label.toLowerCase().replace(/ /g, "-"))} className="lp-nav-link">
+                {label}
+              </button>
+            ))}
           </nav>
 
-          <div className="hidden md:flex items-center gap-4">
+          <div className="lp-nav-right">
             <ThemeToggle />
-            <Link
-              href="/auth"
-              className="hidden md:flex relative h-10 px-4 rounded-[10px] border border-solid border-black shadow-[0px_4px_4px_#00000040] cursor-pointer transition-all duration-200 hover:shadow-[0px_6px_6px_#00000040] hover:-translate-y-0.5 active:translate-y-0 active:shadow-[0px_2px_2px_#00000040] items-center justify-center bg-[var(--variable-collection-warm-apricot)] whitespace-nowrap"
-              aria-label="Sign in or register"
-            >
-              <span className="font-semibold text-[#2c1b1b] text-sm text-center tracking-[0] leading-6">
-                Sign In / Register
-              </span>
-            </Link>
+            <Link href="/auth" className="lp-cta-btn lp-cta-btn--sm">Sign In / Register</Link>
           </div>
 
-          <button
-            type="button"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden relative w-10 h-10 flex flex-col items-center justify-center gap-1.5 cursor-pointer z-50"
-            aria-label="Toggle menu"
-          >
-            <span
-              className={`w-6 h-0.5 bg-[#2e2e2e] transition-all duration-300 ${
-                mobileMenuOpen ? "rotate-45 translate-y-2" : ""
-              }`}
-            />
-            <span
-              className={`w-6 h-0.5 bg-[#2e2e2e] transition-all duration-300 ${
-                mobileMenuOpen ? "opacity-0" : ""
-              }`}
-            />
-            <span
-              className={`w-6 h-0.5 bg-[#2e2e2e] transition-all duration-300 ${
-                mobileMenuOpen ? "-rotate-45 -translate-y-2" : ""
-              }`}
-            />
+          <button type="button" className="lp-hamburger" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} aria-label="Toggle menu">
+            <span className={mobileMenuOpen ? "lp-ham-line lp-ham-line--1 open" : "lp-ham-line lp-ham-line--1"} />
+            <span className={mobileMenuOpen ? "lp-ham-line lp-ham-line--2 open" : "lp-ham-line lp-ham-line--2"} />
+            <span className={mobileMenuOpen ? "lp-ham-line lp-ham-line--3 open" : "lp-ham-line lp-ham-line--3"} />
           </button>
         </div>
 
-        <div
-          className={`landing-mobile-menu md:hidden fixed top-[73px] left-0 w-full bg-white border-b border-neutral-200 transition-all duration-300 ease-in-out ${
-            mobileMenuOpen
-              ? "max-h-screen opacity-100"
-              : "max-h-0 opacity-0 overflow-hidden"
-          }`}
-          style={{ zIndex: 40 }}
-        >
-          <nav className="flex flex-col items-start gap-4 px-8 py-6">
-            <button
-              type="button"
-              onClick={() => scrollToSection("how-it-works")}
-              className="font-medium text-[var(--poly-neutral-muted)] text-base tracking-[0] leading-6 hover:text-[#6dbe8b] transition-colors duration-200 w-full text-left"
-            >
-              How It Works
-            </button>
-            <button
-              type="button"
-              onClick={() => scrollToSection("why-poly-pages")}
-              className="font-medium text-[var(--poly-neutral-muted)] text-base tracking-[0] leading-6 hover:text-[#6dbe8b] transition-colors duration-200 w-full text-left"
-            >
-              Why Us
-            </button>
-            <button
-              type="button"
-              onClick={() => scrollToSection("features")}
-              className="font-medium text-[var(--poly-neutral-muted)] text-base tracking-[0] leading-6 hover:text-[#6dbe8b] transition-colors duration-200 w-full text-left"
-            >
-              Features
-            </button>
-            <Link
-              href="/auth"
-              className="relative w-full h-10 rounded-[10px] border border-solid border-black shadow-[0px_4px_4px_#00000040] cursor-pointer transition-all duration-200 active:translate-y-px active:shadow-[0px_2px_2px_#00000040] mt-2 flex items-center justify-center bg-[var(--variable-collection-warm-apricot)]"
-              aria-label="Sign in or register"
-            >
-              <span className="font-semibold text-[#2c1b1b] text-base text-center tracking-[0] leading-6 whitespace-nowrap">
-                Sign In / Register
-              </span>
-            </Link>
-          </nav>
-        </div>
+        {mobileMenuOpen && (
+          <div className="lp-mobile-menu">
+            {["How It Works", "Why Us", "Features"].map((label) => (
+              <button key={label} type="button" onClick={() => scrollToSection(label.toLowerCase().replace(/ /g, "-"))} className="lp-mobile-link">
+                {label}
+              </button>
+            ))}
+            <Link href="/auth" className="lp-cta-btn lp-cta-btn--full">Sign In / Register</Link>
+          </div>
+        )}
       </header>
 
-      {/* Hero */}
-      <section
-        className="relative w-full pt-16 md:pt-20 pb-16 md:pb-24 px-4 md:px-8"
-        aria-label="Hero Section"
-        id="hero"
-      >
-        <div className="relative max-w-6xl mx-auto">
-          <header
-            className={`mb-8 md:mb-12 transition-all duration-1000 ${
-              heroVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-            }`}
-          >
-            <h1 className="font-bold text-3xl md:text-5xl lg:text-6xl text-center tracking-[0] leading-tight md:leading-[72px] px-4">
-              <span className="landing-tagline-gray">Share notes. Earn credits. </span>
-              <span className="text-[#6dbe8b]">Learn together.</span>
+      {/* ── HERO ── */}
+      <section className="lp-hero" id="hero">
+        <div className="lp-hero-inner">
+          <div className="lp-hero-text">
+            <div className={`lp-eyebrow ${heroVisible ? "lp-fade-in" : "lp-fade-out"}`} style={{ transitionDelay: "0ms" }}>
+              ✦ Cal Poly · Note Sharing Platform
+            </div>
+            <h1 className={`lp-hero-heading ${heroVisible ? "lp-fade-in" : "lp-fade-out"}`} style={{ transitionDelay: "100ms" }}>
+              Share notes.<br />
+              <em className="lp-hero-em">Earn credits.</em><br />
+              Learn together.
             </h1>
-          </header>
-
-          <div
-            className={`mb-8 md:mb-12 transition-all duration-1000 delay-200 ${
-              heroVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-            }`}
-          >
-            <p className="max-w-3xl mx-auto font-normal text-[#666666] text-base md:text-xl text-center tracking-[0] leading-relaxed md:leading-[34px] px-4">
-              A note-sharing platform built for Cal Poly SLO students. Upload
-              your notes, earn credits, and unlock help from students across campus.
+            <p className={`lp-hero-sub ${heroVisible ? "lp-fade-in" : "lp-fade-out"}`} style={{ transitionDelay: "200ms" }}>
+              A note-sharing platform built for Cal Poly SLO students. Upload your notes, earn credits, and unlock help from students across campus.
             </p>
+            <div className={`lp-hero-actions ${heroVisible ? "lp-fade-in" : "lp-fade-out"}`} style={{ transitionDelay: "300ms" }}>
+              <Link href="/auth" className="lp-cta-btn lp-cta-btn--lg">Get Started →</Link>
+              <button type="button" onClick={() => scrollToSection("how-it-works")} className="lp-ghost-btn">See how it works</button>
+            </div>
+            <div className={`lp-trust-row ${heroVisible ? "lp-fade-in" : "lp-fade-out"}`} style={{ transitionDelay: "400ms" }}>
+              <div className="lp-trust-avatars">
+                {["J", "M", "A", "K"].map((l, i) => (
+                  <span key={i} className="lp-trust-avatar" style={{ background: ["#6dbe8b","#f9c784","#a78bfa","#60a5fa"][i] }}>{l}</span>
+                ))}
+              </div>
+              <span className="lp-trust-text"><strong>Cal Poly students only</strong> — verified by @calpoly.edu email</span>
+            </div>
           </div>
 
-          <div
-            className={`flex justify-center mb-12 md:mb-16 transition-all duration-1000 delay-400 ${
-              heroVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-            }`}
-          >
-            <Link
-              href="/auth"
-              className="relative w-full max-w-[200px] h-[59px] rounded-[14px] border border-solid border-[#080000] shadow-[0px_4px_4px_#00000040] cursor-pointer transition-all duration-200 hover:shadow-[0px_6px_8px_#00000050] hover:-translate-y-0.5 active:translate-y-0 active:shadow-[0px_2px_2px_#00000040] flex items-center justify-center bg-[var(--variable-collection-warm-apricot)]"
-              aria-label="Sign in or register for the platform"
-            >
-              <span className="font-semibold text-black text-lg text-center tracking-[0] leading-[27px] whitespace-nowrap">
-                Get Started
-              </span>
-            </Link>
-          </div>
-
-          <div
-            className={`flex justify-start items-end pl-24 transition-all duration-1000 delay-600 ${
-              heroVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-            }`}
-          >
-            <img
-              className="max-w-[480px] h-auto shrink-0"
-              style={{ marginRight: "140px" }}
-              alt="Laptop displaying notes interface"
-              src={`${ANIMA_IMG}/mask-group@2x.png`}
-            />
-            <div className="relative rounded-3xl overflow-hidden" style={{ maxHeight: "340px", lineHeight: 0 }}>
+          <div className={`lp-hero-visual ${heroVisible ? "lp-fade-in" : "lp-fade-out"}`} style={{ transitionDelay: "200ms" }}>
+            <div className="lp-mockup-stack">
+              <div className="lp-card lp-card--back">
+                <div className="lp-card-tag">LECTURE NOTES</div>
+                <div className="lp-card-title">CSC 357 — Systems Programming</div>
+                <div className="lp-card-meta">Score: +12 · 3 credits</div>
+              </div>
+              <div className="lp-card lp-card--front">
+                <div className="lp-card-tag lp-card-tag--green">STUDY GUIDE</div>
+                <div className="lp-card-title">MATH 241 — Calculus IV</div>
+                <div className="lp-card-meta">Score: +8 · 3 credits</div>
+                <div className="lp-card-badge">JUST UPLOADED</div>
+              </div>
               <img
-                className={`phone-mockup h-auto max-h-[340px] w-auto object-contain block ${mountedTheme === "dark" ? "opacity-0" : "opacity-100"}`}
-                alt="Mobile app mockup"
-                src="/IMG_7903.jpeg"
-              />
-              <img
-                className={`phone-mockup h-auto max-h-[340px] w-auto object-contain absolute inset-0 ${mountedTheme === "dark" ? "opacity-100" : "opacity-0"}`}
-                alt="Mobile app mockup dark"
-                src="/IMG_7904.jpeg"
+                className="lp-phone-img"
+                src={mountedTheme === "dark" ? "/IMG_7904.jpeg" : "/IMG_7903.jpeg"}
+                alt="App screenshot"
               />
             </div>
           </div>
         </div>
+
+        {/* floating blobs */}
+        <div className="lp-blob lp-blob--1" aria-hidden />
+        <div className="lp-blob lp-blob--2" aria-hidden />
       </section>
 
-      {/* How It Works */}
+      {/* ── HOW IT WORKS ── */}
       <HowItWorksSection />
 
-      {/* Why Poly Pages */}
-      <WhyChooseUsSection />
+      {/* ── WHY US ── */}
+      <WhySection />
 
-      {/* Features */}
+      {/* ── FEATURES ── */}
       <FeaturesSection />
 
-      {/* Footer */}
-      <footer className="landing-footer flex flex-col w-full items-start pt-8 md:pt-12 pb-8 px-4 md:px-8 bg-neutral-50 border-t border-solid border-neutral-200">
-        <div className="flex flex-col md:flex-row h-auto md:h-[61px] items-start md:items-center justify-between gap-6 md:gap-0 w-full max-w-6xl mx-auto">
-          <div className="flex flex-col items-start gap-2">
-            <div className="relative h-8">
-              <h2 className="font-bold text-[#6dbe8b] text-2xl tracking-[0] leading-8 whitespace-nowrap">
-                Poly Pages
-              </h2>
-            </div>
-            <p className="font-normal text-[#999999] text-sm tracking-[0] leading-relaxed max-w-md">
-              Independent student project · Not affiliated with Cal Poly
-              administration
-            </p>
-            <p className="font-normal text-[#999999] text-xs tracking-[0] mt-1">
-              CodeBox TM
-            </p>
+      {/* ── FOOTER ── */}
+      <footer className="lp-footer">
+        <div className="lp-footer-inner">
+          <div>
+            <p className="lp-footer-brand">Poly Pages</p>
+            <p className="lp-footer-sub">Independent student project · Not affiliated with Cal Poly administration</p>
+            <p className="lp-footer-sub" style={{ marginTop: 4 }}>CodeBox TM</p>
           </div>
-            <nav
-            className="flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-8"
-            aria-label="Footer navigation"
-          >
-            <a
-              href="/terms-and-conditions"
-              className="font-medium text-[#666666] text-base tracking-[0] leading-6 whitespace-nowrap hover:text-[#6dbe8b] transition-colors duration-200"
-            >
-              Community Guidelines
-            </a>
-          </nav>
+          <a href="/terms-and-conditions" className="lp-footer-link">Community Guidelines</a>
         </div>
       </footer>
     </div>
@@ -281,78 +170,26 @@ export default function Home() {
 }
 
 function HowItWorksSection() {
-  const [isVisible, setIsVisible] = useState(false);
-  const sectionRef = useRef<HTMLElement>(null);
-
-  useEffect(() => {
-    const el = sectionRef.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) setIsVisible(true);
-      },
-      { threshold: 0.2 }
-    );
-    observer.observe(el);
-    return () => observer.unobserve(el);
-  }, []);
-
+  const { ref, visible } = useInView(0.15);
   const steps = [
-    {
-      icon: `${ANIMA_IMG}/container.svg`,
-      title: "Upload Your Notes",
-      description: "Upload your study materials and lecture notes",
-    },
-    {
-      icon: `${ANIMA_IMG}/container-1.svg`,
-      title: "Earn Credits",
-      description: "Receive credits every time you upload.",
-    },
-    {
-      icon: `${ANIMA_IMG}/container-2.svg`,
-      title: "Unlock Study Materials",
-      description:
-        "Use your credits to access notes from students across campus.",
-    },
+    { num: "01", title: "Upload Your Notes", desc: "Share your study materials and lecture notes as PDFs. Every upload goes through a quick review." },
+    { num: "02", title: "Earn Credits", desc: "Get credits automatically when your notes are approved. Quality notes earn bonus credits from upvotes." },
+    { num: "03", title: "Unlock Materials", desc: "Spend credits to access notes from other students across every department on campus." },
   ];
-
   return (
-    <section
-      ref={sectionRef}
-      id="how-it-works"
-      className="flex flex-col w-full items-center gap-12 md:gap-16 pt-16 md:pt-24 pb-12 md:pb-16 px-4 md:px-8 bg-white"
-    >
-      <header className="relative w-full">
-        <h2
-          className={`font-bold text-[#2e2e2e] text-3xl md:text-4xl text-center tracking-[0] leading-10 transition-all duration-700 ${
-            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-          }`}
-        >
-          How Poly Pages Works
+    <section ref={ref} id="how-it-works" className="lp-section lp-section--cream">
+      <div className="lp-section-inner">
+        <div className={`lp-section-label ${visible ? "lp-fade-in" : "lp-fade-out"}`}>✦ How It Works</div>
+        <h2 className={`lp-section-heading ${visible ? "lp-fade-in" : "lp-fade-out"}`} style={{ transitionDelay: "100ms" }}>
+          Three steps to better studying
         </h2>
-      </header>
-      <div className="relative w-full max-w-6xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 items-stretch">
-          {steps.map((step, index) => (
-            <article
-              key={index}
-              className={`flex flex-col items-center h-full transition-all duration-700 ${
-                isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-              }`}
-              style={{ transitionDelay: `${(index + 1) * 150}ms` }}
-            >
-              <img
-                className="w-[88px] h-[88px] mb-6 transition-transform duration-300 hover:scale-110"
-                alt={step.title}
-                src={step.icon}
-              />
-              <h3 className="font-semibold text-[#2e2e2e] text-xl md:text-2xl text-center tracking-[0] leading-8 mb-3 px-4">
-                {step.title}
-              </h3>
-              <p className="font-normal text-[#666666] text-base text-center tracking-[0] leading-[25.6px] px-4 max-w-[280px] mt-auto">
-                {step.description}
-              </p>
-            </article>
+        <div className="lp-steps-grid">
+          {steps.map((s, i) => (
+            <div key={i} className={`lp-step-card ${visible ? "lp-fade-in" : "lp-fade-out"}`} style={{ transitionDelay: `${200 + i * 120}ms` }}>
+              <span className="lp-step-num">{s.num}</span>
+              <h3 className="lp-step-title">{s.title}</h3>
+              <p className="lp-step-desc">{s.desc}</p>
+            </div>
           ))}
         </div>
       </div>
@@ -360,87 +197,28 @@ function HowItWorksSection() {
   );
 }
 
-function WhyChooseUsSection() {
-  const [isVisible, setIsVisible] = useState(false);
-  const sectionRef = useRef<HTMLElement>(null);
-
-  useEffect(() => {
-    const el = sectionRef.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) setIsVisible(true);
-      },
-      { threshold: 0.1 }
-    );
-    observer.observe(el);
-    return () => observer.unobserve(el);
-  }, []);
-
-  const features = [
-    {
-      icon: `${ANIMA_IMG}/container-3.svg`,
-      title: "Organized and searchable notes",
-      description:
-        "Find exactly what you need with smart categorization and powerful search across all subjects and courses.",
-    },
-    {
-      icon: `${ANIMA_IMG}/container-4.svg`,
-      title: "Fair credit based system",
-      description:
-        "Contribute to earn, use credits to access. A balanced ecosystem that rewards quality and participation. Learn more",
-    },
-    {
-      icon: `${ANIMA_IMG}/container-5.svg`,
-      title: "Built for students, by students",
-      description:
-        "Designed with real student needs in mind. Community-driven and focused on collaborative learning.",
-    },
-    {
-      icon: `${ANIMA_IMG}/container-6.svg`,
-      title: "Clean and distraction free experience",
-      description:
-        "No clutter, no ads. Just a simple, intuitive platform designed to help you study better.",
-    },
+function WhySection() {
+  const { ref, visible } = useInView(0.1);
+  const items = [
+    { emoji: "🔍", title: "Organized & searchable", desc: "Find exactly what you need with smart categorization and search across all subjects and courses." },
+    { emoji: "⚖️", title: "Fair credit system", desc: "Contribute to earn, use credits to access. A balanced ecosystem that rewards quality and participation." },
+    { emoji: "🎓", title: "Built for students", desc: "Designed with real student needs in mind. Community-driven and focused on collaborative learning." },
+    { emoji: "✨", title: "Distraction free", desc: "No clutter, no ads. Just a simple, intuitive platform designed to help you study better." },
   ];
-
   return (
-    <section
-      ref={sectionRef}
-      id="why-poly-pages"
-      className="flex flex-col w-full items-center gap-12 md:gap-16 px-4 md:px-8 py-16 md:py-24"
-    >
-      <header className="relative w-full">
-        <h2
-          className={`font-bold text-[#2e2e2e] text-3xl md:text-4xl text-center tracking-[0] leading-10 transition-all duration-700 ${
-            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-          }`}
-        >
-          Why Poly Pages?
+    <section ref={ref} id="why-us" className="lp-section">
+      <div className="lp-section-inner">
+        <div className={`lp-section-label ${visible ? "lp-fade-in" : "lp-fade-out"}`}>✦ Why Poly Pages</div>
+        <h2 className={`lp-section-heading ${visible ? "lp-fade-in" : "lp-fade-out"}`} style={{ transitionDelay: "100ms" }}>
+          A calmer way to study with your campus
         </h2>
-      </header>
-      <div className="relative w-full max-w-6xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 items-stretch">
-          {features.map((feature, index) => (
-            <article
-              key={index}
-              className={`flex flex-col h-full bg-white rounded-2xl shadow-[0px_4px_20px_#00000014] p-8 md:p-10 transition-all duration-700 hover:shadow-[0px_8px_30px_#00000020] hover:-translate-y-1 ${
-                isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-              }`}
-              style={{ transitionDelay: `${(index + 1) * 100}ms` }}
-            >
-              <img
-                className="w-16 h-16 mb-6 transition-transform duration-300 hover:scale-110"
-                alt={`${feature.title} icon`}
-                src={feature.icon}
-              />
-              <h3 className="font-semibold text-[#2e2e2e] text-xl md:text-2xl tracking-[0] leading-8 mb-4">
-                {feature.title}
-              </h3>
-              <p className="font-normal text-[#666666] text-base tracking-[0] leading-[27.2px] flex-1">
-                {feature.description}
-              </p>
-            </article>
+        <div className="lp-why-grid">
+          {items.map((item, i) => (
+            <div key={i} className={`lp-why-card ${visible ? "lp-fade-in" : "lp-fade-out"}`} style={{ transitionDelay: `${200 + i * 100}ms` }}>
+              <span className="lp-why-emoji">{item.emoji}</span>
+              <h3 className="lp-why-title">{item.title}</h3>
+              <p className="lp-why-desc">{item.desc}</p>
+            </div>
           ))}
         </div>
       </div>
@@ -449,55 +227,25 @@ function WhyChooseUsSection() {
 }
 
 function FeaturesSection() {
-  const [isVisible, setIsVisible] = useState(false);
-  const sectionRef = useRef<HTMLElement>(null);
-
-  useEffect(() => {
-    const el = sectionRef.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) setIsVisible(true);
-      },
-      { threshold: 0.3 }
-    );
-    observer.observe(el);
-    return () => observer.unobserve(el);
-  }, []);
-
+  const { ref, visible } = useInView(0.2);
   return (
-    <section
-      ref={sectionRef}
-      id="features"
-      className="flex flex-col gap-6 md:gap-8 bg-white w-full px-4 md:px-8 py-16 md:py-24"
-    >
-      <img
-        className={`w-16 h-16 md:w-20 md:h-20 mx-auto transition-all duration-700 ${
-          isVisible
-            ? "opacity-100 translate-y-0 scale-100"
-            : "opacity-0 translate-y-8 scale-75"
-        }`}
-        alt="Campus collaboration icon"
-        src={`${ANIMA_IMG}/container-7.svg`}
-      />
-      <div className="w-full flex justify-center">
-        <h2
-          className={`max-w-3xl font-bold text-[#2e2e2e] text-3xl md:text-4xl text-center tracking-[0] leading-10 px-4 transition-all duration-700 delay-200 ${
-            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-          }`}
-        >
+    <section ref={ref} id="features" className="lp-section lp-section--dark">
+      <div className="lp-section-inner lp-features-inner">
+        <div className={`lp-section-label lp-section-label--light ${visible ? "lp-fade-in" : "lp-fade-out"}`}>✦ Features</div>
+        <h2 className={`lp-section-heading lp-section-heading--light ${visible ? "lp-fade-in" : "lp-fade-out"}`} style={{ transitionDelay: "100ms" }}>
           Built for campus collaboration
         </h2>
-      </div>
-      <div className="w-full flex justify-center">
-        <p
-          className={`max-w-2xl font-normal text-[#666666] text-base md:text-xl text-center tracking-[0] leading-relaxed md:leading-[34px] px-4 transition-all duration-700 delay-400 ${
-            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-          }`}
-        >
-          Join a growing community of students helping each other succeed. Share
-          knowledge, support peers, and achieve more together.
+        <p className={`lp-features-sub ${visible ? "lp-fade-in" : "lp-fade-out"}`} style={{ transitionDelay: "200ms" }}>
+          Join a growing community of students helping each other succeed. Share knowledge, support peers, and achieve more together.
         </p>
+        <div className={`lp-features-pills ${visible ? "lp-fade-in" : "lp-fade-out"}`} style={{ transitionDelay: "300ms" }}>
+          {["PDF uploads", "Credit system", "Course search", "Professor tags", "Bookmarks", "Leaderboard", "Dark mode", "Mobile friendly"].map((f) => (
+            <span key={f} className="lp-pill">{f}</span>
+          ))}
+        </div>
+        <div className={`lp-features-cta ${visible ? "lp-fade-in" : "lp-fade-out"}`} style={{ transitionDelay: "400ms" }}>
+          <Link href="/auth" className="lp-cta-btn lp-cta-btn--lg lp-cta-btn--white">Start sharing notes →</Link>
+        </div>
       </div>
     </section>
   );
