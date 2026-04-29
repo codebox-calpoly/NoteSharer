@@ -88,19 +88,31 @@ export default function Home() {
               Trade class materials with verified Cal Poly students. Upload approved notes to earn credits, then spend those credits on lecture notes, study guides, and exam reviews.
             </p>
 
-            <div className={`lp-mobile-exchange${heroVisible ? " lp-fade-in" : " lp-fade-out"}`} style={{ transitionDelay: "220ms" }} aria-hidden>
-              <span>
-                <strong>Upload</strong>
-                CSC 357 notes
-              </span>
-              <span>
-                <strong>Earn</strong>
-                +12 credits
-              </span>
-              <span>
-                <strong>Unlock</strong>
-                Study guides
-              </span>
+            <div className={`lp-mobile-credit-flow${heroVisible ? " lp-fade-in" : " lp-fade-out"}`} style={{ transitionDelay: "220ms" }} aria-hidden>
+              <div className="lp-mobile-flow-line">
+                <span />
+              </div>
+              <div className="lp-mobile-flow-row">
+                <span className="lp-mobile-flow-icon"><Upload size={18} strokeWidth={2.4} /></span>
+                <span>
+                  <strong>Upload approved materials</strong>
+                  Notes, study guides, or exam reviews
+                </span>
+              </div>
+              <div className="lp-mobile-flow-row lp-mobile-flow-row--credit">
+                <span className="lp-mobile-flow-icon"><WalletCards size={18} strokeWidth={2.4} /></span>
+                <span>
+                  <strong>Credits added</strong>
+                  A fair balance for every unlock
+                </span>
+              </div>
+              <div className="lp-mobile-flow-row">
+                <span className="lp-mobile-flow-icon"><Unlock size={18} strokeWidth={2.4} /></span>
+                <span>
+                  <strong>Unlock class materials</strong>
+                  Spend credits when you need them
+                </span>
+              </div>
             </div>
 
             <div className={`lp-hero-actions${heroVisible ? " lp-fade-in" : " lp-fade-out"}`} style={{ transitionDelay: "240ms" }}>
@@ -149,7 +161,7 @@ export default function Home() {
         </div>
       </section>
 
-      <HowItWorksSection />
+      <CreditSystemSection />
       <FeaturesSection />
 
       <footer className="lp-footer">
@@ -165,35 +177,70 @@ export default function Home() {
   );
 }
 
-function HowItWorksSection() {
+function CreditSystemSection() {
   const { ref, visible } = useInView(0.15);
-  const steps = [
-    { Icon: Upload, num: "01", title: "Contribute materials", desc: "Upload lecture notes, study guides, exam reviews, or class resources tied to a Cal Poly course." },
-    { Icon: WalletCards, num: "02", title: "Earn credits", desc: "Approved uploads add credits to your account as the course collection grows." },
-    { Icon: Unlock, num: "03", title: "Unlock resources", desc: "Spend credits on materials for classes you are taking now or checking out next." },
+  const principles = [
+    { Icon: BadgeCheck, title: "Students are verified", desc: "Access is limited to Cal Poly emails, so the exchange stays campus-specific." },
+    { Icon: Upload, title: "Uploads are reviewed", desc: "Materials are checked before credits are awarded or files enter the shared pool." },
+    { Icon: WalletCards, title: "Credits balance access", desc: "Contributing earns credits. Unlocking materials spends them." },
   ];
 
   return (
     <section ref={ref} id="how-it-works" className="lp-section lp-section--cream">
       <div className="lp-section-inner">
-        <div className="lp-section-head">
-          <p className={`lp-section-label${visible ? " lp-fade-in" : " lp-fade-out"}`}>How it works</p>
-          <h2 className={`lp-section-heading${visible ? " lp-fade-in" : " lp-fade-out"}`} style={{ transitionDelay: "90ms" }}>
-            <span>Upload once.</span>
-            <span>Use credits anytime.</span>
-          </h2>
-        </div>
-        <div className="lp-steps-grid">
-          {steps.map(({ Icon, ...s }, i) => (
-            <article key={s.num} className={`lp-step-card${visible ? " lp-fade-in" : " lp-fade-out"}`} style={{ transitionDelay: `${180 + i * 110}ms` }}>
-              <div className="lp-step-icon" aria-hidden>
-                <Icon size={25} strokeWidth={2.35} />
+        <div className="lp-credit-system">
+          <div className="lp-credit-copy">
+            <p className={`lp-section-label${visible ? " lp-fade-in" : " lp-fade-out"}`}>Credit system</p>
+            <h2 className={`lp-section-heading${visible ? " lp-fade-in" : " lp-fade-out"}`} style={{ transitionDelay: "90ms" }}>
+              <span>Built to keep</span>
+              <span>the exchange fair.</span>
+            </h2>
+            <p className={`lp-credit-intro${visible ? " lp-fade-in" : " lp-fade-out"}`} style={{ transitionDelay: "150ms" }}>
+              Credits make note sharing transactional without turning it into a free-for-all. Students contribute useful materials, approved uploads earn credits, and those credits unlock resources from the shared pool.
+            </p>
+
+            <div className="lp-credit-principles">
+              {principles.map(({ Icon, title, desc }, i) => (
+                <div key={title} className={`lp-credit-principle${visible ? " lp-fade-in" : " lp-fade-out"}`} style={{ transitionDelay: `${230 + i * 85}ms` }}>
+                  <span className="lp-credit-principle-icon" aria-hidden>
+                    <Icon size={21} strokeWidth={2.35} />
+                  </span>
+                  <span>
+                    <strong>{title}</strong>
+                    <em>{desc}</em>
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className={`lp-credit-visual${visible ? " lp-fade-in" : " lp-fade-out"}`} style={{ transitionDelay: "230ms" }} aria-hidden>
+            <div className="lp-credit-board">
+              <div className="lp-credit-board-head">
+                <span>Credit pool</span>
+                <strong>Fair access</strong>
               </div>
-              <span className="lp-step-num">{s.num}</span>
-              <h3 className="lp-card-title">{s.title}</h3>
-              <p className="lp-card-desc">{s.desc}</p>
-            </article>
-          ))}
+              <div className="lp-note-stream">
+                <span className="lp-stream-note lp-stream-note--one">CSC 357</span>
+                <span className="lp-stream-note lp-stream-note--two">MATH 241</span>
+                <span className="lp-stream-note lp-stream-note--three">BIO 161</span>
+                <span className="lp-stream-note lp-stream-note--four">STAT 312</span>
+              </div>
+              <div className="lp-credit-pool">
+                <span className="lp-credit-ring" />
+                <span className="lp-credit-ring lp-credit-ring--delay" />
+                <div>
+                  <strong>+ credits</strong>
+                  <em>approved uploads</em>
+                </div>
+              </div>
+              <div className="lp-credit-ledger">
+                <span><Upload size={16} /> Upload reviewed</span>
+                <span><WalletCards size={16} /> Credits added</span>
+                <span><Unlock size={16} /> Materials unlocked</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
