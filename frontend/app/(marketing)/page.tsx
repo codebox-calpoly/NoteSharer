@@ -154,9 +154,9 @@ export default function Home() {
 function CreditSystemSection() {
   const { ref, visible } = useInView(0.15);
   const principles = [
-    { Icon: BadgeCheck, title: "Cal Poly emails only", desc: "Access stays limited to verified students, so the pool is built for the same campus." },
-    { Icon: Upload, title: "Uploads are reviewed", desc: "Useful class materials are approved before they earn credits or appear in the pool." },
-    { Icon: WalletCards, title: "Credits keep it fair", desc: "If other students stocked a course, you spend credits to unlock those files. Uploading refills your balance." },
+    { Icon: BadgeCheck, title: "Verified students", desc: "@calpoly.edu only" },
+    { Icon: Upload, title: "Approved uploads", desc: "Credits after review" },
+    { Icon: WalletCards, title: "Balanced access", desc: "Earn when you add. Spend when you unlock." },
   ];
 
   return (
@@ -170,7 +170,7 @@ function CreditSystemSection() {
               <span>the exchange fair.</span>
             </h2>
             <p className={`lp-credit-intro${visible ? " lp-fade-in" : " lp-fade-out"}`} style={{ transitionDelay: "150ms" }}>
-              Students add lecture notes, study guides, and exam reviews to shared course pools. Approved uploads earn credits, then those credits unlock materials other Cal Poly students have already contributed.
+              Upload approved materials to earn credits. Spend credits to unlock files for your courses.
             </p>
 
             <div className="lp-credit-principles">
@@ -191,27 +191,44 @@ function CreditSystemSection() {
           <div className={`lp-credit-visual${visible ? " lp-fade-in" : " lp-fade-out"}`} style={{ transitionDelay: "230ms" }} aria-hidden>
             <div className="lp-credit-board">
               <div className="lp-credit-board-head">
-                <span>Course pool</span>
-                <strong>Credit access</strong>
+                <span>Credit exchange</span>
+                <strong>Upload to unlock</strong>
               </div>
-              <div className="lp-note-stream">
-                <span className="lp-stream-note lp-stream-note--one">CSC 357</span>
-                <span className="lp-stream-note lp-stream-note--two">MATH 241</span>
-                <span className="lp-stream-note lp-stream-note--three">BIO 161</span>
-                <span className="lp-stream-note lp-stream-note--four">STAT 312</span>
-              </div>
-              <div className="lp-credit-pool">
-                <span className="lp-credit-ring" />
-                <span className="lp-credit-ring lp-credit-ring--delay" />
-                <div>
-                  <strong>credits</strong>
-                  <em>unlock the pool</em>
+              <div className="lp-credit-flow">
+                <div className="lp-credit-step lp-credit-step--upload">
+                  <span className="lp-credit-step-icon"><Upload size={21} strokeWidth={2.35} /></span>
+                  <div>
+                    <strong>Upload</strong>
+                    <em>Approved files earn credits</em>
+                  </div>
+                  <span className="lp-credit-chip">+ credits</span>
                 </div>
-              </div>
-              <div className="lp-credit-ledger">
-                <span><Upload size={16} /> Students add notes</span>
-                <span><WalletCards size={16} /> You spend credits</span>
-                <span><Unlock size={16} /> Files unlock by course</span>
+
+                <div className="lp-credit-connector"><span /></div>
+
+                <div className="lp-credit-step lp-credit-step--pool">
+                  <span className="lp-credit-step-icon"><BookOpen size={21} strokeWidth={2.35} /></span>
+                  <div>
+                    <strong>Course pools</strong>
+                    <em>Files stay grouped by class</em>
+                    <span className="lp-course-chips">
+                      <span>CSC 357 notes</span>
+                      <span>MATH 241 guide</span>
+                      <span>BIO 161 review</span>
+                    </span>
+                  </div>
+                </div>
+
+                <div className="lp-credit-connector lp-credit-connector--delay"><span /></div>
+
+                <div className="lp-credit-step lp-credit-step--unlock">
+                  <span className="lp-credit-step-icon"><Unlock size={21} strokeWidth={2.35} /></span>
+                  <div>
+                    <strong>Unlock</strong>
+                    <em>Spend credits on what you need</em>
+                  </div>
+                  <span className="lp-credit-chip lp-credit-chip--spend">- credits</span>
+                </div>
               </div>
             </div>
           </div>
