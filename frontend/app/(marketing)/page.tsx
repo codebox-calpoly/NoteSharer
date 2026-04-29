@@ -1,30 +1,59 @@
 "use client";
-/* eslint-disable @next/next/no-img-element */
 
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import {
+  ArrowRight,
+  BadgeCheck,
+  BookOpen,
+  Bookmark,
+  CalendarDays,
+  ClipboardList,
+  Paperclip,
+  Trophy,
+  Unlock,
+  Upload,
+  WalletCards,
+} from "lucide-react";
 import { getSessionWithRecovery, supabase } from "@/lib/supabaseClient";
 import "./landing.css";
 
 function useInView(threshold = 0.15) {
   const ref = useRef<HTMLElement>(null);
   const [visible, setVisible] = useState(false);
+
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setVisible(true); }, { threshold });
+
+    const obs = new IntersectionObserver(
+      ([e]) => {
+        if (e.isIntersecting) setVisible(true);
+      },
+      { threshold },
+    );
     obs.observe(el);
     return () => obs.unobserve(el);
   }, [threshold]);
+
   return { ref, visible };
 }
 
 export default function Home() {
   const router = useRouter();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [heroVisible, setHeroVisible] = useState(false);
-  useEffect(() => { const t = setTimeout(() => setHeroVisible(true), 100); return () => clearTimeout(t); }, []);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadTimer = setTimeout(() => setLoading(false), 780);
+    const heroTimer = setTimeout(() => setHeroVisible(true), 260);
+    return () => {
+      clearTimeout(loadTimer);
+      clearTimeout(heroTimer);
+    };
+  }, []);
+
   useEffect(() => {
     getSessionWithRecovery(supabase).then(({ session }) => {
       if (session) router.replace("/dashboard");
@@ -33,133 +62,98 @@ export default function Home() {
 
   const scrollToSection = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
-    setMobileMenuOpen(false);
   };
 
   return (
-    <div className="lp-root" style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif" }}>
-
-      {/* NAV */}
-      <header className="lp-nav">
-        <div className="lp-nav-inner">
-          <div className="lp-nav-brand">
-            <span className="lp-logo-wrap">
-              <img src="/Transparent Note Sharer(1).svg" alt="Poly Pages" className="lp-logo-img" />
-            </span>
-            <span className="lp-brand-name">Poly Pages</span>
-            <span className="lp-badge">Cal Poly SLO</span>
-          </div>
-
-          <nav className="lp-nav-links">
-            {["How It Works", "Why Us", "Features"].map((label) => (
-              <button key={label} type="button"
-                onClick={() => scrollToSection(label.toLowerCase().replace(/ /g, "-"))}
-                className="lp-nav-link">
-                {label}
-              </button>
-            ))}
-          </nav>
-
-          <div className="lp-nav-right">
-            <Link href="/auth" className="lp-cta-btn lp-cta-btn--sm">Sign In / Register</Link>
-          </div>
-
-          <button type="button" className="lp-hamburger" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} aria-label="Toggle menu">
-            <span className={`lp-ham-line lp-ham-line--1${mobileMenuOpen ? " open" : ""}`} />
-            <span className={`lp-ham-line lp-ham-line--2${mobileMenuOpen ? " open" : ""}`} />
-            <span className={`lp-ham-line lp-ham-line--3${mobileMenuOpen ? " open" : ""}`} />
-          </button>
+    <div className="lp-root">
+      <div className={`lp-loading${loading ? "" : " is-hidden"}`} aria-hidden={!loading}>
+        <div className="lp-loading-card">
+          <span className="lp-loading-mark" />
+          <span className="lp-loading-text">Organizing notes</span>
+          <span className="lp-loading-line" />
         </div>
+      </div>
 
-        {mobileMenuOpen && (
-          <div className="lp-mobile-menu">
-            {["How It Works", "Why Us", "Features"].map((label) => (
-              <button key={label} type="button"
-                onClick={() => scrollToSection(label.toLowerCase().replace(/ /g, "-"))}
-                className="lp-mobile-link">
-                {label}
-              </button>
-            ))}
-            <Link href="/auth" className="lp-cta-btn lp-cta-btn--full">Sign In / Register</Link>
-          </div>
-        )}
-      </header>
-
-      {/* HERO */}
       <section className="lp-hero" id="hero">
         <div className="lp-hero-inner">
-          <div className="lp-hero-text">
-            <div className={`lp-eyebrow${heroVisible ? " lp-fade-in" : " lp-fade-out"}`} style={{ transitionDelay: "0ms" }}>
-              ✦ Cal Poly · Note Sharing Platform
-            </div>
-            <h1 className={`lp-hero-heading${heroVisible ? " lp-fade-in" : " lp-fade-out"}`} style={{ transitionDelay: "100ms", fontFamily: "var(--font-playfair), Georgia, serif" }}>
-              Share notes.<br />
-              <em className="lp-hero-em">Earn credits.</em><br />
-              Learn together.
-            </h1>
-            <p className={`lp-hero-sub${heroVisible ? " lp-fade-in" : " lp-fade-out"}`} style={{ transitionDelay: "200ms" }}>
-              A note-sharing platform built for Cal Poly SLO students. Upload your notes, earn credits, and unlock help from students across campus.
+          <div className="lp-hero-copy">
+            <p className={`lp-hero-kicker${heroVisible ? " lp-fade-in" : " lp-fade-out"}`} style={{ transitionDelay: "60ms" }}>
+              Cal Poly student notes, traded fairly
             </p>
-            <div className={`lp-hero-actions${heroVisible ? " lp-fade-in" : " lp-fade-out"}`} style={{ transitionDelay: "300ms" }}>
-              <Link href="/auth" className="lp-cta-btn lp-cta-btn--lg">Get Started →</Link>
-              <button type="button" onClick={() => scrollToSection("how-it-works")} className="lp-ghost-btn">See how it works</button>
+            <h1
+              className={`lp-hero-heading${heroVisible ? " lp-fade-in" : " lp-fade-out"}`}
+              style={{ transitionDelay: "120ms" }}
+            >
+              Upload notes.
+              <span>Earn credits.</span>
+              Unlock class materials.
+            </h1>
+            <p className={`lp-hero-sub${heroVisible ? " lp-fade-in" : " lp-fade-out"}`} style={{ transitionDelay: "190ms" }}>
+              Share lecture notes, study guides, and exam reviews. Earn credits when classmates use them, then spend those credits on materials for your current courses.
+            </p>
+
+            <div className={`lp-hero-actions${heroVisible ? " lp-fade-in" : " lp-fade-out"}`} style={{ transitionDelay: "260ms" }}>
+              <Link href="/auth" className="lp-action-btn lp-action-btn--primary">
+                Start sharing
+                <ArrowRight className="lp-button-icon" size={18} strokeWidth={2.8} aria-hidden />
+              </Link>
+              <button type="button" onClick={() => scrollToSection("how-it-works")} className="lp-action-btn lp-action-btn--secondary">
+                See how it works
+              </button>
             </div>
-            <div className={`lp-trust-row${heroVisible ? " lp-fade-in" : " lp-fade-out"}`} style={{ transitionDelay: "400ms" }}>
-              <div className="lp-trust-avatars">
-                {["J", "M", "A", "K"].map((l, i) => (
-                  <span key={i} className="lp-trust-avatar" style={{ background: ["#6dbe8b","#f9c784","#a78bfa","#60a5fa"][i] }}>{l}</span>
-                ))}
-              </div>
-              <span className="lp-trust-text"><strong>Cal Poly students only</strong> — verified by @calpoly.edu email</span>
+
+            <div className={`lp-verify-note${heroVisible ? " lp-fade-in" : " lp-fade-out"}`} style={{ transitionDelay: "330ms" }}>
+              <span className="lp-verify-icon" aria-hidden>
+                <BadgeCheck size={24} strokeWidth={2.4} />
+              </span>
+              <span>
+                <strong>Cal Poly students only</strong>
+                <em>must be verified by @calpoly.edu</em>
+              </span>
             </div>
           </div>
 
-          <div className={`lp-hero-visual${heroVisible ? " lp-fade-in" : " lp-fade-out"}`} style={{ transitionDelay: "200ms" }}>
-            <div className="lp-mockup-stack">
-              {/* Floating note cards */}
-              <div className="lp-card lp-card--back">
-                <div className="lp-card-tag">LECTURE NOTES</div>
-                <div className="lp-card-title">CSC 357 — Systems Programming</div>
-                <div className="lp-card-meta">Score: +12 · 3 credits</div>
+          <div className={`lp-hero-visual${heroVisible ? " lp-fade-in" : " lp-fade-out"}`} style={{ transitionDelay: "220ms" }}>
+            <div className="lp-note-scene" aria-hidden>
+              <span className="lp-doodle lp-doodle--star" />
+              <span className="lp-doodle lp-doodle--spark" />
+              <div className="lp-note-card lp-note-card--lecture">
+                <Paperclip className="lp-note-clip" size={74} strokeWidth={2.1} />
+                <span className="lp-note-course">CSC 357</span>
+                <span className="lp-note-title">Lecture Notes</span>
+                <span className="lp-note-rule" />
               </div>
-              <div className="lp-card lp-card--front">
-                <div className="lp-card-tag lp-card-tag--green">STUDY GUIDE</div>
-                <div className="lp-card-title">MATH 241 — Calculus IV</div>
-                <div className="lp-card-meta">Score: +8 · 3 credits</div>
-                <div className="lp-card-badge">JUST UPLOADED</div>
+              <div className="lp-note-card lp-note-card--study">
+                <span className="lp-note-tape" />
+                <span className="lp-note-course">MATH 241</span>
+                <span className="lp-note-title">Study Guide</span>
+                <span className="lp-note-rule" />
               </div>
-              {/* Phone mockup — always dark */}
-              <img
-                className="lp-phone-img"
-                src="/IMG_7904.jpeg"
-                alt="App on mobile"
-              />
+              <div className="lp-note-card lp-note-card--review">
+                <span className="lp-note-pin" />
+                <span className="lp-note-course">BIO 161</span>
+                <span className="lp-note-title">Exam Review</span>
+                <span className="lp-note-rule" />
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="lp-blob lp-blob--1" aria-hidden />
-        <div className="lp-blob lp-blob--2" aria-hidden />
+        <button type="button" onClick={() => scrollToSection("how-it-works")} className="lp-scroll-cue" aria-label="Scroll to how it works">
+          <span />
+        </button>
       </section>
 
-      {/* HOW IT WORKS */}
       <HowItWorksSection />
-
-      {/* WHY US */}
-      <WhySection />
-
-      {/* FEATURES */}
       <FeaturesSection />
 
-      {/* FOOTER */}
       <footer className="lp-footer">
         <div className="lp-footer-inner">
           <div>
             <p className="lp-footer-brand">Poly Pages</p>
-            <p className="lp-footer-sub">Independent student project · Not affiliated with Cal Poly administration</p>
-            <p className="lp-footer-sub" style={{ marginTop: 4 }}>CodeBox TM</p>
+            <p className="lp-footer-sub">Independent student project - not affiliated with Cal Poly administration.</p>
           </div>
-          <a href="/terms-and-conditions" className="lp-footer-link">Community Guidelines</a>
+          <Link href="/auth" className="lp-footer-link">Start sharing</Link>
         </div>
       </footer>
     </div>
@@ -169,53 +163,30 @@ export default function Home() {
 function HowItWorksSection() {
   const { ref, visible } = useInView(0.15);
   const steps = [
-    { num: "01", title: "Upload Your Notes", desc: "Share your study materials and lecture notes as PDFs. Every upload goes through a quick review." },
-    { num: "02", title: "Earn Credits", desc: "Get credits automatically when your notes are approved. Quality notes earn bonus credits from upvotes." },
-    { num: "03", title: "Unlock Materials", desc: "Spend credits to access notes from other students across every department on campus." },
+    { Icon: Upload, num: "01", title: "Upload useful materials", desc: "Share lecture notes, study guides, exam reviews, or other class files you would actually want before a midterm." },
+    { Icon: WalletCards, num: "02", title: "Earn credits back", desc: "Approved uploads add credits to your account, so contributing to the library gives you access to more materials." },
+    { Icon: Unlock, num: "03", title: "Unlock course help", desc: "Spend credits on notes and study materials for the classes you are taking now, all organized around Cal Poly courses." },
   ];
+
   return (
     <section ref={ref} id="how-it-works" className="lp-section lp-section--cream">
       <div className="lp-section-inner">
-        <div className={`lp-section-label${visible ? " lp-fade-in" : " lp-fade-out"}`}>✦ How It Works</div>
-        <h2 className={`lp-section-heading${visible ? " lp-fade-in" : " lp-fade-out"}`} style={{ transitionDelay: "100ms" }}>
-          Three steps to better studying
-        </h2>
-        <div className="lp-steps-grid">
-          {steps.map((s, i) => (
-            <div key={i} className={`lp-step-card${visible ? " lp-fade-in" : " lp-fade-out"}`} style={{ transitionDelay: `${200 + i * 120}ms` }}>
-              <span className="lp-step-num">{s.num}</span>
-              <h3 className="lp-step-title">{s.title}</h3>
-              <p className="lp-step-desc">{s.desc}</p>
-            </div>
-          ))}
+        <div className="lp-section-head">
+          <p className={`lp-section-label${visible ? " lp-fade-in" : " lp-fade-out"}`}>How it works</p>
+          <h2 className={`lp-section-heading${visible ? " lp-fade-in" : " lp-fade-out"}`} style={{ transitionDelay: "90ms" }}>
+            Share what helped you. Get what helps next.
+          </h2>
         </div>
-      </div>
-    </section>
-  );
-}
-
-function WhySection() {
-  const { ref, visible } = useInView(0.1);
-  const items = [
-    { emoji: "🔍", title: "Organized & searchable", desc: "Find exactly what you need with smart categorization and search across all subjects and courses." },
-    { emoji: "⚖️", title: "Fair credit system", desc: "Contribute to earn, use credits to access. A balanced ecosystem that rewards quality and participation." },
-    { emoji: "🎓", title: "Built for students", desc: "Designed with real student needs in mind. Community-driven and focused on collaborative learning." },
-    { emoji: "✨", title: "Distraction free", desc: "No clutter, no ads. Just a simple, intuitive platform designed to help you study better." },
-  ];
-  return (
-    <section ref={ref} id="why-us" className="lp-section">
-      <div className="lp-section-inner">
-        <div className={`lp-section-label${visible ? " lp-fade-in" : " lp-fade-out"}`}>✦ Why Poly Pages</div>
-        <h2 className={`lp-section-heading${visible ? " lp-fade-in" : " lp-fade-out"}`} style={{ transitionDelay: "100ms" }}>
-          A calmer way to study with your campus
-        </h2>
-        <div className="lp-why-grid">
-          {items.map((item, i) => (
-            <div key={i} className={`lp-why-card${visible ? " lp-fade-in" : " lp-fade-out"}`} style={{ transitionDelay: `${200 + i * 100}ms` }}>
-              <span className="lp-why-emoji">{item.emoji}</span>
-              <h3 className="lp-why-title">{item.title}</h3>
-              <p className="lp-why-desc">{item.desc}</p>
-            </div>
+        <div className="lp-steps-grid">
+          {steps.map(({ Icon, ...s }, i) => (
+            <article key={s.num} className={`lp-step-card${visible ? " lp-fade-in" : " lp-fade-out"}`} style={{ transitionDelay: `${180 + i * 110}ms` }}>
+              <div className="lp-step-icon" aria-hidden>
+                <Icon size={25} strokeWidth={2.35} />
+              </div>
+              <span className="lp-step-num">{s.num}</span>
+              <h3 className="lp-card-title">{s.title}</h3>
+              <p className="lp-card-desc">{s.desc}</p>
+            </article>
           ))}
         </div>
       </div>
@@ -224,24 +195,50 @@ function WhySection() {
 }
 
 function FeaturesSection() {
-  const { ref, visible } = useInView(0.2);
+  const { ref, visible } = useInView(0.18);
+  const features = [
+    { Icon: ClipboardList, title: "Track your classes", desc: "Keep your current courses close so the notes you need are always one click away." },
+    { Icon: BookOpen, title: "Browse notes and study guides", desc: "Find PDFs, lecture notes, exam reviews, and study materials by course and professor." },
+    { Icon: CalendarDays, title: "Scope out future courses", desc: "Peek at materials from classes you might take next quarter before you commit." },
+    { Icon: Trophy, title: "Climb the leaderboards", desc: "Earn recognition when your uploads help classmates study better." },
+    { Icon: WalletCards, title: "Manage your credits", desc: "See what you earned, what you unlocked, and where your contributions are paying off." },
+    { Icon: Bookmark, title: "Save your best finds", desc: "Bookmark useful materials so finals week does not start with another search spiral." },
+  ];
+
   return (
-    <section ref={ref} id="features" className="lp-section lp-section--dark">
-      <div className="lp-section-inner lp-features-inner">
-        <div className={`lp-section-label lp-section-label--light${visible ? " lp-fade-in" : " lp-fade-out"}`}>✦ Features</div>
-        <h2 className={`lp-section-heading lp-section-heading--light${visible ? " lp-fade-in" : " lp-fade-out"}`} style={{ transitionDelay: "100ms" }}>
-          Built for campus collaboration
-        </h2>
-        <p className={`lp-features-sub${visible ? " lp-fade-in" : " lp-fade-out"}`} style={{ transitionDelay: "200ms" }}>
-          Join a growing community of students helping each other succeed. Share knowledge, support peers, and achieve more together.
-        </p>
-        <div className={`lp-features-pills${visible ? " lp-fade-in" : " lp-fade-out"}`} style={{ transitionDelay: "300ms" }}>
-          {["PDF uploads", "Credit system", "Course search", "Professor tags", "Bookmarks", "Leaderboard", "Dark mode", "Mobile friendly"].map((f) => (
-            <span key={f} className="lp-pill">{f}</span>
+    <section ref={ref} id="features" className="lp-section lp-section--features">
+      <div className="lp-section-inner">
+        <div className="lp-feature-header">
+          <div>
+            <p className={`lp-section-label${visible ? " lp-fade-in" : " lp-fade-out"}`}>What you can do</p>
+            <h2 className={`lp-section-heading${visible ? " lp-fade-in" : " lp-fade-out"}`} style={{ transitionDelay: "90ms" }}>
+              A class library that feels built around your schedule.
+            </h2>
+          </div>
+          <p className={`lp-feature-intro${visible ? " lp-fade-in" : " lp-fade-out"}`} style={{ transitionDelay: "150ms" }}>
+            Poly Pages is more than an upload form. It is a course-aware place to trade notes, plan ahead, track credits, and find the materials that make studying less chaotic.
+          </p>
+        </div>
+        <div className="lp-feature-card-grid">
+          {features.map(({ Icon, title, desc }, i) => (
+            <article key={title} className={`lp-feature-card${visible ? " lp-fade-in" : " lp-fade-out"}`} style={{ transitionDelay: `${210 + i * 70}ms` }}>
+              <span className="lp-feature-icon" aria-hidden>
+                <Icon size={23} strokeWidth={2.25} />
+              </span>
+              <h3>{title}</h3>
+              <p>{desc}</p>
+            </article>
           ))}
         </div>
-        <div className={`lp-features-cta${visible ? " lp-fade-in" : " lp-fade-out"}`} style={{ transitionDelay: "400ms" }}>
-          <Link href="/auth" className="lp-cta-btn lp-cta-btn--lg lp-cta-btn--white">Start sharing notes →</Link>
+        <div className={`lp-final-strip${visible ? " lp-fade-in" : " lp-fade-out"}`} style={{ transitionDelay: "640ms" }}>
+          <div>
+            <strong>Have notes from a class you already survived?</strong>
+            <span>Turn them into credits for the next one.</span>
+          </div>
+          <Link href="/auth" className="lp-action-btn lp-action-btn--primary lp-final-cta">
+            Start sharing
+            <ArrowRight className="lp-button-icon" size={18} strokeWidth={2.8} aria-hidden />
+          </Link>
         </div>
       </div>
     </section>
