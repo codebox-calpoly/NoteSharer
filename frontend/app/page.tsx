@@ -4,7 +4,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useTheme } from "@/app/components/ThemeProvider";
 import { getSessionWithRecovery, supabase } from "@/lib/supabaseClient";
 
 function useInView(threshold = 0.15) {
@@ -23,11 +22,7 @@ function useInView(threshold = 0.15) {
 export default function Home() {
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { theme } = useTheme();
-  const [mountedTheme, setMountedTheme] = useState<string | null>(null);
   const [heroVisible, setHeroVisible] = useState(false);
-
-  useEffect(() => { setMountedTheme(theme); }, [theme]);
   useEffect(() => { const t = setTimeout(() => setHeroVisible(true), 100); return () => clearTimeout(t); }, []);
   useEffect(() => {
     getSessionWithRecovery(supabase).then(({ session }) => {
@@ -96,7 +91,7 @@ export default function Home() {
             <div className={`lp-eyebrow${heroVisible ? " lp-fade-in" : " lp-fade-out"}`} style={{ transitionDelay: "0ms" }}>
               ✦ Cal Poly · Note Sharing Platform
             </div>
-            <h1 className={`lp-hero-heading${heroVisible ? " lp-fade-in" : " lp-fade-out"}`} style={{ transitionDelay: "100ms" }}>
+            <h1 className={`lp-hero-heading${heroVisible ? " lp-fade-in" : " lp-fade-out"}`} style={{ transitionDelay: "100ms", fontFamily: "var(--font-playfair), Georgia, serif" }}>
               Share notes.<br />
               <em className="lp-hero-em">Earn credits.</em><br />
               Learn together.
@@ -132,10 +127,10 @@ export default function Home() {
                 <div className="lp-card-meta">Score: +8 · 3 credits</div>
                 <div className="lp-card-badge">JUST UPLOADED</div>
               </div>
-              {/* Phone mockup */}
+              {/* Phone mockup — always dark */}
               <img
                 className="lp-phone-img"
-                src={mountedTheme === "dark" ? "/IMG_7904.jpeg" : "/IMG_7903.jpeg"}
+                src="/IMG_7904.jpeg"
                 alt="App on mobile"
               />
             </div>

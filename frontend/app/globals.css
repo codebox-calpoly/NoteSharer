@@ -2217,17 +2217,19 @@ body {
 }
 .lp-card {
   position: absolute;
-  background: #fff;
-  border-radius: 20px;
-  padding: 24px;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.12);
-  width: 260px;
+  background: #1e1e1e;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+  width: 240px;
 }
 .lp-card--back {
   top: 0;
   left: 0;
   transform: rotate(-6deg);
-  background: var(--lp-gold);
+  background: #2a2218;
+  border-color: rgba(249,199,132,0.2);
   animation: lp-float 4s ease-in-out infinite;
   z-index: 1;
 }
@@ -2235,59 +2237,65 @@ body {
   top: 60px;
   right: 0;
   transform: rotate(4deg);
+  background: #1a2420;
+  border-color: rgba(109,190,139,0.2);
   animation: lp-float2 5s ease-in-out infinite;
   z-index: 2;
 }
 .lp-card-tag {
   font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--lp-muted);
-  background: rgba(0,0,0,0.06);
+  color: rgba(255,255,255,0.4);
+  background: rgba(255,255,255,0.06);
   display: inline-block;
   padding: 3px 8px;
-  border-radius: 6px;
+  border-radius: 4px;
   margin-bottom: 12px;
 }
 .lp-card-tag--green {
-  background: rgba(45, 106, 79, 0.1);
-  color: var(--lp-green);
+  background: rgba(109,190,139,0.12);
+  color: #6dbe8b;
 }
 .lp-card-title {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
-  color: var(--lp-text);
+  color: #e5e5e5;
   margin-bottom: 8px;
   line-height: 1.4;
+  letter-spacing: -0.2px;
 }
 .lp-card-meta {
-  font-size: 12px;
-  color: var(--lp-muted);
+  font-size: 11px;
+  color: rgba(255,255,255,0.35);
+  letter-spacing: 0.02em;
 }
 .lp-card-badge {
   position: absolute;
   top: -10px;
   right: 16px;
-  background: var(--lp-green);
-  color: #fff;
-  font-size: 10px;
-  font-weight: 700;
+  background: #6dbe8b;
+  color: #0d1a12;
+  font-size: 9px;
+  font-weight: 800;
   padding: 4px 10px;
   border-radius: 100px;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 .lp-phone-img {
   position: absolute;
   bottom: -20px;
   right: -20px;
   width: 140px;
-  height: auto;
-  border-radius: 20px;
-  box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+  height: 240px;
+  border-radius: 16px;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.6);
   animation: lp-phone-bob 6s ease-in-out infinite;
   z-index: 3;
   object-fit: cover;
+  object-position: top;
 }
 
 /* ── Blobs ── */
@@ -2339,7 +2347,7 @@ body {
 }
 .lp-section-label--light { color: var(--lp-green-light); }
 .lp-section-heading {
-  font-family: 'Plus Jakarta Sans', serif;
+  font-family: var(--font-playfair), Georgia, serif;
   font-size: clamp(32px, 4vw, 52px);
   font-weight: 800;
   letter-spacing: -1px;
