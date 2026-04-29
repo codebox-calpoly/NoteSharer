@@ -1179,7 +1179,7 @@ body:has(.lp-root) {
     min-height: 100vh;
     min-height: 100dvh;
     align-items: start;
-    padding: 84px 16px 34px;
+    padding: 108px 16px 34px;
   }
 
   .lp-hero::before {
@@ -1244,7 +1244,7 @@ body:has(.lp-root) {
     display: grid;
     grid-template-columns: 1fr;
     gap: 11px;
-    margin: 40px 0 18px;
+    margin: 56px 0 18px;
   }
 
   .lp-action-btn {
