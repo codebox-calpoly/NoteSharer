@@ -2110,7 +2110,7 @@ body {
 /* ── Hero ── */
 .lp-hero {
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   padding: 80px 24px 100px;
   min-height: 90vh;
   display: flex;
@@ -2212,8 +2212,9 @@ body {
 }
 .lp-mockup-stack {
   position: relative;
-  width: 360px;
-  height: 440px;
+  width: 380px;
+  height: 500px;
+  overflow: visible;
 }
 .lp-card {
   position: absolute;
@@ -2225,22 +2226,22 @@ body {
   width: 240px;
 }
 .lp-card--back {
-  top: 0;
-  left: 0;
+  top: 160px;
+  left: -20px;
   transform: rotate(-6deg);
   background: #2a2218;
   border-color: rgba(249,199,132,0.2);
   animation: lp-float 4s ease-in-out infinite;
-  z-index: 1;
+  z-index: 4;
 }
 .lp-card--front {
-  top: 60px;
-  right: 0;
+  top: 240px;
+  right: -10px;
   transform: rotate(4deg);
   background: #1a2420;
   border-color: rgba(109,190,139,0.2);
   animation: lp-float2 5s ease-in-out infinite;
-  z-index: 2;
+  z-index: 5;
 }
 .lp-card-tag {
   font-size: 10px;
@@ -2286,11 +2287,11 @@ body {
 }
 .lp-phone-img {
   position: absolute;
-  bottom: -20px;
-  right: -20px;
-  width: 140px;
-  height: 240px;
-  border-radius: 16px;
+  top: 0;
+  right: 20px;
+  width: 150px;
+  height: 280px;
+  border-radius: 20px;
   box-shadow: 0 24px 60px rgba(0,0,0,0.6);
   animation: lp-phone-bob 6s ease-in-out infinite;
   z-index: 3;
