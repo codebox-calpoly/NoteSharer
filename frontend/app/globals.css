@@ -2290,19 +2290,6 @@ body {
   object-fit: cover;
 }
 
-/* ── Laptop mockup — sits behind cards in the stack ── */
-.lp-laptop-img {
-  position: absolute;
-  bottom: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 200px;
-  height: auto;
-  opacity: 0.8;
-  z-index: 0;
-  filter: drop-shadow(0 10px 20px rgba(0,0,0,0.2));
-}
-
 /* ── Blobs ── */
 .lp-blob {
   position: absolute;

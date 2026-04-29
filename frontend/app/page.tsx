@@ -7,8 +7,6 @@ import { useRouter } from "next/navigation";
 import { useTheme } from "@/app/components/ThemeProvider";
 import { getSessionWithRecovery, supabase } from "@/lib/supabaseClient";
 
-const ANIMA_IMG = "https://c.animaapp.com/vYVdVbUl/img";
-
 function useInView(threshold = 0.15) {
   const ref = useRef<HTMLElement>(null);
   const [visible, setVisible] = useState(false);
@@ -122,12 +120,6 @@ export default function Home() {
 
           <div className={`lp-hero-visual${heroVisible ? " lp-fade-in" : " lp-fade-out"}`} style={{ transitionDelay: "200ms" }}>
             <div className="lp-mockup-stack">
-              {/* Laptop behind the cards */}
-              <img
-                className="lp-laptop-img"
-                src={`${ANIMA_IMG}/mask-group@2x.png`}
-                alt="Laptop displaying Poly Pages"
-              />
               {/* Floating note cards */}
               <div className="lp-card lp-card--back">
                 <div className="lp-card-tag">LECTURE NOTES</div>
