@@ -729,8 +729,8 @@ body:has(.lp-root) {
 
 .lp-credit-board {
   position: relative;
-  min-height: 410px;
-  padding: 26px 28px 24px;
+  min-height: 394px;
+  padding: 24px 26px 26px;
   overflow: hidden;
   border: 1px solid rgba(109, 190, 139, 0.24);
   border-radius: 22px;
@@ -749,8 +749,7 @@ body:has(.lp-root) {
 }
 
 .lp-credit-board-head,
-.lp-pool-stage,
-.lp-pool-actions {
+.lp-pool-stage {
   position: relative;
   z-index: 1;
 }
@@ -778,81 +777,107 @@ body:has(.lp-root) {
 }
 
 .lp-pool-stage {
-  height: 246px;
-  margin-top: 20px;
+  display: grid;
+  grid-template-columns: minmax(134px, 1fr) 152px minmax(134px, 1fr);
+  gap: 24px;
+  align-items: center;
+  height: 278px;
+  margin-top: 18px;
+  padding: 24px 30px;
   overflow: hidden;
   border-radius: 18px;
   background:
-    radial-gradient(circle at 72% 52%, rgba(109, 190, 139, 0.15), transparent 32%),
-    linear-gradient(180deg, rgba(250, 247, 242, 0.7), rgba(255, 255, 255, 0.74));
+    radial-gradient(circle at 50% 50%, rgba(109, 190, 139, 0.13), transparent 32%),
+    radial-gradient(circle at 18% 70%, rgba(249, 199, 132, 0.11), transparent 30%),
+    linear-gradient(180deg, rgba(255, 253, 247, 0.95), rgba(255, 255, 255, 0.82));
   border: 1px solid rgba(109, 190, 139, 0.18);
 }
 
-.lp-pool-stage::before,
+.lp-pool-stage::before {
+  content: "";
+  position: absolute;
+  left: 54px;
+  right: 54px;
+  top: 50%;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(109, 190, 139, 0.02), rgba(109, 190, 139, 0.26), rgba(109, 190, 139, 0.02));
+}
+
 .lp-pool-stage::after {
   content: "";
   position: absolute;
-  left: 36px;
-  right: 36px;
-  height: 1px;
-  background: rgba(84, 96, 109, 0.08);
+  left: 50%;
+  top: 50%;
+  width: 216px;
+  height: 216px;
+  border-radius: 50%;
+  border: 1px solid rgba(109, 190, 139, 0.13);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
 }
 
-.lp-pool-stage::before {
-  top: 82px;
+.lp-pool-column {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 18px;
 }
 
-.lp-pool-stage::after {
-  top: 164px;
+.lp-pool-column--uploads {
+  justify-items: end;
+}
+
+.lp-pool-column--materials {
+  justify-items: start;
 }
 
 .lp-pool-slip {
-  position: absolute;
   display: inline-flex;
-  min-width: 118px;
+  width: min(154px, 100%);
   justify-content: center;
-  padding: 14px 17px;
+  padding: 13px 15px;
   border: 1px solid rgba(84, 96, 109, 0.12);
   border-radius: 14px;
   background: #fffdf7;
   color: #252525;
   font-family: "Segoe Print", "Comic Sans MS", "Bradley Hand", cursive;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 800;
-  box-shadow: 0 18px 32px rgba(33, 43, 54, 0.12);
+  box-shadow: 0 14px 26px rgba(33, 43, 54, 0.1);
+  white-space: nowrap;
 }
 
 .lp-pool-slip--one {
-  left: 34px;
-  top: 128px;
-  transform: rotate(-3.5deg);
+  justify-self: start;
+  transform: translateX(12px) rotate(-3.5deg);
 }
 
 .lp-pool-slip--two {
-  right: 32px;
-  top: 26px;
-  background: #fffefa;
+  justify-self: end;
+  background: #fff6d9;
   transform: rotate(3deg);
 }
 
 .lp-pool-slip--three {
-  left: 138px;
-  top: 38px;
-  background: #fff6d9;
-  transform: rotate(5deg);
+  justify-self: center;
+  transform: translateX(-10px) rotate(1.8deg);
 }
 
-.lp-pool-slip--ghost {
-  right: 128px;
-  bottom: 30px;
-  opacity: 0.2;
-  transform: rotate(-4deg);
+.lp-pool-slip--study {
+  background: #fffefa;
+  transform: translateX(-8px) rotate(2.8deg);
+}
+
+.lp-pool-slip--review {
+  justify-self: end;
+  background: #fff6d9;
+  transform: translateX(-20px) rotate(-3deg);
 }
 
 .lp-credit-pool-orb {
-  position: absolute;
-  right: 54px;
-  bottom: 34px;
+  position: relative;
+  z-index: 2;
   width: 152px;
   height: 152px;
   border: 1px solid rgba(109, 190, 139, 0.3);
@@ -862,7 +887,6 @@ body:has(.lp-root) {
   place-items: center;
   text-align: center;
   box-shadow: 0 18px 38px rgba(33, 43, 54, 0.09);
-  z-index: 2;
 }
 
 .lp-credit-pool-orb span,
@@ -874,43 +898,18 @@ body:has(.lp-root) {
 .lp-credit-pool-orb span {
   color: var(--lp-text);
   font-family: var(--font-playfair), Georgia, serif;
-  font-size: 32px;
+  font-size: 36px;
   font-weight: 900;
-  line-height: 0.92;
+  line-height: 0.88;
 }
 
 .lp-credit-pool-orb strong {
-  margin-top: 6px;
+  margin-top: 8px;
   color: var(--lp-muted);
   font-size: 12px;
   font-weight: 900;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-}
-
-.lp-pool-actions {
-  position: relative;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 9px;
-  margin-top: 14px;
-}
-
-.lp-pool-actions span {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 8px 11px;
-  border: 1px solid rgba(109, 190, 139, 0.22);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.9);
-  color: var(--lp-muted);
-  font-size: 13px;
-  font-weight: 800;
-}
-
-.lp-pool-actions svg {
-  color: var(--lp-green-dark);
 }
 
 .lp-feature-icon svg {
@@ -943,17 +942,26 @@ body:has(.lp-root) {
   gap: 18px;
 }
 
-@media (max-width: 1050px) {
+@media (max-width: 1180px) {
   .lp-feature-card-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .lp-credit-system {
     grid-template-columns: 1fr;
+    gap: 42px;
+  }
+
+  .lp-credit-copy {
+    width: 100%;
+    max-width: 760px;
+    margin: 0 auto;
   }
 
   .lp-credit-visual {
-    max-width: 620px;
+    width: 100%;
+    max-width: 760px;
+    margin: 0 auto;
   }
 }
 
