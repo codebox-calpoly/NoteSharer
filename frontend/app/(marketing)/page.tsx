@@ -197,37 +197,23 @@ function CreditSystemSection() {
           <div className={`lp-credit-visual${visible ? " lp-fade-in" : " lp-fade-out"}`} style={{ transitionDelay: "230ms" }} aria-hidden>
             <div className="lp-credit-board">
               <div className="lp-credit-board-head">
-                <span>Credit exchange</span>
-                <strong>Earn / spend</strong>
+                <span>Credit pool</span>
+                <strong>Fair access</strong>
               </div>
-              <div className="lp-credit-balance">
-                <span>Current balance</span>
-                <strong>12 credits</strong>
-                <em>approved uploads</em>
-              </div>
-              <div className="lp-credit-flow">
-                <div className="lp-credit-step lp-credit-step--upload">
-                  <span className="lp-credit-step-icon"><Upload size={21} strokeWidth={2.35} /></span>
-                  <div>
-                    <strong>Upload files</strong>
-                    <em>Notes, guides, reviews</em>
-                    <span className="lp-credit-chip">+ credits</span>
-                  </div>
-                </div>
-
-                <div className="lp-credit-step lp-credit-step--unlock">
-                  <span className="lp-credit-step-icon"><Unlock size={21} strokeWidth={2.35} /></span>
-                  <div>
-                    <strong>Unlock materials</strong>
-                    <em>Spend when useful</em>
-                    <span className="lp-credit-chip lp-credit-chip--spend">- credits</span>
-                  </div>
+              <div className="lp-pool-stage">
+                <span className="lp-pool-slip lp-pool-slip--one">CSC 357</span>
+                <span className="lp-pool-slip lp-pool-slip--two">MATH 241</span>
+                <span className="lp-pool-slip lp-pool-slip--three">BIO 161</span>
+                <span className="lp-pool-slip lp-pool-slip--ghost">STAT 312</span>
+                <div className="lp-credit-pool-orb">
+                  <span>+ credits</span>
+                  <strong>pool</strong>
                 </div>
               </div>
-              <div className="lp-material-chips">
-                <span>CSC 357</span>
-                <span>MATH 241</span>
-                <span>BIO 161</span>
+              <div className="lp-pool-actions">
+                <span><Upload size={16} /> Upload</span>
+                <span><WalletCards size={16} /> Earn</span>
+                <span><Unlock size={16} /> Unlock</span>
               </div>
             </div>
           </div>

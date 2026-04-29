@@ -729,8 +729,8 @@ body:has(.lp-root) {
 
 .lp-credit-board {
   position: relative;
-  min-height: 430px;
-  padding: 26px;
+  min-height: 410px;
+  padding: 26px 28px 24px;
   overflow: hidden;
   border: 1px solid rgba(109, 190, 139, 0.24);
   border-radius: 22px;
@@ -749,8 +749,8 @@ body:has(.lp-root) {
 }
 
 .lp-credit-board-head,
-.lp-credit-balance,
-.lp-credit-flow {
+.lp-pool-stage,
+.lp-pool-actions {
   position: relative;
   z-index: 1;
 }
@@ -777,141 +777,140 @@ body:has(.lp-root) {
   font-size: 15px;
 }
 
-.lp-credit-balance {
-  display: grid;
-  place-items: center;
-  min-height: 142px;
+.lp-pool-stage {
+  height: 246px;
   margin-top: 20px;
-  padding: 20px;
-  border: 1px solid rgba(109, 190, 139, 0.24);
-  border-radius: 20px;
+  overflow: hidden;
+  border-radius: 18px;
   background:
-    radial-gradient(circle at 50% 42%, rgba(109, 190, 139, 0.16), transparent 42%),
-    linear-gradient(180deg, #ffffff, #f9fdf9);
-  text-align: center;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.65);
+    radial-gradient(circle at 72% 52%, rgba(109, 190, 139, 0.15), transparent 32%),
+    linear-gradient(180deg, rgba(250, 247, 242, 0.7), rgba(255, 255, 255, 0.74));
+  border: 1px solid rgba(109, 190, 139, 0.18);
 }
 
-.lp-credit-balance span,
-.lp-credit-balance strong,
-.lp-credit-balance em {
+.lp-pool-stage::before,
+.lp-pool-stage::after {
+  content: "";
+  position: absolute;
+  left: 36px;
+  right: 36px;
+  height: 1px;
+  background: rgba(84, 96, 109, 0.08);
+}
+
+.lp-pool-stage::before {
+  top: 82px;
+}
+
+.lp-pool-stage::after {
+  top: 164px;
+}
+
+.lp-pool-slip {
+  position: absolute;
+  display: inline-flex;
+  min-width: 118px;
+  justify-content: center;
+  padding: 14px 17px;
+  border: 1px solid rgba(84, 96, 109, 0.12);
+  border-radius: 14px;
+  background: #fffdf7;
+  color: #252525;
+  font-family: "Segoe Print", "Comic Sans MS", "Bradley Hand", cursive;
+  font-size: 18px;
+  font-weight: 800;
+  box-shadow: 0 18px 32px rgba(33, 43, 54, 0.12);
+}
+
+.lp-pool-slip--one {
+  left: 34px;
+  top: 128px;
+  transform: rotate(-3.5deg);
+}
+
+.lp-pool-slip--two {
+  right: 32px;
+  top: 26px;
+  background: #fffefa;
+  transform: rotate(3deg);
+}
+
+.lp-pool-slip--three {
+  left: 138px;
+  top: 38px;
+  background: #fff6d9;
+  transform: rotate(5deg);
+}
+
+.lp-pool-slip--ghost {
+  right: 128px;
+  bottom: 30px;
+  opacity: 0.2;
+  transform: rotate(-4deg);
+}
+
+.lp-credit-pool-orb {
+  position: absolute;
+  right: 54px;
+  bottom: 34px;
+  width: 152px;
+  height: 152px;
+  border: 1px solid rgba(109, 190, 139, 0.3);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.94);
+  display: grid;
+  place-items: center;
+  text-align: center;
+  box-shadow: 0 18px 38px rgba(33, 43, 54, 0.09);
+  z-index: 2;
+}
+
+.lp-credit-pool-orb span,
+.lp-credit-pool-orb strong {
   display: block;
   font-style: normal;
 }
 
-.lp-credit-balance span {
-  color: var(--lp-green-dark);
+.lp-credit-pool-orb span {
+  color: var(--lp-text);
+  font-family: var(--font-playfair), Georgia, serif;
+  font-size: 32px;
+  font-weight: 900;
+  line-height: 0.92;
+}
+
+.lp-credit-pool-orb strong {
+  margin-top: 6px;
+  color: var(--lp-muted);
   font-size: 12px;
   font-weight: 900;
-  letter-spacing: 0.09em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
-.lp-credit-balance strong {
-  margin-top: 7px;
-  color: var(--lp-text);
-  font-family: var(--font-playfair), Georgia, serif;
-  font-size: 42px;
-  line-height: 1;
-}
-
-.lp-credit-balance em {
-  margin-top: 7px;
-  color: var(--lp-muted);
-  font-size: 13px;
-  font-weight: 800;
-}
-
-.lp-credit-flow {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
-  padding-top: 16px;
-}
-
-.lp-credit-step {
-  display: grid;
+.lp-pool-actions {
   position: relative;
-  grid-template-columns: 52px minmax(0, 1fr);
-  gap: 16px;
-  align-items: start;
-  min-height: 154px;
-  padding: 22px;
-  border: 1px solid rgba(109, 190, 139, 0.24);
-  border-radius: 17px;
-  background: rgba(255, 255, 255, 0.84);
-  box-shadow: 0 12px 24px rgba(33, 43, 54, 0.05);
-}
-
-.lp-credit-step-icon {
-  width: 52px;
-  height: 52px;
-  border-radius: 15px;
-  border: 1px solid rgba(109, 190, 139, 0.28);
-  background: rgba(109, 190, 139, 0.12);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.lp-credit-step strong,
-.lp-credit-step em {
-  display: block;
-  font-style: normal;
-}
-
-.lp-credit-step strong {
-  color: var(--lp-text);
-  font-size: 22px;
-  font-weight: 900;
-  line-height: 1.12;
-}
-
-.lp-credit-step em {
-  margin-top: 9px;
-  color: var(--lp-muted);
-  font-size: 15px;
-  line-height: 1.45;
-}
-
-.lp-credit-chip {
-  display: inline-flex;
-  width: fit-content;
-  margin-top: 14px;
-  padding: 8px 12px;
-  border-radius: 999px;
-  background: rgba(109, 190, 139, 0.14);
-  color: var(--lp-green-dark);
-  font-size: 12px;
-  font-weight: 900;
-  white-space: nowrap;
-}
-
-.lp-credit-chip--spend {
-  background: rgba(249, 199, 132, 0.26);
-  color: #8d4a10;
-}
-
-.lp-material-chips {
-  position: relative;
-  z-index: 1;
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 16px;
+  gap: 9px;
+  margin-top: 14px;
 }
 
-.lp-material-chips span {
+.lp-pool-actions span {
   display: inline-flex;
-  padding: 8px 10px;
-  border: 1px solid rgba(84, 96, 109, 0.12);
+  align-items: center;
+  gap: 7px;
+  padding: 8px 11px;
+  border: 1px solid rgba(109, 190, 139, 0.22);
   border-radius: 999px;
-  background: #fff;
-  color: #252525;
-  font-family: "Segoe Print", "Comic Sans MS", "Bradley Hand", cursive;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--lp-muted);
   font-size: 13px;
   font-weight: 800;
-  box-shadow: 0 8px 16px rgba(33, 43, 54, 0.06);
+}
+
+.lp-pool-actions svg {
+  color: var(--lp-green-dark);
 }
 
 .lp-feature-icon svg {
