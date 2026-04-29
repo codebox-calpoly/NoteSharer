@@ -73,6 +73,12 @@ export default function Home() {
       </div>
 
       <section className="lp-hero" id="hero">
+        <div className={`lp-wordmark${heroVisible ? " lp-fade-in" : " lp-fade-out"}`} style={{ transitionDelay: "40ms" }}>
+          <span aria-hidden>
+            <BookOpen size={18} strokeWidth={2.45} />
+          </span>
+          <strong>Poly Pages</strong>
+        </div>
         <div className="lp-hero-inner">
           <div className="lp-hero-copy">
             <h1
@@ -166,8 +172,8 @@ function CreditSystemSection() {
           <div className="lp-credit-copy">
             <p className={`lp-section-label${visible ? " lp-fade-in" : " lp-fade-out"}`}>Credit system</p>
             <h2 className={`lp-section-heading${visible ? " lp-fade-in" : " lp-fade-out"}`} style={{ transitionDelay: "90ms" }}>
-              <span>Built to keep</span>
-              <span>the exchange fair.</span>
+              <span>Earn credits by sharing.</span>
+              <span>Spend them on materials.</span>
             </h2>
             <p className={`lp-credit-intro${visible ? " lp-fade-in" : " lp-fade-out"}`} style={{ transitionDelay: "150ms" }}>
               Upload approved materials to earn credits. Spend credits to unlock files for your courses.
@@ -192,43 +198,36 @@ function CreditSystemSection() {
             <div className="lp-credit-board">
               <div className="lp-credit-board-head">
                 <span>Credit exchange</span>
-                <strong>Upload to unlock</strong>
+                <strong>Earn / spend</strong>
+              </div>
+              <div className="lp-credit-balance">
+                <span>Current balance</span>
+                <strong>12 credits</strong>
+                <em>from approved uploads</em>
               </div>
               <div className="lp-credit-flow">
                 <div className="lp-credit-step lp-credit-step--upload">
                   <span className="lp-credit-step-icon"><Upload size={21} strokeWidth={2.35} /></span>
                   <div>
-                    <strong>Upload</strong>
-                    <em>Approved files earn credits</em>
+                    <strong>Upload approved files</strong>
+                    <em>Notes, guides, reviews</em>
                   </div>
                   <span className="lp-credit-chip">+ credits</span>
                 </div>
 
-                <div className="lp-credit-connector"><span /></div>
-
-                <div className="lp-credit-step lp-credit-step--pool">
-                  <span className="lp-credit-step-icon"><BookOpen size={21} strokeWidth={2.35} /></span>
-                  <div>
-                    <strong>Course pools</strong>
-                    <em>Files stay grouped by class</em>
-                    <span className="lp-course-chips">
-                      <span>CSC 357 notes</span>
-                      <span>MATH 241 guide</span>
-                      <span>BIO 161 review</span>
-                    </span>
-                  </div>
-                </div>
-
-                <div className="lp-credit-connector lp-credit-connector--delay"><span /></div>
-
                 <div className="lp-credit-step lp-credit-step--unlock">
                   <span className="lp-credit-step-icon"><Unlock size={21} strokeWidth={2.35} /></span>
                   <div>
-                    <strong>Unlock</strong>
-                    <em>Spend credits on what you need</em>
+                    <strong>Unlock class materials</strong>
+                    <em>Spend only when useful</em>
                   </div>
                   <span className="lp-credit-chip lp-credit-chip--spend">- credits</span>
                 </div>
+              </div>
+              <div className="lp-material-chips">
+                <span>CSC 357 notes</span>
+                <span>MATH 241 guide</span>
+                <span>BIO 161 review</span>
               </div>
             </div>
           </div>

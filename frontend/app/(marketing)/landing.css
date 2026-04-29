@@ -43,12 +43,6 @@
   100% { opacity: 1; filter: blur(0); transform: translate3d(0, 0, 0) rotate(-2.5deg) scale(1); }
 }
 
-@keyframes lp-credit-pulse {
-  0% { opacity: 0; transform: translateY(-9px) scale(0.92); }
-  35% { opacity: 1; transform: translateY(0) scale(1); }
-  100% { opacity: 0; transform: translateY(20px) scale(0.92); }
-}
-
 html:has(.lp-root),
 body:has(.lp-root) {
   background: #faf7f2;
@@ -197,6 +191,36 @@ body:has(.lp-root) {
   inset: 0;
   background: linear-gradient(90deg, rgba(250, 247, 242, 0.58), transparent 22%, transparent 78%, rgba(250, 247, 242, 0.28));
   pointer-events: none;
+}
+
+.lp-wordmark {
+  position: absolute;
+  z-index: 3;
+  top: 28px;
+  left: clamp(42px, 6vw, 96px);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--lp-green-dark);
+  letter-spacing: 0;
+}
+
+.lp-wordmark span {
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(109, 190, 139, 0.3);
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.62);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 22px rgba(33, 43, 54, 0.06);
+}
+
+.lp-wordmark strong {
+  color: var(--lp-green-dark);
+  font-size: 15px;
+  font-weight: 950;
 }
 
 .lp-hero-inner {
@@ -706,7 +730,7 @@ body:has(.lp-root) {
 .lp-credit-board {
   position: relative;
   min-height: 430px;
-  padding: 24px;
+  padding: 26px;
   overflow: hidden;
   border: 1px solid rgba(109, 190, 139, 0.24);
   border-radius: 22px;
@@ -725,6 +749,7 @@ body:has(.lp-root) {
 }
 
 .lp-credit-board-head,
+.lp-credit-balance,
 .lp-credit-flow {
   position: relative;
   z-index: 1;
@@ -752,34 +777,75 @@ body:has(.lp-root) {
   font-size: 15px;
 }
 
+.lp-credit-balance {
+  display: grid;
+  place-items: center;
+  min-height: 142px;
+  margin-top: 20px;
+  padding: 20px;
+  border: 1px solid rgba(109, 190, 139, 0.24);
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(109, 190, 139, 0.16), transparent 42%),
+    linear-gradient(180deg, #ffffff, #f9fdf9);
+  text-align: center;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.65);
+}
+
+.lp-credit-balance span,
+.lp-credit-balance strong,
+.lp-credit-balance em {
+  display: block;
+  font-style: normal;
+}
+
+.lp-credit-balance span {
+  color: var(--lp-green-dark);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.lp-credit-balance strong {
+  margin-top: 7px;
+  color: var(--lp-text);
+  font-family: var(--font-playfair), Georgia, serif;
+  font-size: 42px;
+  line-height: 1;
+}
+
+.lp-credit-balance em {
+  margin-top: 7px;
+  color: var(--lp-muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
 .lp-credit-flow {
   display: grid;
-  gap: 10px;
-  padding-top: 22px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  padding-top: 16px;
 }
 
 .lp-credit-step {
   display: grid;
-  grid-template-columns: 46px minmax(0, 1fr) auto;
-  gap: 14px;
-  align-items: start;
-  min-height: 86px;
-  padding: 16px;
+  position: relative;
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 13px;
+  align-items: center;
+  min-height: 98px;
+  padding: 18px;
   border: 1px solid rgba(109, 190, 139, 0.24);
   border-radius: 17px;
   background: rgba(255, 255, 255, 0.84);
   box-shadow: 0 12px 24px rgba(33, 43, 54, 0.05);
 }
 
-.lp-credit-step--pool {
-  background:
-    radial-gradient(circle at 86% 20%, rgba(109, 190, 139, 0.1), transparent 30%),
-    #fffefa;
-}
-
 .lp-credit-step-icon {
-  width: 46px;
-  height: 46px;
+  width: 44px;
+  height: 44px;
   border-radius: 15px;
   border: 1px solid rgba(109, 190, 139, 0.28);
   background: rgba(109, 190, 139, 0.12);
@@ -806,10 +872,13 @@ body:has(.lp-root) {
   color: var(--lp-muted);
   font-size: 13px;
   line-height: 1.45;
+  padding-right: 72px;
 }
 
 .lp-credit-chip {
-  align-self: start;
+  position: absolute;
+  top: 18px;
+  right: 18px;
   width: fit-content;
   padding: 7px 10px;
   border-radius: 999px;
@@ -825,45 +894,24 @@ body:has(.lp-root) {
   color: #8d4a10;
 }
 
-.lp-credit-connector {
+.lp-material-chips {
   position: relative;
-  height: 22px;
-  margin-left: 38px;
-  border-left: 2px solid rgba(109, 190, 139, 0.28);
-}
-
-.lp-credit-connector span {
-  position: absolute;
-  left: -5px;
-  top: 0;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--lp-green-dark);
-  box-shadow: 0 0 0 7px rgba(109, 190, 139, 0.13);
-  animation: lp-credit-pulse 1.9s cubic-bezier(0.65, 0, 0.35, 1) infinite;
-}
-
-.lp-credit-connector--delay span {
-  animation-delay: 0.52s;
-}
-
-.lp-course-chips {
+  z-index: 1;
   display: flex;
   flex-wrap: wrap;
-  gap: 7px;
-  margin-top: 12px;
+  gap: 8px;
+  margin-top: 16px;
 }
 
-.lp-course-chips span {
+.lp-material-chips span {
   display: inline-flex;
-  padding: 6px 9px;
+  padding: 8px 10px;
   border: 1px solid rgba(84, 96, 109, 0.12);
-  border-radius: 10px;
+  border-radius: 999px;
   background: #fff;
   color: #252525;
   font-family: "Segoe Print", "Comic Sans MS", "Bradley Hand", cursive;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 800;
   box-shadow: 0 8px 16px rgba(33, 43, 54, 0.06);
 }
@@ -1126,11 +1174,26 @@ body:has(.lp-root) {
     min-height: 100vh;
     min-height: 100dvh;
     align-items: start;
-    padding: 42px 16px 34px;
+    padding: 84px 16px 34px;
   }
 
   .lp-hero::before {
     left: 16px;
+  }
+
+  .lp-wordmark {
+    top: 26px;
+    left: 38px;
+  }
+
+  .lp-wordmark span {
+    width: 31px;
+    height: 31px;
+    border-radius: 10px;
+  }
+
+  .lp-wordmark strong {
+    font-size: 14px;
   }
 
   .lp-hero-inner {
@@ -1308,65 +1371,7 @@ body:has(.lp-root) {
   }
 
   .lp-credit-visual {
-    width: 100%;
-    max-width: 360px;
-    margin: 4px auto 0;
-  }
-
-  .lp-credit-board {
-    min-height: auto;
-    padding: 20px;
-    border-radius: 20px;
-  }
-
-  .lp-credit-board-head strong {
-    font-size: 14px;
-  }
-
-  .lp-credit-flow {
-    gap: 8px;
-    padding-top: 18px;
-  }
-
-  .lp-credit-step {
-    grid-template-columns: 38px minmax(0, 1fr);
-    min-height: auto;
-    gap: 12px;
-    padding: 14px;
-  }
-
-  .lp-credit-step-icon {
-    width: 38px;
-    height: 38px;
-    border-radius: 13px;
-  }
-
-  .lp-credit-step strong {
-    font-size: 15px;
-  }
-
-  .lp-credit-step em {
-    font-size: 12px;
-  }
-
-  .lp-credit-chip {
-    grid-column: 2;
-    justify-self: start;
-    margin-top: 2px;
-  }
-
-  .lp-credit-connector {
-    height: 18px;
-    margin-left: 32px;
-  }
-
-  .lp-course-chips {
-    gap: 6px;
-    margin-top: 10px;
-  }
-
-  .lp-course-chips span {
-    font-size: 11px;
+    display: none;
   }
 
   .lp-feature-card-grid {
