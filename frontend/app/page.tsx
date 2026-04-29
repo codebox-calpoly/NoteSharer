@@ -122,6 +122,12 @@ export default function Home() {
 
           <div className={`lp-hero-visual${heroVisible ? " lp-fade-in" : " lp-fade-out"}`} style={{ transitionDelay: "200ms" }}>
             <div className="lp-mockup-stack">
+              {/* Laptop behind the cards */}
+              <img
+                className="lp-laptop-img"
+                src={`${ANIMA_IMG}/mask-group@2x.png`}
+                alt="Laptop displaying Poly Pages"
+              />
               {/* Floating note cards */}
               <div className="lp-card lp-card--back">
                 <div className="lp-card-tag">LECTURE NOTES</div>
@@ -142,15 +148,6 @@ export default function Home() {
               />
             </div>
           </div>
-        </div>
-
-        {/* Laptop mockup below hero content */}
-        <div className={`lp-laptop-wrap${heroVisible ? " lp-fade-in" : " lp-fade-out"}`} style={{ transitionDelay: "600ms" }}>
-          <img
-            className="lp-laptop-img"
-            src={`${ANIMA_IMG}/mask-group@2x.png`}
-            alt="Laptop displaying Poly Pages"
-          />
         </div>
 
         <div className="lp-blob lp-blob--1" aria-hidden />

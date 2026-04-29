@@ -2213,8 +2213,8 @@ body {
 }
 .lp-mockup-stack {
   position: relative;
-  width: 340px;
-  height: 380px;
+  width: 360px;
+  height: 440px;
 }
 .lp-card {
   position: absolute;
@@ -2291,20 +2291,17 @@ body {
   object-fit: cover;
 }
 
-/* ── Laptop mockup ── */
-.lp-laptop-wrap {
-  max-width: 900px;
-  margin: 60px auto 0;
-  padding: 0 24px;
-  width: 100%;
-  display: flex;
-  justify-content: center;
-}
+/* ── Laptop mockup — sits behind cards in the stack ── */
 .lp-laptop-img {
-  width: 100%;
-  max-width: 820px;
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 200px;
   height: auto;
-  filter: drop-shadow(0 30px 60px rgba(0,0,0,0.25));
+  opacity: 0.8;
+  z-index: 0;
+  filter: drop-shadow(0 10px 20px rgba(0,0,0,0.2));
 }
 
 /* ── Blobs ── */
