@@ -4,13 +4,11 @@ import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  ArrowRight,
   BadgeCheck,
   BookOpen,
   Bookmark,
   CalendarDays,
   ClipboardList,
-  Paperclip,
   Trophy,
   Unlock,
   Upload,
@@ -46,8 +44,8 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadTimer = setTimeout(() => setLoading(false), 780);
-    const heroTimer = setTimeout(() => setHeroVisible(true), 260);
+    const loadTimer = setTimeout(() => setLoading(false), 520);
+    const heroTimer = setTimeout(() => setHeroVisible(true), 720);
     return () => {
       clearTimeout(loadTimer);
       clearTimeout(heroTimer);
@@ -77,38 +75,50 @@ export default function Home() {
       <section className="lp-hero" id="hero">
         <div className="lp-hero-inner">
           <div className="lp-hero-copy">
-            <p className={`lp-hero-kicker${heroVisible ? " lp-fade-in" : " lp-fade-out"}`} style={{ transitionDelay: "60ms" }}>
-              Cal Poly student notes, traded fairly
-            </p>
             <h1
               className={`lp-hero-heading${heroVisible ? " lp-fade-in" : " lp-fade-out"}`}
-              style={{ transitionDelay: "120ms" }}
+              style={{ transitionDelay: "80ms" }}
             >
               Upload notes.
-              <span>Earn credits.</span>
-              Unlock class materials.
+              <span className="lp-accent-line">Earn credits.</span>
+              <span className="lp-title-desktop">Unlock class materials.</span>
+              <span className="lp-title-mobile">Unlock materials.</span>
             </h1>
-            <p className={`lp-hero-sub${heroVisible ? " lp-fade-in" : " lp-fade-out"}`} style={{ transitionDelay: "190ms" }}>
-              Share lecture notes, study guides, and exam reviews. Earn credits when classmates use them, then spend those credits on materials for your current courses.
+            <p className={`lp-hero-sub${heroVisible ? " lp-fade-in" : " lp-fade-out"}`} style={{ transitionDelay: "160ms" }}>
+              Trade class materials with verified Cal Poly students. Upload approved notes to earn credits, then spend those credits on lecture notes, study guides, and exam reviews.
             </p>
 
-            <div className={`lp-hero-actions${heroVisible ? " lp-fade-in" : " lp-fade-out"}`} style={{ transitionDelay: "260ms" }}>
+            <div className={`lp-mobile-exchange${heroVisible ? " lp-fade-in" : " lp-fade-out"}`} style={{ transitionDelay: "220ms" }} aria-hidden>
+              <span>
+                <strong>Upload</strong>
+                CSC 357 notes
+              </span>
+              <span>
+                <strong>Earn</strong>
+                +12 credits
+              </span>
+              <span>
+                <strong>Unlock</strong>
+                Study guides
+              </span>
+            </div>
+
+            <div className={`lp-hero-actions${heroVisible ? " lp-fade-in" : " lp-fade-out"}`} style={{ transitionDelay: "240ms" }}>
               <Link href="/auth" className="lp-action-btn lp-action-btn--primary">
-                Start sharing
-                <ArrowRight className="lp-button-icon" size={18} strokeWidth={2.8} aria-hidden />
+                Join now
               </Link>
               <button type="button" onClick={() => scrollToSection("how-it-works")} className="lp-action-btn lp-action-btn--secondary">
-                See how it works
+                How credits work
               </button>
             </div>
 
-            <div className={`lp-verify-note${heroVisible ? " lp-fade-in" : " lp-fade-out"}`} style={{ transitionDelay: "330ms" }}>
+            <div className={`lp-verify-note${heroVisible ? " lp-fade-in" : " lp-fade-out"}`} style={{ transitionDelay: "310ms" }}>
               <span className="lp-verify-icon" aria-hidden>
                 <BadgeCheck size={24} strokeWidth={2.4} />
               </span>
               <span>
-                <strong>Cal Poly students only</strong>
-                <em>must be verified by @calpoly.edu</em>
+                <strong>Verified Cal Poly students only</strong>
+                <em>requires an @calpoly.edu email</em>
               </span>
             </div>
           </div>
@@ -118,7 +128,6 @@ export default function Home() {
               <span className="lp-doodle lp-doodle--star" />
               <span className="lp-doodle lp-doodle--spark" />
               <div className="lp-note-card lp-note-card--lecture">
-                <Paperclip className="lp-note-clip" size={74} strokeWidth={2.1} />
                 <span className="lp-note-course">CSC 357</span>
                 <span className="lp-note-title">Lecture Notes</span>
                 <span className="lp-note-rule" />
@@ -138,10 +147,6 @@ export default function Home() {
             </div>
           </div>
         </div>
-
-        <button type="button" onClick={() => scrollToSection("how-it-works")} className="lp-scroll-cue" aria-label="Scroll to how it works">
-          <span />
-        </button>
       </section>
 
       <HowItWorksSection />
@@ -153,7 +158,7 @@ export default function Home() {
             <p className="lp-footer-brand">Poly Pages</p>
             <p className="lp-footer-sub">Independent student project - not affiliated with Cal Poly administration.</p>
           </div>
-          <Link href="/auth" className="lp-footer-link">Start sharing</Link>
+          <Link href="/auth" className="lp-footer-link">Join now</Link>
         </div>
       </footer>
     </div>
@@ -163,9 +168,9 @@ export default function Home() {
 function HowItWorksSection() {
   const { ref, visible } = useInView(0.15);
   const steps = [
-    { Icon: Upload, num: "01", title: "Upload useful materials", desc: "Share lecture notes, study guides, exam reviews, or other class files you would actually want before a midterm." },
-    { Icon: WalletCards, num: "02", title: "Earn credits back", desc: "Approved uploads add credits to your account, so contributing to the library gives you access to more materials." },
-    { Icon: Unlock, num: "03", title: "Unlock course help", desc: "Spend credits on notes and study materials for the classes you are taking now, all organized around Cal Poly courses." },
+    { Icon: Upload, num: "01", title: "Contribute materials", desc: "Upload lecture notes, study guides, exam reviews, or class resources tied to a Cal Poly course." },
+    { Icon: WalletCards, num: "02", title: "Earn credits", desc: "Approved uploads add credits to your account as the course collection grows." },
+    { Icon: Unlock, num: "03", title: "Unlock resources", desc: "Spend credits on materials for classes you are taking now or checking out next." },
   ];
 
   return (
@@ -174,7 +179,8 @@ function HowItWorksSection() {
         <div className="lp-section-head">
           <p className={`lp-section-label${visible ? " lp-fade-in" : " lp-fade-out"}`}>How it works</p>
           <h2 className={`lp-section-heading${visible ? " lp-fade-in" : " lp-fade-out"}`} style={{ transitionDelay: "90ms" }}>
-            Share what helped you. Get what helps next.
+            <span>Upload once.</span>
+            <span>Use credits anytime.</span>
           </h2>
         </div>
         <div className="lp-steps-grid">
@@ -197,12 +203,12 @@ function HowItWorksSection() {
 function FeaturesSection() {
   const { ref, visible } = useInView(0.18);
   const features = [
-    { Icon: ClipboardList, title: "Track your classes", desc: "Keep your current courses close so the notes you need are always one click away." },
-    { Icon: BookOpen, title: "Browse notes and study guides", desc: "Find PDFs, lecture notes, exam reviews, and study materials by course and professor." },
-    { Icon: CalendarDays, title: "Scope out future courses", desc: "Peek at materials from classes you might take next quarter before you commit." },
-    { Icon: Trophy, title: "Climb the leaderboards", desc: "Earn recognition when your uploads help classmates study better." },
-    { Icon: WalletCards, title: "Manage your credits", desc: "See what you earned, what you unlocked, and where your contributions are paying off." },
-    { Icon: Bookmark, title: "Save your best finds", desc: "Bookmark useful materials so finals week does not start with another search spiral." },
+    { Icon: ClipboardList, title: "Track your classes", desc: "Pin current courses and jump straight to matching notes and materials." },
+    { Icon: BookOpen, title: "Find course materials", desc: "Browse lecture notes, study guides, exam reviews, and PDFs by course." },
+    { Icon: CalendarDays, title: "Preview future courses", desc: "Look through materials from classes you are considering before registration." },
+    { Icon: Trophy, title: "Earn from uploads", desc: "See which contributions are getting used and building credits." },
+    { Icon: WalletCards, title: "Manage credits", desc: "Track your balance, unlocks, and upload history in one place." },
+    { Icon: Bookmark, title: "Save useful materials", desc: "Bookmark the files you want ready when you study." },
   ];
 
   return (
@@ -210,14 +216,11 @@ function FeaturesSection() {
       <div className="lp-section-inner">
         <div className="lp-feature-header">
           <div>
-            <p className={`lp-section-label${visible ? " lp-fade-in" : " lp-fade-out"}`}>What you can do</p>
-            <h2 className={`lp-section-heading${visible ? " lp-fade-in" : " lp-fade-out"}`} style={{ transitionDelay: "90ms" }}>
-              A class library that feels built around your schedule.
+            <h2 className={`lp-section-heading${visible ? " lp-fade-in" : " lp-fade-out"}`}>
+              <span>Find notes by course.</span>
+              <span>Unlock with credits.</span>
             </h2>
           </div>
-          <p className={`lp-feature-intro${visible ? " lp-fade-in" : " lp-fade-out"}`} style={{ transitionDelay: "150ms" }}>
-            Poly Pages is more than an upload form. It is a course-aware place to trade notes, plan ahead, track credits, and find the materials that make studying less chaotic.
-          </p>
         </div>
         <div className="lp-feature-card-grid">
           {features.map(({ Icon, title, desc }, i) => (
@@ -232,12 +235,11 @@ function FeaturesSection() {
         </div>
         <div className={`lp-final-strip${visible ? " lp-fade-in" : " lp-fade-out"}`} style={{ transitionDelay: "640ms" }}>
           <div>
-            <strong>Have notes from a class you already survived?</strong>
-            <span>Turn them into credits for the next one.</span>
+            <strong>Upload what you have. Unlock what you need.</strong>
+            <span>Credits keep the exchange balanced for every student.</span>
           </div>
           <Link href="/auth" className="lp-action-btn lp-action-btn--primary lp-final-cta">
-            Start sharing
-            <ArrowRight className="lp-button-icon" size={18} strokeWidth={2.8} aria-hidden />
+            Join now
           </Link>
         </div>
       </div>
