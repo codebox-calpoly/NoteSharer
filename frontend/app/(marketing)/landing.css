@@ -832,11 +832,11 @@ body:has(.lp-root) {
 .lp-credit-step {
   display: grid;
   position: relative;
-  grid-template-columns: 44px minmax(0, 1fr);
-  gap: 13px;
-  align-items: center;
-  min-height: 98px;
-  padding: 18px;
+  grid-template-columns: 52px minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+  min-height: 154px;
+  padding: 22px;
   border: 1px solid rgba(109, 190, 139, 0.24);
   border-radius: 17px;
   background: rgba(255, 255, 255, 0.84);
@@ -844,8 +844,8 @@ body:has(.lp-root) {
 }
 
 .lp-credit-step-icon {
-  width: 44px;
-  height: 44px;
+  width: 52px;
+  height: 52px;
   border-radius: 15px;
   border: 1px solid rgba(109, 190, 139, 0.28);
   background: rgba(109, 190, 139, 0.12);
@@ -862,25 +862,23 @@ body:has(.lp-root) {
 
 .lp-credit-step strong {
   color: var(--lp-text);
-  font-size: 16px;
+  font-size: 22px;
   font-weight: 900;
-  line-height: 1.25;
+  line-height: 1.12;
 }
 
 .lp-credit-step em {
-  margin-top: 4px;
+  margin-top: 9px;
   color: var(--lp-muted);
-  font-size: 13px;
+  font-size: 15px;
   line-height: 1.45;
-  padding-right: 72px;
 }
 
 .lp-credit-chip {
-  position: absolute;
-  top: 18px;
-  right: 18px;
+  display: inline-flex;
   width: fit-content;
-  padding: 7px 10px;
+  margin-top: 14px;
+  padding: 8px 12px;
   border-radius: 999px;
   background: rgba(109, 190, 139, 0.14);
   color: var(--lp-green-dark);
