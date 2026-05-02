@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
 
   const resend = new Resend(resendApiKey);
   const { error: emailError } = await resend.emails.send({
-    from: "Poly Pages <onboarding@resend.dev>",
+    from: "Poly Pages <noreply@codeboxorg.com>",
     to: email,
     subject: "Your Poly Pages sign-in code",
     html: `
